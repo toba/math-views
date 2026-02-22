@@ -9,7 +9,7 @@ struct DisplayPreRendererTests {
   let renderer: DisplayPreRenderer
 
   init() {
-    font = FontInstance(fontWithName: "latinmodern-math", size: 20)
+    font = MathFont.latinModernFont.fontInstance(size: 20)
     renderer = DisplayPreRenderer(font: font, style: .display, cramped: false)
   }
 
@@ -150,7 +150,7 @@ struct DisplayPreRendererTests {
   // MARK: - Font and Style Tests
 
   @Test func rendererWithDifferentFonts() {
-    let smallFont = FontInstance(fontWithName: "latinmodern-math", size: 10)
+    let smallFont = MathFont.latinModernFont.fontInstance(size: 10)
     let smallRenderer = DisplayPreRenderer(font: smallFont, style: .display, cramped: false)
 
     let mathList = MathList()

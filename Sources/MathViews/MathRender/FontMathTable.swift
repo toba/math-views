@@ -19,9 +19,9 @@ struct GlyphPart {
 }
 
 /** This class represents the Math table of an open type font.
- 
+
  The math table is documented here: https://www.microsoft.com/typography/otspec/math.htm
- 
+
  How the constants in this class affect the display is documented here:
  http://www.tug.org/TUGboat/tb30-1/tb94vieth.pdf
 
@@ -29,177 +29,160 @@ struct GlyphPart {
  in python and convert it to a .plist file which is easily consumed by this class.
  This approach is preferable to spending an inordinate amount of time figuring out
  how to parse the returned NSData object using the open type rules.
- 
+
  Remark: This class is not meant to be used outside of this library.
  */
 class FontMathTable {
-    
-    // The font for this math table.
-    public private(set) weak var font:FontInstance? // @property (nonatomic, readonly, weak) FontInstance* font;
-    
-    var _unitsPerEm: UInt
-    var _fontSize: CGFloat
-    var _mathTable: [String: Any]
-    
-    let kConstants = "constants"
-    
+
+    let mathFont: MathFont
+    let fontSize: CGFloat
+    let unitsPerEm: UInt
+    private let _mathTable: [String: Any]
+
+    private let kConstants = "constants"
+
     /** MU unit in points */
-    var muUnit:CGFloat { _fontSize/18 }
-    
-    func fontUnitsToPt(_ fontUnits:Int) -> CGFloat {
-        CGFloat(fontUnits) * _fontSize / CGFloat(_unitsPerEm)
-    }
-    
-    init(withFont font: FontInstance?, mathTable:[String: Any]) {
-        assert(font != nil, "font has nil value")
-        assert(font!.ctFont != nil, "font.ctFont has nil value")
-        self.font = font
-        // do domething with font
-        _unitsPerEm = UInt(CTFontGetUnitsPerEm(font!.ctFont))
-        _fontSize = font!.fontSize;
-        _mathTable = mathTable
-        let version = _mathTable["version"] as! String
-        precondition(version == "1.3", "Invalid version of math table plist: \(version)")
-    }
-    
-    func constantFromTable(_ constName:String) -> CGFloat {
-        let consts = _mathTable[kConstants] as? [String: Any]
-        let val = consts![constName] as? Int
-        return fontUnitsToPt(val!)
+    var muUnit: CGFloat { fontSize / 18 }
+
+    func fontUnitsToPt(_ fontUnits: Int) -> CGFloat {
+        CGFloat(fontUnits) * fontSize / CGFloat(unitsPerEm)
     }
 
-    func percentFromTable(_ percentName:String) -> CGFloat {
-        let consts = _mathTable[kConstants] as? [String: Any]
-        let val = consts![percentName] as? Int
-        return CGFloat(val!) / 100
+    init(mathFont: MathFont, size: CGFloat, unitsPerEm: UInt) {
+        self.mathFont = mathFont
+        self.fontSize = size
+        self.unitsPerEm = unitsPerEm
+        self._mathTable = mathFont.rawMathTable()
     }
-    
+
+    func constantFromTable(_ constName: String) -> CGFloat {
+        guard let consts = _mathTable[kConstants] as? [String: Any], let val = consts[constName] as? Int else {
+            return .zero
+        }
+        return fontUnitsToPt(val)
+    }
+
+    func percentFromTable(_ percentName: String) -> CGFloat {
+        guard let consts = _mathTable[kConstants] as? [String: Any], let val = consts[percentName] as? Int else {
+            return .zero
+        }
+        return CGFloat(val) / 100
+    }
+
     /// Math Font Metrics from the opentype specification
     // MARK: - Fractions
-    var fractionNumeratorDisplayStyleShiftUp:CGFloat { constantFromTable("FractionNumeratorDisplayStyleShiftUp") }          // \sigma_8 in TeX
-    var fractionNumeratorShiftUp:CGFloat { constantFromTable("FractionNumeratorShiftUp") }                      // \sigma_9 in TeX
-    var fractionDenominatorDisplayStyleShiftDown:CGFloat { constantFromTable("FractionDenominatorDisplayStyleShiftDown") }      // \sigma_11 in TeX
-    var fractionDenominatorShiftDown:CGFloat { constantFromTable("FractionDenominatorShiftDown") }                  // \sigma_12 in TeX
-    var fractionNumeratorDisplayStyleGapMin:CGFloat { constantFromTable("FractionNumDisplayStyleGapMin") }           // 3 * \xi_8 in TeX
-    var fractionNumeratorGapMin:CGFloat { constantFromTable("FractionNumeratorGapMin") }                       // \xi_8 in TeX
-    var fractionDenominatorDisplayStyleGapMin:CGFloat { constantFromTable("FractionDenomDisplayStyleGapMin") }         // 3 * \xi_8 in TeX
-    var fractionDenominatorGapMin:CGFloat { constantFromTable("FractionDenominatorGapMin") }                     // \xi_8 in TeX
-    var fractionRuleThickness:CGFloat { constantFromTable("FractionRuleThickness") }                         // \xi_8 in TeX
-    var skewedFractionHorizonalGap:CGFloat { constantFromTable("SkewedFractionHorizontalGap") }             // \sigma_20 in TeX
-    var skewedFractionVerticalGap:CGFloat { constantFromTable("SkewedFractionVerticalGap") }                         // \sigma_21 in TeX
-    
-    // MARK: - Non-standard
-    /// FractionDelimiterSize and FractionDelimiterDisplayStyleSize are not constants
-    /// specified in the OpenType Math specification. Rather these are proposed LuaTeX extensions
-    /// for the TeX parameters \sigma_20 (delim1) and \sigma_21 (delim2). Since these do not
-    /// exist in the fonts that we have, we use the same approach as LuaTeX and use the fontSize
-    /// to determine these values. The constants used match the metrics values of the original TeX fonts.
-    /// Note: An alternative approach is to use DelimitedSubFormulaMinHeight for \sigma21 and use a factor
-    /// of 2 to get \sigma 20 as proposed in Vieth paper.
-    /// The XeTeX implementation sets \sigma21 = fontSize and \sigma20 = DelimitedSubFormulaMinHeight which
-    /// will produce smaller delimiters.
-    /// Of all the approaches we've implemented LuaTeX's approach since it mimics LaTeX most accurately.
-    var fractionDelimiterSize: CGFloat { 1.01 * _fontSize }
+    var fractionNumeratorDisplayStyleShiftUp: CGFloat { constantFromTable("FractionNumeratorDisplayStyleShiftUp") }
+    var fractionNumeratorShiftUp: CGFloat { constantFromTable("FractionNumeratorShiftUp") }
+    var fractionDenominatorDisplayStyleShiftDown: CGFloat { constantFromTable("FractionDenominatorDisplayStyleShiftDown") }
+    var fractionDenominatorShiftDown: CGFloat { constantFromTable("FractionDenominatorShiftDown") }
+    var fractionNumeratorDisplayStyleGapMin: CGFloat { constantFromTable("FractionNumDisplayStyleGapMin") }
+    var fractionNumeratorGapMin: CGFloat { constantFromTable("FractionNumeratorGapMin") }
+    var fractionDenominatorDisplayStyleGapMin: CGFloat { constantFromTable("FractionDenomDisplayStyleGapMin") }
+    var fractionDenominatorGapMin: CGFloat { constantFromTable("FractionDenominatorGapMin") }
+    var fractionRuleThickness: CGFloat { constantFromTable("FractionRuleThickness") }
+    var skewedFractionHorizonalGap: CGFloat { constantFromTable("SkewedFractionHorizontalGap") }
+    var skewedFractionVerticalGap: CGFloat { constantFromTable("SkewedFractionVerticalGap") }
 
-    /// Modified constant from 2.4 to 2.39 for better visual appearance.
-    var fractionDelimiterDisplayStyleSize: CGFloat { 2.39 * _fontSize }
+    // MARK: - Non-standard
+    var fractionDelimiterSize: CGFloat { 1.01 * fontSize }
+    var fractionDelimiterDisplayStyleSize: CGFloat { 2.39 * fontSize }
 
     // MARK: - Stacks
-    var stackTopDisplayStyleShiftUp:CGFloat { constantFromTable("StackTopDisplayStyleShiftUp")  }                   // \sigma_8 in TeX
-    var stackTopShiftUp:CGFloat { constantFromTable("StackTopShiftUp")  }                               // \sigma_10 in TeX
-    var stackDisplayStyleGapMin:CGFloat { constantFromTable("StackDisplayStyleGapMin")  }                       // 7 \xi_8 in TeX
-    var stackGapMin:CGFloat { constantFromTable("StackGapMin")  }                                   // 3 \xi_8 in TeX
-    var stackBottomDisplayStyleShiftDown:CGFloat { constantFromTable("StackBottomDisplayStyleShiftDown")  }              // \sigma_11 in TeX
-    var stackBottomShiftDown:CGFloat { constantFromTable("StackBottomShiftDown")  } // \sigma_12 in TeX
+    var stackTopDisplayStyleShiftUp: CGFloat { constantFromTable("StackTopDisplayStyleShiftUp") }
+    var stackTopShiftUp: CGFloat { constantFromTable("StackTopShiftUp") }
+    var stackDisplayStyleGapMin: CGFloat { constantFromTable("StackDisplayStyleGapMin") }
+    var stackGapMin: CGFloat { constantFromTable("StackGapMin") }
+    var stackBottomDisplayStyleShiftDown: CGFloat { constantFromTable("StackBottomDisplayStyleShiftDown") }
+    var stackBottomShiftDown: CGFloat { constantFromTable("StackBottomShiftDown") }
 
-   var stretchStackBottomShiftDown:CGFloat { constantFromTable("StretchStackBottomShiftDown") }
-   var stretchStackGapAboveMin:CGFloat { constantFromTable("StretchStackGapAboveMin") }
-   var stretchStackGapBelowMin:CGFloat { constantFromTable("StretchStackGapBelowMin") }
-   var stretchStackTopShiftUp:CGFloat { constantFromTable("StretchStackTopShiftUp") }
-    
+    var stretchStackBottomShiftDown: CGFloat { constantFromTable("StretchStackBottomShiftDown") }
+    var stretchStackGapAboveMin: CGFloat { constantFromTable("StretchStackGapAboveMin") }
+    var stretchStackGapBelowMin: CGFloat { constantFromTable("StretchStackGapBelowMin") }
+    var stretchStackTopShiftUp: CGFloat { constantFromTable("StretchStackTopShiftUp") }
+
     // MARK: - super/sub scripts
 
-    var superscriptShiftUp:CGFloat { constantFromTable("SuperscriptShiftUp")  }                            // \sigma_13, \sigma_14 in TeX
-    var superscriptShiftUpCramped:CGFloat { constantFromTable("SuperscriptShiftUpCramped")  }                     // \sigma_15 in TeX
-    var subscriptShiftDown:CGFloat { constantFromTable("SubscriptShiftDown")  }                            // \sigma_16, \sigma_17 in TeX
-    var superscriptBaselineDropMax:CGFloat { constantFromTable("SuperscriptBaselineDropMax")  }                    // \sigma_18 in TeX
-    var subscriptBaselineDropMin:CGFloat { constantFromTable("SubscriptBaselineDropMin")  }                      // \sigma_19 in TeX
-    var superscriptBottomMin:CGFloat { constantFromTable("SuperscriptBottomMin")  }                          // 1/4 \sigma_5 in TeX
-    var subscriptTopMax:CGFloat { constantFromTable("SubscriptTopMax")  }                               // 4/5 \sigma_5 in TeX
-    var subSuperscriptGapMin:CGFloat { constantFromTable("SubSuperscriptGapMin")  }                          // 4 \xi_8 in TeX
-    var superscriptBottomMaxWithSubscript:CGFloat { constantFromTable("SuperscriptBottomMaxWithSubscript")  }             // 4/5 \sigma_5 in TeX
+    var superscriptShiftUp: CGFloat { constantFromTable("SuperscriptShiftUp") }
+    var superscriptShiftUpCramped: CGFloat { constantFromTable("SuperscriptShiftUpCramped") }
+    var subscriptShiftDown: CGFloat { constantFromTable("SubscriptShiftDown") }
+    var superscriptBaselineDropMax: CGFloat { constantFromTable("SuperscriptBaselineDropMax") }
+    var subscriptBaselineDropMin: CGFloat { constantFromTable("SubscriptBaselineDropMin") }
+    var superscriptBottomMin: CGFloat { constantFromTable("SuperscriptBottomMin") }
+    var subscriptTopMax: CGFloat { constantFromTable("SubscriptTopMax") }
+    var subSuperscriptGapMin: CGFloat { constantFromTable("SubSuperscriptGapMin") }
+    var superscriptBottomMaxWithSubscript: CGFloat { constantFromTable("SuperscriptBottomMaxWithSubscript") }
 
-    var spaceAfterScript:CGFloat { constantFromTable("SpaceAfterScript")  }
+    var spaceAfterScript: CGFloat { constantFromTable("SpaceAfterScript") }
 
     // MARK: - radicals
-    var radicalExtraAscender:CGFloat { constantFromTable("RadicalExtraAscender")  }                          // \xi_8 in Tex
-    var radicalRuleThickness:CGFloat { constantFromTable("RadicalRuleThickness")  }                          // \xi_8 in Tex
-    var radicalDisplayStyleVerticalGap:CGFloat { constantFromTable("RadicalDisplayStyleVerticalGap")  }                // \xi_8 + 1/4 \sigma_5 in Tex
-    var radicalVerticalGap:CGFloat { constantFromTable("RadicalVerticalGap")  }                            // 5/4 \xi_8 in Tex
-    var radicalKernBeforeDegree:CGFloat { constantFromTable("RadicalKernBeforeDegree")  }                       // 5 mu in Tex
-    var radicalKernAfterDegree:CGFloat { constantFromTable("RadicalKernAfterDegree")  }                        // -10 mu in Tex
-    var radicalDegreeBottomRaisePercent:CGFloat { percentFromTable("RadicalDegreeBottomRaisePercent")  }               // 60% in Tex
+    var radicalExtraAscender: CGFloat { constantFromTable("RadicalExtraAscender") }
+    var radicalRuleThickness: CGFloat { constantFromTable("RadicalRuleThickness") }
+    var radicalDisplayStyleVerticalGap: CGFloat { constantFromTable("RadicalDisplayStyleVerticalGap") }
+    var radicalVerticalGap: CGFloat { constantFromTable("RadicalVerticalGap") }
+    var radicalKernBeforeDegree: CGFloat { constantFromTable("RadicalKernBeforeDegree") }
+    var radicalKernAfterDegree: CGFloat { constantFromTable("RadicalKernAfterDegree") }
+    var radicalDegreeBottomRaisePercent: CGFloat { percentFromTable("RadicalDegreeBottomRaisePercent") }
 
     // MARK: - Limits
-    var upperLimitBaselineRiseMin:CGFloat { constantFromTable("UpperLimitBaselineRiseMin")  }                     // \xi_11 in TeX
-    var upperLimitGapMin:CGFloat { constantFromTable("UpperLimitGapMin")  }                              // \xi_9 in TeX
-    var lowerLimitGapMin:CGFloat { constantFromTable("LowerLimitGapMin")  }                              // \xi_10 in TeX
-    var lowerLimitBaselineDropMin:CGFloat { constantFromTable("LowerLimitBaselineDropMin")  }                     // \xi_12 in TeX
-    var limitExtraAscenderDescender:CGFloat { 0 }                   // \xi_13 in TeX, not present in OpenType so we always set it to 0.
+    var upperLimitBaselineRiseMin: CGFloat { constantFromTable("UpperLimitBaselineRiseMin") }
+    var upperLimitGapMin: CGFloat { constantFromTable("UpperLimitGapMin") }
+    var lowerLimitGapMin: CGFloat { constantFromTable("LowerLimitGapMin") }
+    var lowerLimitBaselineDropMin: CGFloat { constantFromTable("LowerLimitBaselineDropMin") }
+    var limitExtraAscenderDescender: CGFloat { 0 }
 
     // MARK: - Underline
-    var underbarVerticalGap:CGFloat { constantFromTable("UnderbarVerticalGap")  }                           // 3 \xi_8 in TeX
-    var underbarRuleThickness:CGFloat { constantFromTable("UnderbarRuleThickness")  }                         // \xi_8 in TeX
-    var underbarExtraDescender:CGFloat { constantFromTable("UnderbarExtraDescender")  }                        // \xi_8 in TeX
+    var underbarVerticalGap: CGFloat { constantFromTable("UnderbarVerticalGap") }
+    var underbarRuleThickness: CGFloat { constantFromTable("UnderbarRuleThickness") }
+    var underbarExtraDescender: CGFloat { constantFromTable("UnderbarExtraDescender") }
 
     // MARK: - Overline
-    var overbarVerticalGap:CGFloat { constantFromTable("OverbarVerticalGap")  }                            // 3 \xi_8 in TeX
-    var overbarRuleThickness:CGFloat { constantFromTable("OverbarRuleThickness")  }                          // \xi_8 in TeX
-    var overbarExtraAscender:CGFloat { constantFromTable("OverbarExtraAscender")  }                          // \xi_8 in TeX
+    var overbarVerticalGap: CGFloat { constantFromTable("OverbarVerticalGap") }
+    var overbarRuleThickness: CGFloat { constantFromTable("OverbarRuleThickness") }
+    var overbarExtraAscender: CGFloat { constantFromTable("OverbarExtraAscender") }
 
     // MARK: - Constants
 
-    var axisHeight:CGFloat { constantFromTable("AxisHeight")  }                                    // \sigma_22 in TeX
-    var scriptScaleDown:CGFloat { percentFromTable("ScriptPercentScaleDown")  }
-    var scriptScriptScaleDown:CGFloat { percentFromTable("ScriptScriptPercentScaleDown")  }
-    var mathLeading:CGFloat { constantFromTable("MathLeading")  }
-    var delimitedSubFormulaMinHeight:CGFloat { constantFromTable("DelimitedSubFormulaMinHeight")  }
+    var axisHeight: CGFloat { constantFromTable("AxisHeight") }
+    var scriptScaleDown: CGFloat { percentFromTable("ScriptPercentScaleDown") }
+    var scriptScriptScaleDown: CGFloat { percentFromTable("ScriptScriptPercentScaleDown") }
+    var mathLeading: CGFloat { constantFromTable("MathLeading") }
+    var delimitedSubFormulaMinHeight: CGFloat { constantFromTable("DelimitedSubFormulaMinHeight") }
 
     // MARK: - Accent
 
-    var accentBaseHeight:CGFloat { constantFromTable("AccentBaseHeight")  } // \fontdimen5 in TeX (x-height)
-    var flattenedAccentBaseHeight:CGFloat { constantFromTable("FlattenedAccentBaseHeight")  }
-    
+    var accentBaseHeight: CGFloat { constantFromTable("AccentBaseHeight") }
+    var flattenedAccentBaseHeight: CGFloat { constantFromTable("FlattenedAccentBaseHeight") }
+
     // MARK: - Variants
-    
-    let kVertVariants = "v_variants"
-    let kHorizVariants = "h_variants"
+
+    private let kVertVariants = "v_variants"
+    private let kHorizVariants = "h_variants"
 
     /** Returns an Array of all the vertical variants of the glyph if any. If
      there are no variants for the glyph, the array contains the given glyph. */
-    func getVerticalVariantsForGlyph( _ glyph:CGGlyph) -> [CGGlyph] {
-        let variants = _mathTable[kVertVariants] as! [String: Any]
+    func getVerticalVariantsForGlyph(_ glyph: CGGlyph) -> [CGGlyph] {
+        guard let variants = _mathTable[kVertVariants] as? [String: Any] else { return [] }
         return self.getVariantsForGlyph(glyph, inDictionary: variants)
     }
 
     /** Returns an Array of all the horizontal variants of the glyph if any. If
      there are no variants for the glyph, the array contains the given glyph. */
-    func getHorizontalVariantsForGlyph( _ glyph:CGGlyph) -> [CGGlyph] {
-        let variants = _mathTable[kHorizVariants] as! [String: Any]
-        return self.getVariantsForGlyph(glyph, inDictionary:variants)
+    func getHorizontalVariantsForGlyph(_ glyph: CGGlyph) -> [CGGlyph] {
+        guard let variants = _mathTable[kHorizVariants] as? [String: Any] else { return [] }
+        return self.getVariantsForGlyph(glyph, inDictionary: variants)
     }
 
-    func getVariantsForGlyph(_ glyph: CGGlyph, inDictionary variants:[String: Any]) -> [CGGlyph] {
-        let glyphName = self.font!.get(nameForGlyph: glyph)
-        let variantGlyphs = variants[glyphName] as? [String]
-        if variantGlyphs == nil || variantGlyphs!.isEmpty {
-            // There are no extra variants, so just add the current glyph to it.
-            let glyph = self.font!.get(glyphWithName: glyphName)
+    func getVariantsForGlyph(_ glyph: CGGlyph, inDictionary variants: [String: Any]) -> [CGGlyph] {
+        let font = mathFont.fontInstance(size: fontSize)
+        let glyphName = font.get(nameForGlyph: glyph)
+
+        guard let variantGlyphs = variants[glyphName] as? [String], !variantGlyphs.isEmpty else {
+            let glyph = font.get(glyphWithName: glyphName)
             return [glyph]
         }
         var glyphArray = [CGGlyph]()
-        for glyphVariantName in variantGlyphs! {
-            let variantGlyph = self.font!.get(glyphWithName: glyphVariantName)
+        for glyphVariantName in variantGlyphs {
+            let variantGlyph = font.get(glyphWithName: glyphVariantName)
             glyphArray.append(variantGlyph)
         }
         return glyphArray
@@ -213,125 +196,115 @@ class FontMathTable {
                                   If false, selects the next larger variant (incremental sizing).
      - Returns: A larger glyph variant, or the original glyph if no variants exist
      */
-    func getLargerGlyph(_ glyph:CGGlyph, forDisplayStyle: Bool = false) -> CGGlyph {
-        let variants = _mathTable[kVertVariants] as? [String: Any]
-        let glyphName = self.font?.get(nameForGlyph: glyph)
-        let variantGlyphs = variants?[glyphName!] as? [String]
-        if variantGlyphs == nil || variantGlyphs!.isEmpty {
-            // There are no extra variants, so just returnt the current glyph.
+    func getLargerGlyph(_ glyph: CGGlyph, forDisplayStyle: Bool = false) -> CGGlyph {
+        let font = mathFont.fontInstance(size: fontSize)
+        let glyphName = font.get(nameForGlyph: glyph)
+
+        guard let variants = _mathTable[kVertVariants] as? [String: Any],
+                let variantGlyphs = variants[glyphName] as? [String], !variantGlyphs.isEmpty else {
             return glyph
         }
 
         if forDisplayStyle {
-            // For display style, select a large variant suitable for mathematical display mode
-            // Display integrals should be significantly larger (~2.2em) for visual prominence
-            let count = variantGlyphs!.count
+            let count = variantGlyphs.count
 
-            // Strategy: Use the largest variant, but avoid extreme sizes for fonts with many variants
             let targetIndex: Int
             if count <= 2 {
-                // Small variant list: use the last one (e.g., integral.size1 at ~2.2em)
                 targetIndex = count - 1
             } else if count <= 4 {
-                // Medium variant list: use second-to-last to avoid extremes
                 targetIndex = count - 2
             } else {
-                // Large variant list (like texgyretermes with 6 variants):
-                // Use variant at ~60% position to get appropriate display size (~2.0em)
-                // For 7 variants (0-6), this gives index 4
                 targetIndex = min(count - 2, Int(Double(count) * 0.6))
             }
 
-            let glyphVariantName = variantGlyphs![targetIndex]
-            let variantGlyph = self.font?.get(glyphWithName: glyphVariantName)
-            return variantGlyph!
+            let glyphVariantName = variantGlyphs[targetIndex]
+            let variantGlyph = font.get(glyphWithName: glyphVariantName)
+            return variantGlyph
         } else {
-            // Text/inline style: use incremental sizing for moderate enlargement
-            // Find the first variant with a different name
-            for glyphVariantName in variantGlyphs! {
+            for glyphVariantName in variantGlyphs {
                 if glyphVariantName != glyphName {
-                    let variantGlyph = self.font?.get(glyphWithName: glyphVariantName)
-                    return variantGlyph!
+                    let variantGlyph = font.get(glyphWithName: glyphVariantName)
+                    return variantGlyph
                 }
             }
         }
 
-        // We did not find any variants of this glyph so return it.
-        return glyph;
+        return glyph
     }
 
     // MARK: - Italic Correction
-    
-    let kItalic = "italic"
+
+    private let kItalic = "italic"
 
     /** Returns the italic correction for the given glyph if any. If there
      isn't any this returns 0. */
     func getItalicCorrection(_ glyph: CGGlyph) -> CGFloat {
-        let italics = _mathTable[kItalic] as? [String: Any]
-        let glyphName = self.font?.get(nameForGlyph: glyph)
-        let val = italics?[glyphName!] as? Int
-        // if val is nil, this returns 0.
-        return self.fontUnitsToPt(val ?? 0)
+        let font = mathFont.fontInstance(size: fontSize)
+        let glyphName = font.get(nameForGlyph: glyph)
+
+        guard let italics = _mathTable[kItalic] as? [String: Any], let val = italics[glyphName] as? Int else {
+            return .zero
+        }
+        return fontUnitsToPt(val)
     }
 
     // MARK: - Accents
-    
-    let kAccents = "accents"
+
+    private let kAccents = "accents"
 
     /** Returns the adjustment to the top accent for the given glyph if any.
-     If there isn't any this returns -1. */
+     If there isn't any this returns the center of the advance width. */
     func getTopAccentAdjustment(_ glyph: CGGlyph) -> CGFloat {
-        var glyph = glyph
-        let accents = _mathTable[kAccents] as? [String: Any]
-        let glyphName = self.font?.get(nameForGlyph: glyph)
-        if let val = accents?[glyphName!] as? Int {
-            return self.fontUnitsToPt(val)
-        } else {
-            // If no top accent is defined then it is the center of the advance width.
+        let font = mathFont.fontInstance(size: fontSize)
+        let glyphName = font.get(nameForGlyph: glyph)
+
+        guard let accents = _mathTable[kAccents] as? [String: Any], let val = accents[glyphName] as? Int else {
+            var glyph = glyph
             var advances = CGSize.zero
-            CTFontGetAdvancesForGlyphs(self.font!.ctFont, .horizontal, &glyph, &advances, 1)
-            return advances.width/2
+            CTFontGetAdvancesForGlyphs(font.ctFont, .horizontal, &glyph, &advances, 1)
+            return advances.width / 2
         }
+        return fontUnitsToPt(val)
     }
 
     // MARK: - Glyph Construction
 
     /** Minimum overlap of connecting glyphs during glyph construction */
-    var minConnectorOverlap:CGFloat { constantFromTable("MinConnectorOverlap") }
-    
-    let kVertAssembly = "v_assembly"
-    let kAssemblyParts = "parts"
+    var minConnectorOverlap: CGFloat { constantFromTable("MinConnectorOverlap") }
+
+    private let kVertAssembly = "v_assembly"
+    private let kAssemblyParts = "parts"
 
     /** Returns an array of the glyph parts to be used for constructing vertical variants
      of this glyph. If there is no glyph assembly defined, returns an empty array. */
-    func getVerticalGlyphAssembly(forGlyph glyph:CGGlyph) -> [GlyphPart] {
-        let assemblyTable = _mathTable[kVertAssembly] as? [String: Any]
-        let glyphName = self.font?.get(nameForGlyph: glyph)
-        guard let assemblyInfo = assemblyTable?[glyphName!] as? [String: Any] else {
-            // No vertical assembly defined for glyph
+    func getVerticalGlyphAssembly(forGlyph glyph: CGGlyph) -> [GlyphPart] {
+        let font = mathFont.fontInstance(size: fontSize)
+        let glyphName = font.get(nameForGlyph: glyph)
+
+        guard let assemblyTable = _mathTable[kVertAssembly] as? [String: Any],
+              let assemblyInfo = assemblyTable[glyphName] as? [String: Any],
+              let parts = assemblyInfo[kAssemblyParts] as? [[String: Any]] else {
             return []
         }
-        guard let parts = assemblyInfo[kAssemblyParts] as? [[String: Any]] else {
-            // parts should always have been defined, but if it isn't return nil
-            return []
-        }
+
         var rv = [GlyphPart]()
         for partInfo in parts {
-            var part = GlyphPart()
-            let adv = partInfo["advance"] as! Int
-            part.fullAdvance = self.fontUnitsToPt(adv)
-            let end = partInfo["endConnector"] as! Int
-            part.endConnectorLength = self.fontUnitsToPt(end)
-            let start = partInfo["startConnector"] as! Int
-            part.startConnectorLength = self.fontUnitsToPt(start)
-            let ext = partInfo["extender"] as! Int
-            part.isExtender = ext != 0
-            let glyphName = partInfo["glyph"] as! String
-            part.glyph = self.font?.get(glyphWithName: glyphName)
+            guard let adv = partInfo["advance"] as? Int,
+                let end = partInfo["endConnector"] as? Int,
+                let start = partInfo["startConnector"] as? Int,
+                let ext = partInfo["extender"] as? Int,
+                let glyphName = partInfo["glyph"] as? String else { continue }
+            let fullAdvance = fontUnitsToPt(adv)
+            let endConnectorLength = fontUnitsToPt(end)
+            let startConnectorLength = fontUnitsToPt(start)
+            let isExtender = ext != 0
+            let glyph = font.get(glyphWithName: glyphName)
+            let part = GlyphPart(glyph: glyph, fullAdvance: fullAdvance,
+                                 startConnectorLength: startConnectorLength,
+                                 endConnectorLength: endConnectorLength,
+                                 isExtender: isExtender)
             rv.append(part)
         }
         return rv
     }
-
-    
 }

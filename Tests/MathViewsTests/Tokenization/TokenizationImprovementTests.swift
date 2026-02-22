@@ -8,7 +8,7 @@ struct TokenizationImprovementTests {
   let font: FontInstance
 
   init() {
-    font = FontInstance(fontWithName: "latinmodern-math", size: 20)
+    font = MathFont.latinModernFont.fontInstance(size: 20)
   }
 
   // MARK: - Real-World Scenario 1: Radical with Long Text

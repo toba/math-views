@@ -9,7 +9,7 @@ struct DisplayGeneratorTests {
   let generator: DisplayGenerator
 
   init() {
-    font = FontInstance(fontWithName: "latinmodern-math", size: 20)
+    font = MathFont.latinModernFont.fontInstance(size: 20)
     generator = DisplayGenerator(font: font, style: .display)
   }
 

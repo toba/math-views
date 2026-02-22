@@ -84,7 +84,7 @@ struct MathUILabelLineWrappingTests {
     // Issue: "=" sign may be clipped when line breaking with width constraints
     let label = MathUILabel()
     label.latex = "Simplify the numerical coefficients \\\\(\\\\frac{2^{2}}{4} = 1\\\\)."
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     print("\n=== testEqualsSignClipping_InlineFraction ===")
@@ -147,7 +147,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     label.latex =
       "\\[\\frac{3}{\\sqrt{9+c^{2}}}=\\frac{1}{2}\\Rightarrow \\sqrt{9+c^{2}}=6\\Rightarrow 9+c^{2}=36\\Rightarrow c^{2}=27\\Rightarrow c=3\\sqrt{3}\\]"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     let unconstrainedSize = label.intrinsicContentSize
@@ -216,7 +216,6 @@ struct MathUILabelLineWrappingTests {
     let label1 = MathUILabel()
     label1.latex =
       #"\(\frac{3}{\sqrt{9+c^{2}}}=\frac{1}{2}\Rightarrow \sqrt{9+c^{2}}=6\Rightarrow 9+c^{2}=36\Rightarrow c^{2}=27\Rightarrow c=3\sqrt{3}\)"#
-    label1.font = FontManager.fontManager.defaultFont
     label1.labelMode = .text
     label1.preferredMaxLayoutWidth = 235.0
 
@@ -243,7 +242,6 @@ struct MathUILabelLineWrappingTests {
     // Case 2: Text with inline fraction
     let label2 = MathUILabel()
     label2.latex = #"\(\text{Simplify the numerical coefficients }\frac{2^{2}}{4} = 1\text{.}\)"#
-    label2.font = FontManager.fontManager.defaultFont
     label2.labelMode = .text
     label2.preferredMaxLayoutWidth = 235.0
 
@@ -275,7 +273,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     label.latex =
       #"\(\text{Assume }f(x)=3x^{2}+5x-2\text{ so that we can differentiate the polynomial term by term.}\)"#
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
     label.preferredMaxLayoutWidth = 235.0
 
@@ -302,7 +300,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     label.latex =
       #"\(\text{Rewrite the logarithmic equation }\log_{3}(x)=4\text{ in exponential form.}\)"#
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
     label.preferredMaxLayoutWidth = 235.0
 
@@ -328,7 +326,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     label.latex =
       #"\(\text{Treat }v\text{ as a constant and find an antiderivative of }x^{2}+v\text{.}\)"#
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
     label.preferredMaxLayoutWidth = 235.0
 
@@ -352,7 +350,7 @@ struct MathUILabelLineWrappingTests {
   @Test func basicIntrinsicContentSize() {
     let label = MathUILabel()
     label.latex = "\\(x + y\\)"
-    label.font = FontManager.fontManager.defaultFont
+
 
     // Debug: check if parsing worked
     #expect(label.mathList != nil, "Math list should not be nil")
@@ -369,7 +367,7 @@ struct MathUILabelLineWrappingTests {
   @Test func textModeIntrinsicContentSize() {
     let label = MathUILabel()
     label.latex = "\\(\\text{Hello World}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     let size = label.intrinsicContentSize
@@ -381,7 +379,7 @@ struct MathUILabelLineWrappingTests {
   @Test func longTextIntrinsicContentSize() {
     let label = MathUILabel()
     label.latex = "\\(\\text{Rappelons la conversion : 1 km équivaut à 1000 m.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     let size = label.intrinsicContentSize
@@ -393,7 +391,7 @@ struct MathUILabelLineWrappingTests {
   @Test func sizeThatFitsWithoutConstraint() {
     let label = MathUILabel()
     label.latex = "\\(\\text{Hello World}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
 
     let size = label.sizeThatFits(CGSize.zero)
 
@@ -404,7 +402,7 @@ struct MathUILabelLineWrappingTests {
   @Test func sizeThatFitsWithWidthConstraint() {
     let label = MathUILabel()
     label.latex = "\\(\\text{Rappelons la conversion : 1 km équivaut à 1000 m.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Get unconstrained size first
@@ -436,7 +434,7 @@ struct MathUILabelLineWrappingTests {
   @Test func preferredMaxLayoutWidth() {
     let label = MathUILabel()
     label.latex = "\\(\\text{Rappelons la conversion : 1 km équivaut à 1000 m.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Get unconstrained size
@@ -461,7 +459,7 @@ struct MathUILabelLineWrappingTests {
   @Test func wordBoundaryBreaking() {
     let label = MathUILabel()
     label.latex = "\\(\\text{Word1 Word2 Word3 Word4 Word5}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
     label.preferredMaxLayoutWidth = 150
 
@@ -484,7 +482,7 @@ struct MathUILabelLineWrappingTests {
   @Test func emptyLatex() {
     let label = MathUILabel()
     label.latex = ""
-    label.font = FontManager.fontManager.defaultFont
+
 
     let size = label.intrinsicContentSize
 
@@ -496,7 +494,7 @@ struct MathUILabelLineWrappingTests {
   @Test func mathAndTextMixed() {
     let label = MathUILabel()
     label.latex = "\\(\\text{Result: } x^2 + y^2 = z^2\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     let size = label.intrinsicContentSize
@@ -508,7 +506,7 @@ struct MathUILabelLineWrappingTests {
   @Test func debugSizeThatFitsWithConstraint() {
     let label = MathUILabel()
     label.latex = "\\(\\text{Word1 Word2 Word3 Word4 Word5}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     let unconstr = label.sizeThatFits(CGSize.zero)
@@ -526,7 +524,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     // French text with accented characters: è, é, à
     label.latex = "\\(\\text{Rappelons la relation entre kilomètres et mètres.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Get unconstrained size
@@ -598,7 +596,7 @@ struct MathUILabelLineWrappingTests {
     // Specific test for the reported issue: "équivaut" should not break at "é"
     let label = MathUILabel()
     label.latex = "\\(\\text{Rappelons la conversion : 1 km équivaut à 1000 m.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Set the exact width constraint from the bug report
@@ -633,7 +631,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     label.latex =
       "\\(\\text{Calculer le discriminant }\\Delta=b^{2}-4ac\\text{ avec }a=1\\text{, }b=-1\\text{, }c=-5\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Set width constraint that should cause wrapping
@@ -665,7 +663,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     // French decimal number should NOT be broken
     label.latex = "\\(\\text{La valeur de pi est approximativement 3,14 dans ce calcul simple.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Constrain to force wrapping, but 3,14 should stay together
@@ -688,7 +686,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     // Number with comma separator should stay together
     label.latex = "\\(\\text{The population is approximately 1,000,000 people in this city.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     label.preferredMaxLayoutWidth = 200
@@ -709,7 +707,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     // Mixed numbers and text - numbers should be protected
     label.latex = "\\(\\text{Results: 3.14, 2.71, and 1.41 are important constants.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     label.preferredMaxLayoutWidth = 180
@@ -732,7 +730,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     // Chinese text: "Mathematical equations are an important tool for describing natural phenomena"
     label.latex = "\\(\\text{数学方程式は自然現象を記述するための重要なツールです。}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Get unconstrained size
@@ -773,7 +771,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     // Japanese text (Hiragana + Kanji): "This is a mathematics explanation"
     label.latex = "\\(\\text{これは数学の説明です。計算式を使います。}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     let unconstrainedSize = label.intrinsicContentSize
@@ -809,7 +807,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     // Korean text: "Mathematics is a very important subject"
     label.latex = "\\(\\text{수학은 매우 중요한 과목입니다. 방정식을 배웁니다.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     label.preferredMaxLayoutWidth = 200
@@ -842,7 +840,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     // Mixed English and Chinese
     label.latex = "\\(\\text{The equation is 方程式: } x^2 + y^2 = r^2 \\text{ です。}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     label.preferredMaxLayoutWidth = 250
@@ -874,7 +872,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     // Emoji and complex grapheme clusters should not be broken
     label.latex = "\\(\\text{Math is fun! 🎉📐📊 The formula is } E = mc^2 \\text{ 🚀✨}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     label.preferredMaxLayoutWidth = 200
@@ -903,7 +901,7 @@ struct MathUILabelLineWrappingTests {
     // Standard English multi-sentence paragraph
     label.latex =
       "\\(\\text{Mathematics is the study of numbers, shapes, and patterns. It is used in science, engineering, and everyday life. Equations help us solve problems.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     let unconstrainedSize = label.intrinsicContentSize
@@ -940,7 +938,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     // Spanish with various accents
     label.latex = "\\(\\text{La ecuación es muy útil para cálculos científicos y matemáticos.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     let unconstrainedSize = label.intrinsicContentSize
@@ -972,7 +970,7 @@ struct MathUILabelLineWrappingTests {
     // German with umlauts
     label.latex =
       "\\(\\text{Mathematische Gleichungen können für Berechnungen verwendet werden.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     let unconstrainedSize = label.intrinsicContentSize
@@ -1006,7 +1004,7 @@ struct MathUILabelLineWrappingTests {
     // The sqrt part is displayed on the second line and overlaps the first line
     let label = MathUILabel()
     label.latex = "y=x^{2}+3x+4x+9x+8x+8+\\sqrt{\\dfrac{3x^{2}+5x}{\\cos x}}"
-    label.font = FontManager.fontManager.defaultFont
+
 
     // Get unconstrained size first
     let unconstrainedSize = label.intrinsicContentSize
@@ -1092,7 +1090,7 @@ struct MathUILabelLineWrappingTests {
     // Simplified version: just a radical with a fraction inside
     let label = MathUILabel()
     label.latex = "x+y+z+\\sqrt{\\dfrac{a}{b}}"
-    label.font = FontManager.fontManager.defaultFont
+
 
     let unconstrainedSize = label.intrinsicContentSize
 
@@ -1119,7 +1117,7 @@ struct MathUILabelLineWrappingTests {
     // Test case with tall fractions and radicals breaking to second line
     let label = MathUILabel()
     label.latex = "a+b+c+\\dfrac{x^2+y^2}{z^2}+\\sqrt{\\dfrac{p}{q}}"
-    label.font = FontManager.fontManager.defaultFont
+
 
     let unconstrainedSize = label.intrinsicContentSize
 
@@ -1186,7 +1184,7 @@ struct MathUILabelLineWrappingTests {
     // Test expression that should wrap to multiple lines with different heights
     let label = MathUILabel()
     label.latex = "x+y+z+a+b+c+\\sqrt{d}+e+f+g+h+\\dfrac{i}{j}+k"
-    label.font = FontManager.fontManager.defaultFont
+
 
     let unconstrainedSize = label.intrinsicContentSize
 
@@ -1217,7 +1215,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     label.latex =
       #"\text{Utiliser le fait que, dans un triangle rectangle, la médiane issue de l'angle droit vers l'hypoténuse vaut la moitié de l'hypoténuse : }m_{B} = \frac{AC}{2}\text{.}"#
-    label.font = FontManager.fontManager.defaultFont
+
     label.fontSize = 14
 
     // Use a width that causes "moitié" to appear near the end of a line
@@ -1249,7 +1247,7 @@ struct MathUILabelLineWrappingTests {
 
     // Craft a string that will put "été" at the end of a line
     label.latex = #"\text{Il a été}"#
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
     label.fontSize = 14
 
@@ -1311,7 +1309,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     label.latex =
       "\\(\\text{Apply the Fundamental Theorem of Calculus and evaluate the antiderivative from }0\\text{ to }2\\text{.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
 
     // Use a width that would cause line wrapping
     label.preferredMaxLayoutWidth = 235.0
@@ -1423,7 +1421,7 @@ struct MathUILabelLineWrappingTests {
     let label = MathUILabel()
     label.latex =
       "\\(\\text{We don't break contractions or well-known hyphenated words incorrectly.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
 
     // Use a width that would cause line wrapping
     label.preferredMaxLayoutWidth = 200.0
@@ -1501,7 +1499,7 @@ struct MathUILabelLineWrappingTests {
     // Test Unicode word boundary detection with international text
     let label = MathUILabel()
     label.latex = "\\(\\text{Testing café résumé naïve Zürich—em-dash…ellipsis correctly.}\\)"
-    label.font = FontManager.fontManager.defaultFont
+
 
     // Use a width that would cause line wrapping
     label.preferredMaxLayoutWidth = 200.0
@@ -1640,7 +1638,7 @@ struct MathUILabelLineWrappingTests {
 
     // Test that commas, periods, semicolons, etc. stay at end of line, not beginning
     let label = MathUILabel()
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Test with comma
@@ -1709,7 +1707,7 @@ struct MathUILabelLineWrappingTests {
 
     // Test that opening brackets/quotes don't end lines, closing brackets/quotes don't start lines
     let label = MathUILabel()
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Test with parentheses
@@ -1765,7 +1763,7 @@ struct MathUILabelLineWrappingTests {
 
     // Test that question marks and exclamation marks don't start lines
     let label = MathUILabel()
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     label.latex = "\\text{Question? Answer! Another question? Another answer!}"
@@ -1797,7 +1795,7 @@ struct MathUILabelLineWrappingTests {
 
     // Test Japanese kinsoku rules
     let label = MathUILabel()
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Test with Japanese sentence-ending punctuation
@@ -1867,7 +1865,7 @@ struct MathUILabelLineWrappingTests {
 
     // Test that small kana don't start lines
     let label = MathUILabel()
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Small tsu is commonly used for gemination
@@ -1931,7 +1929,7 @@ struct MathUILabelLineWrappingTests {
 
     // Test Chinese punctuation rules (similar to Japanese kinsoku)
     let label = MathUILabel()
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Chinese sentence with full-width punctuation
@@ -1999,7 +1997,7 @@ struct MathUILabelLineWrappingTests {
 
     // Test mixed Latin and CJK punctuation
     let label = MathUILabel()
-    label.font = FontManager.fontManager.defaultFont
+
     label.labelMode = .text
 
     // Mixed sentence with both Latin and CJK punctuation

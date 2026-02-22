@@ -9,7 +9,7 @@ struct ElementWidthCalculatorTests {
   let calculator: ElementWidthCalculator
 
   init() {
-    font = FontInstance(fontWithName: "latinmodern-math", size: 20)
+    font = MathFont.latinModernFont.fontInstance(size: 20)
     calculator = ElementWidthCalculator(font: font, style: .display)
   }
 

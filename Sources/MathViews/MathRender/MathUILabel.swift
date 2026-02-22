@@ -41,7 +41,7 @@ public enum MathTextAlignment : UInt {
  is left. This can be changed by setting `textAlignment`. The math is default displayed in
  *Display* mode. This can be changed using `labelMode`.
  
- When created it uses `[FontManager defaultFont]` as its font. This can be changed using
+ When created it uses Latin Modern Math at 20pt as its default font. This can be changed using
  the `font` parameter.
  */
 @IBDesignable
@@ -103,29 +103,39 @@ public class MathUILabel : MathView {
      Default false. */
     public var debugLogging = false
     
-    /** The FontInstance to use for rendering. */
-    public var font:FontInstance? {
+    /** The math font to use for rendering. */
+    public var font: MathFont {
         set {
-            guard newValue != nil else { return }
             _font = newValue
+            _fontInstance = nil
             self.invalidateIntrinsicContentSize()
             self.setNeedsLayout()
         }
         get { _font }
     }
-    private var _font:FontInstance?
-    
+    private var _font: MathFont = .latinModernFont
+
+    /** The resolved FontInstance used internally for rendering. Lazily created from `font` and `fontSize`. */
+    var fontInstance: FontInstance {
+        if let inst = _fontInstance { return inst }
+        let inst = _font.fontInstance(size: _fontSize)
+        _fontInstance = inst
+        return inst
+    }
+    private var _fontInstance: FontInstance?
+
     /** Convenience method to just set the size of the font without changing the fontface. */
     @IBInspectable
-    public var fontSize:CGFloat {
+    public var fontSize: CGFloat {
         set {
             _fontSize = newValue
-            let font = font?.copy(withSize: newValue)
-            self.font = font  // also forces an update
+            _fontInstance = nil
+            self.invalidateIntrinsicContentSize()
+            self.setNeedsLayout()
         }
         get { _fontSize }
     }
-    private var _fontSize:CGFloat=0
+    private var _fontSize: CGFloat = 0
     
     /** This sets the text color of the rendered math formula. The default color is black. */
     @IBInspectable
@@ -223,8 +233,7 @@ public class MathUILabel : MathView {
         _fontSize = 20
         _contentInsets = MathEdgeInsetsZero
         _labelMode = .display
-        let font = FontManager.fontManager.defaultFont
-        self.font = font
+        _font = .latinModernFont
         _textAlignment = .left
         _displayList = nil
         displayErrorInline = true
@@ -246,7 +255,6 @@ public class MathUILabel : MathView {
     override public func draw(_ dirtyRect: MathRect) {
         super.draw(dirtyRect)
         if self.mathList == nil { return }
-        if self.font == nil { return }
 
         // Ensure display list is created before drawing
         if _displayList == nil {
@@ -280,26 +288,12 @@ public class MathUILabel : MathView {
     }
     
     func _layoutSubviews() {
-        guard _mathList != nil && self.font != nil else {
+        guard _mathList != nil else {
             _displayList = nil
             errorLabel?.frame = self.bounds
             self.setNeedsDisplay()
             return
         }
-        // Ensure we have a valid font before attempting to typeset
-        if self.font == nil {
-            // No valid font - try to get default font
-            if let defaultFont = FontManager.fontManager.defaultFont {
-                self._font = defaultFont
-            } else {
-                // Cannot typeset without a font, clear display list
-                _displayList = nil
-                errorLabel?.frame = self.bounds
-                self.setNeedsDisplay()
-                return
-            }
-        }
-
         // Use the effective width for layout
         let effectiveWidth = _preferredMaxLayoutWidth > 0 ? _preferredMaxLayoutWidth : bounds.size.width
         var availableWidth = effectiveWidth - contentInsets.left - contentInsets.right
@@ -307,7 +301,7 @@ public class MathUILabel : MathView {
         // Negative maxWidth passed to Typesetter can cause "Negative value is not representable" crashes
         availableWidth = max(0, availableWidth)
 
-        _displayList = Typesetter.createLineForMathList(_mathList, font: self.font, style: currentStyle, maxWidth: availableWidth)
+        _displayList = Typesetter.createLineForMathList(_mathList, font: self.fontInstance, style: currentStyle, maxWidth: availableWidth)
 
         guard let displayList = _displayList else {
             // Empty or invalid input - nothing to display
@@ -347,17 +341,6 @@ public class MathUILabel : MathView {
             return CGSize(width: -1, height: -1)
         }
 
-        // Ensure we have a valid font before attempting to typeset
-        if self.font == nil {
-            // No valid font - try to get default font
-            if let defaultFont = FontManager.fontManager.defaultFont {
-                self._font = defaultFont
-            } else {
-                // Cannot typeset without a font
-                return CGSize(width: -1, height: -1)
-            }
-        }
-
         // Determine the maximum width to use
         var maxWidth: CGFloat = 0
         if _preferredMaxLayoutWidth > 0 {
@@ -372,7 +355,7 @@ public class MathUILabel : MathView {
         }
 
         var displayList:MathListDisplay? = nil
-        displayList = Typesetter.createLineForMathList(_mathList, font: self.font, style: currentStyle, maxWidth: maxWidth)
+        displayList = Typesetter.createLineForMathList(_mathList, font: self.fontInstance, style: currentStyle, maxWidth: maxWidth)
 
         guard displayList != nil else {
             // Failed to create display list

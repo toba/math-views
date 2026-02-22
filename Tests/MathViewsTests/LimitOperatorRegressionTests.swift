@@ -14,7 +14,7 @@ struct LimitOperatorRegressionTests {
   let font: FontInstance
 
   init() {
-    font = FontManager.fontManager.defaultFont!
+    font = MathFont.latinModernFont.fontInstance(size: 20)
   }
 
   // MARK: - Limit Operator Tests
@@ -58,7 +58,7 @@ struct LimitOperatorRegressionTests {
     // Regression test: Subscript should use script-sized font (~70% of base)
     // Bug: Subscript was rendering at full size (not scaled to script style)
     let baseFontSize: CGFloat = 20.0
-    let testFont = try #require(FontManager.fontManager.termesFont(withSize: baseFontSize))
+    let testFont = MathFont.termesFont.fontInstance(size: baseFontSize)
 
     let latex = "\\lim_{x\\to\\infty}f(x)"
     let mathList = MathListBuilder.build(fromString: latex)
@@ -109,7 +109,7 @@ struct LimitOperatorRegressionTests {
     // Regression test: Vertical spacing between lim and subscript should match OpenType MATH metrics
     // Bug: Originally had 50% reduction in text mode, making spacing too tight
     let baseFontSize: CGFloat = 20.0
-    let testFont = try #require(FontManager.fontManager.termesFont(withSize: baseFontSize))
+    let testFont = MathFont.termesFont.fontInstance(size: baseFontSize)
 
     let latex = "\\lim_{x\\to\\infty}f(x)"
     let mathList = MathListBuilder.build(fromString: latex)
@@ -317,7 +317,7 @@ struct LimitOperatorRegressionTests {
     // Regression test: Integrals in text mode should be taller than surrounding text
     // Bug: Integrals in inline mode were not higher than f(x)
     let baseFontSize: CGFloat = 20.0
-    let testFont = try #require(FontManager.fontManager.termesFont(withSize: baseFontSize))
+    let testFont = MathFont.termesFont.fontInstance(size: baseFontSize)
 
     let latex = "\\int f(x) dx"
     let mathList = MathListBuilder.build(fromString: latex)

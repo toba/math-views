@@ -4,8 +4,8 @@ import Testing
 
 @testable import MathViews
 
-struct FontMathTableV2Tests {
-  @Test func fontMathTableV2Script() {
+struct FontMathTableTests {
+  @Test func fontMathTableScript() {
     let size = CGFloat(Int.random(in: 20...40))
     for font in MathFont.allCases {
       let mTable = font.fontInstance(size: size).mathTable

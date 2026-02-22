@@ -28,8 +28,8 @@ struct TypesetterTests {
 
   let font: FontInstance
 
-  init() throws {
-    self.font = try #require(FontManager.fontManager.defaultFont)
+  init() {
+    self.font = MathFont.latinModernFont.fontInstance(size: 20)
   }
 
   @Test func simpleVariable() throws {
@@ -2806,7 +2806,7 @@ struct TypesetterTests {
 
     // Create display with width constraint matching MathView preview (235)
     // Use .text mode and font size 17 to match MathView settings
-    let testFont = FontManager.fontManager.font(withName: "latinmodern-math", size: 17)
+    let testFont = MathFont.latinModernFont.fontInstance(size: 17)
     let maxWidth: CGFloat = 235  // Same width as MathView preview
     let display = Typesetter.createLineForMathList(
       mathList, font: testFont, style: .text, maxWidth: maxWidth)
@@ -3593,7 +3593,6 @@ struct TypesetterTests {
     // The issue occurred when contentInsets or calculations resulted in negative CGSize dimensions
 
     let label = MathUILabel()
-    label.font = self.font
 
     // Test 1: Complex multiline expression that could cause negative values
     let latex1 =

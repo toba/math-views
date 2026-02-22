@@ -10,7 +10,7 @@ struct WidehatGlyphTest {
   let font: FontInstance
 
   init() {
-    font = FontManager().termesFont(withSize: 20)!
+    font = MathFont.termesFont.fontInstance(size: 20)
   }
 
   @Test func widehatGlyphAvailability() {

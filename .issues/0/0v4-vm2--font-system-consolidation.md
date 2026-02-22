@@ -1,11 +1,11 @@
 ---
 # 0v4-vm2
 title: Font System Consolidation
-status: ready
+status: completed
 type: epic
 priority: normal
 created_at: 2026-02-22T17:08:00Z
-updated_at: 2026-02-22T19:19:32Z
+updated_at: 2026-02-22T23:07:28Z
 parent: 1ve-o8n
 blocking:
     - ziw-odj
@@ -22,12 +22,12 @@ Eliminate the dual font system (legacy `FontInstance`/`FontManager` vs modern `F
 
 ## Tasks
 
-- [ ] **Audit the 12 bundled fonts** — evaluate which provide distinct value (serif vs sans, weight coverage, glyph completeness, MATH table quality). Consider dropping fonts that overlap significantly to reduce bundle size (~180KB–800KB per .otf + companion .plist)
-- [ ] Flatten `FontInstance` + `FontInstanceV2` into a single type (struct or final class) created via `MathFont.instance(size:)`
-- [ ] Merge `FontMathTable` + `FontMathTableV2` into one implementation
-- [ ] Remove `FontManager` singleton and its `RWLock`/`@RWLocked` property wrapper
-- [ ] Remove `MathImageRenderer` (legacy image renderer) — keep only `MathImage`
-- [ ] Update all call sites: `Typesetter`, label/view code, tests
+- [x] **Audit the 12 bundled fonts** — evaluate which provide distinct value (serif vs sans, weight coverage, glyph completeness, MATH table quality). Consider dropping fonts that overlap significantly to reduce bundle size (~180KB–800KB per .otf + companion .plist)
+- [x] Flatten `FontInstance` + `FontInstanceV2` into a single type (struct or final class) created via `MathFont.instance(size:)`
+- [x] Merge `FontMathTable` + `FontMathTableV2` into one implementation
+- [x] Remove `FontManager` singleton and its `RWLock`/`@RWLocked` property wrapper
+- [x] Remove `MathImageRenderer` (legacy image renderer) — keep only `MathImage`
+- [x] Update all call sites: `Typesetter`, label/view code, tests
 
 ## Files to Remove
 
@@ -64,3 +64,15 @@ When evaluating the 12 bundled fonts, prioritize:
 ### Performance: Public Generic Functions
 
 After consolidation, if `MathFont.instance(size:)` or similar hot public API methods become generic, mark them `@inlinable` so client code gets specialized copies rather than paying protocol witness table dispatch (~4x overhead per call per WWDC25-308).
+
+
+## Summary of Changes
+
+Consolidated the dual font system into a single hierarchy:
+- Removed 6 low-value fonts (KpMath-Light, KpMath-Sans, Asana-Math, FiraMath, Euler-Math, LeteSansMath), saving ~3.2MB
+- Flattened FontInstance/FontInstanceV2 into a single final class
+- Flattened FontMathTable/FontMathTableV2 into a single class with safe guards
+- Removed FontManager singleton, RWLock, and MathImageRenderer
+- Updated MathUILabel public API: font is now MathFont enum (non-optional, default .latinModernFont)
+- Migrated ~60 FontManager references across 20 test files
+- All 549 tests pass

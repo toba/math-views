@@ -10,49 +10,31 @@ public enum MathFont: String, CaseIterable, Identifiable {
     public var id: Self { self }  // Makes things simpler for SwiftUI
 
     case latinModernFont = "latinmodern-math"
-    case kpMathLightFont = "KpMath-Light"
-    case kpMathSansFont  = "KpMath-Sans"
     case xitsFont        = "xits-math"
     case termesFont      = "texgyretermes-math"
-    case asanaFont       = "Asana-Math"
-    case eulerFont       = "Euler-Math"
-    case firaFont        = "FiraMath-Regular"
     case notoSansFont    = "NotoSansMath-Regular"
     case libertinusFont  = "LibertinusMath-Regular"
     case garamondFont    = "Garamond-Math"
-    case leteSansFont    = "LeteSansMath"
     
     var fontFamilyName: String {
         switch self {
             case .latinModernFont:  "Latin Modern Math"
-            case .kpMathLightFont:  "KpMath"
-            case .kpMathSansFont:   "KpMath"
             case .xitsFont:         "XITS Math"
             case .termesFont:       "TeX Gyre Termes Math"
-            case .asanaFont:        "Asana Math"
-            case .eulerFont:        "Euler Math"
-            case .firaFont:         "Fira Math"
             case .notoSansFont:     "Noto Sans Math"
             case .libertinusFont:   "Libertinus Math"
-            case .garamondFont:     "Garamond-Math"  // PostScript name is "Garamond-Math", not "Garamond Math"
-            case .leteSansFont:     "Lete Sans Math"
+            case .garamondFont:     "Garamond-Math"
         }
     }
 
     var postScriptName: String {
         switch self {
             case .latinModernFont:  "LatinModernMath-Regular"
-            case .kpMathLightFont:  "KpMath-Light"
-            case .kpMathSansFont:   "KpMath-Sans"
             case .xitsFont:         "XITSMath"
             case .termesFont:       "TeXGyreTermesMath-Regular"
-            case .asanaFont:        "Asana-Math"
-            case .eulerFont:        "Euler-Math"
-            case .firaFont:         "FiraMath-Regular"
             case .notoSansFont:     "NotoSansMath-Regular"
             case .libertinusFont:   "LibertinusMath-Regular"
             case .garamondFont:     "Garamond-Math"
-            case .leteSansFont:     "LeteSansMath"
         }
     }
 
@@ -68,17 +50,9 @@ public enum MathFont: String, CaseIterable, Identifiable {
         BundleManager.manager.obtainRawMathTable(font: self)
     }
     
-    //Note: Below code are no longer supported, unable to tell if UIFont/NSFont is threadsafe, not used in MathViews.
-    // #if os(iOS) || os(visionOS)
-    // public func uiFont(withSize size: CGFloat) -> UIFont? {
-    //     UIFont(name: fontName, size: size)
-    // }
-    // #endif
-    // #if os(macOS)
-    // public func nsFont(withSize size: CGFloat) -> NSFont? {
-    //     NSFont(name: fontName, size: size)
-    // }
-    // #endif
+    public func fontInstance(size: CGFloat) -> FontInstance {
+        FontInstance(font: self, size: size)
+    }
 }
 internal extension CTFont {
     /** The size of this font in points. */

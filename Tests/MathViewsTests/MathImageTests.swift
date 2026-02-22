@@ -27,24 +27,12 @@ struct MathImageTests {
     var mathfont: MathFont { MathFont.allCases.randomElement()! }
     var fontsize: CGFloat { CGFloat.random(in: 20...40) }
     for caseNumber in 0..<20 {
-      let result: MathImageResult
-      switch caseNumber % 2 {
-      case 0:
-        result = MathImageResult.useMathImage(latex: latex, font: mathfont, fontSize: fontsize)
-        #expect(result.error == nil)
-        #expect(result.image != nil)
-        #expect(result.layoutInfo != nil)
-        if result.error == nil, let image = result.image, let imageData = image.pngData() {
-          safeImage(fileName: "\(caseNumber)", pngData: imageData)
-        }
-      default:
-        result = MathImageResult.useMathImageRenderer(
-          latex: latex, font: mathfont, fontSize: fontsize)
-        #expect(result.error == nil)
-        #expect(result.image != nil)
-        if result.error == nil, let image = result.image, let imageData = image.pngData() {
-          safeImage(fileName: "\(caseNumber)", pngData: imageData)
-        }
+      let result = MathImageResult.useMathImage(latex: latex, font: mathfont, fontSize: fontsize)
+      #expect(result.error == nil)
+      #expect(result.image != nil)
+      #expect(result.layoutInfo != nil)
+      if result.error == nil, let image = result.image, let imageData = image.pngData() {
+        safeImage(fileName: "\(caseNumber)", pngData: imageData)
       }
     }
   }
@@ -56,25 +44,17 @@ struct MathImageTests {
     var mathfont: MathFont { MathFont.allCases.randomElement()! }
     var size: CGFloat { CGFloat.random(in: 20...40) }
     let totalCases = 20
-    for caseNumber in 0..<totalCases {
+    for _ in 0..<totalCases {
       group.enter()
       let l = latex
       let m = mathfont
       let s = size
       queue.async {
         defer { group.leave() }
-        let result: MathImageResult
-        switch caseNumber % 2 {
-        case 0:
-          result = MathImageResult.useMathImage(latex: l, font: m, fontSize: s)
-          #expect(result.error == nil)
-          #expect(result.image != nil)
-          #expect(result.layoutInfo != nil)
-        default:
-          result = MathImageResult.useMathImageRenderer(latex: l, font: m, fontSize: s)
-          #expect(result.error == nil)
-          #expect(result.image != nil)
-        }
+        let result = MathImageResult.useMathImage(latex: l, font: m, fontSize: s)
+        #expect(result.error == nil)
+        #expect(result.image != nil)
+        #expect(result.layoutInfo != nil)
       }
     }
     group.wait()
@@ -86,18 +66,6 @@ struct MathImageResult {
   let layoutInfo: MathImage.LayoutInfo?
 }
 extension MathImageResult {
-  static func useMathImageRenderer(
-    latex: String, font: MathFont, fontSize: CGFloat, textColor: MathColor = MathColor.black
-  ) -> MathImageResult {
-    let alignment = MathTextAlignment.left
-    let formatter = MathImageRenderer(
-      latex: latex, fontSize: fontSize - 1.0,
-      textColor: textColor,
-      labelMode: .text, textAlignment: alignment)
-    formatter.font = font.fontInstance(size: fontSize)
-    let (error, image) = formatter.asImage()
-    return MathImageResult(error: error, image: image, layoutInfo: nil)
-  }
   static func useMathImage(
     latex: String, font: MathFont, fontSize: CGFloat, textColor: MathColor = MathColor.black
   ) -> MathImageResult {

@@ -4,14 +4,13 @@ import Testing
 
 @testable import MathViews
 
-struct FontInstanceV2Tests {
-  @Test func fontInstanceV2Script() {
+struct FontInstanceTests {
+  @Test func fontInstanceScript() {
     let size = CGFloat(Int.random(in: 20...40))
     for font in MathFont.allCases {
       let fontInst = font.fontInstance(size: size)
-      let mTable = fontInst.mathTable?._mathTable
       #expect(fontInst != nil)
-      #expect(mTable != nil)
+      #expect(fontInst.mathTable != nil)
     }
   }
 
@@ -25,9 +24,9 @@ struct FontInstanceV2Tests {
       group.enter()
       queue.async {
         defer { group.leave() }
-        let fontV2 = mathFont.fontInstance(size: size)
-        #expect(fontV2 != nil)
-        let (cgfont, ctfont) = (fontV2.defaultCGFont, fontV2.ctFont)
+        let fontInst = mathFont.fontInstance(size: size)
+        #expect(fontInst != nil)
+        let (cgfont, ctfont) = (fontInst.defaultCGFont, fontInst.ctFont)
         #expect(cgfont != nil)
         #expect(ctfont != nil)
       }
@@ -47,7 +46,7 @@ struct FontInstanceV2Tests {
       group.enter()
       queue.async {
         defer { group.leave() }
-        let mathTable = fontInst.mathTable as? FontMathTableV2
+        let mathTable = fontInst.mathTable
         #expect(mathTable != nil)
       }
     }

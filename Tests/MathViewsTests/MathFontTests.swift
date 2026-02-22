@@ -93,8 +93,7 @@ struct MathFontTests {
       let systemCTFont = CTFontCreateWithName(systemFont.fontName as CFString, 20, nil)
     #endif
 
-    let mathFont = try #require(
-      FontManager().font(withName: MathFont.latinModernFont.rawValue, size: 20))
+    let mathFont = MathFont.latinModernFont.fontInstance(size: 20)
     mathFont.fallbackFont = systemCTFont
 
     let mathList = try MathListBuilder.buildChecked(fromString: "\\text{中文测试}")

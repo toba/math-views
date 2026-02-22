@@ -11,8 +11,10 @@ protocol DownShift {
 // MARK: - Display
 
 /// The base class for rendering a math equation.
-public class Display:NSObject {
-    
+public class Display {
+
+    init() { }
+
     /// Draws itself in the given graphics context.
     public func draw(_ context:CGContext) {
         if self.localBackgroundColor != nil {
@@ -699,7 +701,7 @@ class LineDisplay : Display {
     init(withInner inner:MathListDisplay?, position:CGPoint, range:NSRange) {
         super.init()
         self.inner = inner;
-        
+
         self.position = position;
         self.range = range;
     }

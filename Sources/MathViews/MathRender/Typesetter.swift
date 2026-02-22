@@ -171,7 +171,7 @@ func getDefaultStyle(_ ch:Character) -> UTF32Char {
         // . is treated as a number in our code, but it doesn't change fonts.
         return ch.utf32Char
     } else {
-        NSException(name: NSExceptionName("IllegalCharacter"), reason: "Unknown character \(ch) for default style.").raise()
+        preconditionFailure("Unknown character \(ch) for default style.")
     }
     return ch.utf32Char
 }

@@ -59,9 +59,7 @@ class FontMathTable {
         _fontSize = font!.fontSize;
         _mathTable = mathTable
         let version = _mathTable["version"] as! String
-        if version != "1.3" {
-            NSException(name: NSExceptionName.internalInconsistencyException, reason: "Invalid version of math table plist: \(version)").raise()
-        }
+        precondition(version == "1.3", "Invalid version of math table plist: \(version)")
     }
     
     func constantFromTable(_ constName:String) -> CGFloat {

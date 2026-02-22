@@ -157,7 +157,7 @@ public class MathAtom: NSObject {
         didSet {
             if subScript != nil && !self.isScriptAllowed() {
                 subScript = nil
-                NSException(name: NSExceptionName(rawValue: "Error"), reason: "Subscripts not allowed for atom of type \(self.type)").raise()
+                preconditionFailure("Subscripts not allowed for atom of type \(self.type)")
             }
         }
     }
@@ -166,7 +166,7 @@ public class MathAtom: NSObject {
         didSet {
             if superScript != nil && !self.isScriptAllowed() {
                 superScript = nil
-                NSException(name: NSExceptionName(rawValue: "Error"), reason: "Superscripts not allowed for atom of type \(self.type)").raise()
+                preconditionFailure("Superscripts not allowed for atom of type \(self.type)")
             }
         }
     }
@@ -455,7 +455,7 @@ public class Inner: MathAtom {
         didSet {
             if let left = leftBoundary, left.type != .boundary {
                 leftBoundary = nil
-                NSException(name: NSExceptionName(rawValue: "Error"), reason: "Left boundary must be of type .boundary").raise()
+                preconditionFailure("Left boundary must be of type .boundary")
             }
         }
     }
@@ -464,7 +464,7 @@ public class Inner: MathAtom {
         didSet {
             if let right = rightBoundary, right.type != .boundary {
                 rightBoundary = nil
-                NSException(name: NSExceptionName(rawValue: "Error"), reason: "Right boundary must be of type .boundary").raise()
+                preconditionFailure("Right boundary must be of type .boundary")
             }
         }
     }
@@ -974,27 +974,16 @@ public class MathList : NSObject {
     
     public override init() { super.init() }
     
-    func NSParamException(_ param:Any?) {
-        if param == nil {
-            NSException(name: NSExceptionName(rawValue: "Error"), reason: "Parameter cannot be nil").raise()
-        }
-    }
-    
-    func NSIndexException(_ array:[Any], index: Int) {
-        guard !array.indices.contains(index) else { return }
-        NSException(name: NSExceptionName(rawValue: "Error"), reason: "Index \(index) out of bounds").raise()
+    func checkIndex(_ array:[Any], index: Int) {
+        precondition(array.indices.contains(index), "Index \(index) out of bounds")
     }
     
     /// Add an atom to the end of the list.
     /// - parameter atom: The atom to be inserted. This cannot be `nil` and cannot have the type `MathAtomType.boundary`.
-    /// - throws NSException if the atom is of type `MathAtomType.boundary`
     public func add(_ atom: MathAtom?) {
         guard let atom = atom else { return }
-        if self.isAtomAllowed(atom) {
-            self.atoms.append(atom)
-        } else {
-            NSException(name: NSExceptionName(rawValue: "Error"), reason: "Cannot add atom of type \(atom.type.rawValue) into mathlist").raise()
-        }
+        precondition(self.isAtomAllowed(atom), "Cannot add atom of type \(atom.type.rawValue) into mathlist")
+        self.atoms.append(atom)
     }
     
     /// Inserts an atom at the given index. If index is already occupied, the objects at index and beyond are
@@ -1003,18 +992,11 @@ public class MathList : NSObject {
     /// - parameter atom: The atom to be inserted. This cannot be `nil` and cannot have the type `MathAtomType.boundary`.
     /// - parameter index: The index where the atom is to be inserted. The index should be less than or equal to the
     ///  number of elements in the math list.
-    /// - throws NSException if the atom is of type MathAtomType.boundary
     public func insert(_ atom: MathAtom?, at index: Int) {
-        // NSParamException(atom)
         guard let atom = atom else { return }
         guard self.atoms.indices.contains(index) || index == self.atoms.endIndex else { return }
-        // guard self.atoms.endIndex >= index else { NSIndexException(); return }
-        if self.isAtomAllowed(atom) {
-            // NSIndexException(self.atoms, index: index)
-            self.atoms.insert(atom, at: index)
-        } else {
-            NSException(name: NSExceptionName(rawValue: "Error"), reason: "Cannot add atom of type \(atom.type.rawValue) into mathlist").raise()
-        }
+        precondition(self.isAtomAllowed(atom), "Cannot add atom of type \(atom.type.rawValue) into mathlist")
+        self.atoms.insert(atom, at: index)
     }
     
     /// Append the given list to the end of the current list.
@@ -1035,14 +1017,14 @@ public class MathList : NSObject {
     /// - parameter index: The index at which to remove the atom. Must be less than the number of atoms
     /// in the list.
     public func removeAtom(at index: Int) {
-        NSIndexException(self.atoms, index:index)
+        checkIndex(self.atoms, index:index)
         self.atoms.remove(at: index)
     }
-    
+
     /** Removes all the atoms within the given range. */
     public func removeAtoms(in range: ClosedRange<Int>) {
-        NSIndexException(self.atoms, index: range.lowerBound)
-        NSIndexException(self.atoms, index: range.upperBound)
+        checkIndex(self.atoms, index: range.lowerBound)
+        checkIndex(self.atoms, index: range.upperBound)
         self.atoms.removeSubrange(range)
     }
     

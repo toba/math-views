@@ -149,7 +149,8 @@ public enum FontStyle:Int {
  
  Certain types of atoms inherit from `MathAtom` and may have additional fields.
  */
-public class MathAtom: NSObject {
+public class MathAtom: CustomStringConvertible, Equatable {
+    public static func == (lhs: MathAtom, rhs: MathAtom) -> Bool { lhs === rhs }
     /** The type of the atom. */
     public var type = MathAtomType.ordinary
     /** An optional subscript. */
@@ -196,7 +197,7 @@ public class MathAtom: NSObject {
         self.fusedAtoms = atom.fusedAtoms
     }
     
-    override init() { }
+    init() { }
     
     /// Factory function to create an atom with a given type and value.
     /// - parameter type: The type of the atom to instantiate.
@@ -240,7 +241,7 @@ public class MathAtom: NSObject {
         }
     }
     
-    public override var description: String {
+    public var description: String {
         var string = ""
         string += self.nucleus
         if self.superScript != nil {
@@ -344,7 +345,7 @@ public class Fraction: MathAtom {
         self.type = .fraction
         self.hasRule = rule
     }
-    
+
     override public var description: String {
         var string = self.hasRule ? "\\frac" : "\\atop"
         if !self.leftDelimiter.isEmpty {
@@ -389,13 +390,13 @@ public class Radical: MathAtom {
         self.degree = MathList(rad?.degree)
         self.nucleus = ""
     }
-    
+
     override init() {
         super.init()
         self.type = .radical
         self.nucleus = ""
     }
-    
+
     override public var description: String {
         var string = "\\sqrt"
         if self.degree != nil {
@@ -481,12 +482,12 @@ public class Inner: MathAtom {
         self.rightBoundary = MathAtom(inner?.rightBoundary)
         self.delimiterHeight = inner?.delimiterHeight
     }
-    
+
     override init() {
         super.init()
         self.type = .inner
     }
-    
+
     override public var description: String {
         var string = "\\inner"
         if self.leftBoundary != nil {
@@ -528,7 +529,7 @@ public class OverLine: MathAtom {
         self.type = .overline
         self.innerList = MathList(over!.innerList)
     }
-    
+
     override init() {
         super.init()
         self.type = .overline
@@ -551,7 +552,7 @@ public class UnderLine: MathAtom {
         self.type = .underline
         self.innerList = MathList(under?.innerList)
     }
-    
+
     override init() {
         super.init()
         self.type = .underline
@@ -675,7 +676,7 @@ public class MathColorAtom: MathAtom {
         self.colorString = color?.colorString ?? ""
         self.innerList = MathList(color?.innerList)
     }
-    
+
     override init() {
         super.init()
         self.type = .color
@@ -739,7 +740,7 @@ public class MathColorbox: MathAtom {
         self.colorString = cbox?.colorString ?? ""
         self.innerList = MathList(cbox?.innerList)
     }
-    
+
     override init() {
         super.init()
         self.type = .colorBox
@@ -823,7 +824,7 @@ public class MathTable: MathAtom {
         }
         self.cells = cellCopy
     }
-    
+
     override init() {
         super.init()
         self.type = .table
@@ -880,8 +881,8 @@ public class MathTable: MathAtom {
 
 // MARK: - MathList
 
-extension MathList {
-    public override var description: String { self.atoms.description }
+extension MathList: CustomStringConvertible {
+    public var description: String { self.atoms.description }
     /// converts the MathList to a string form. Note: This is not the LaTeX form.
     public var string: String { self.description }
 }
@@ -895,7 +896,8 @@ extension MathList {
  
     Note: This class is for **advanced** usage only.
  */
-public class MathList : NSObject {
+public class MathList: Equatable {
+    public static func == (lhs: MathList, rhs: MathList) -> Bool { lhs === rhs }
     
     init?(_ list:MathList?) {
         guard let list = list else { return nil }
@@ -972,7 +974,7 @@ public class MathList : NSObject {
         self.atoms.append(atom)
     }
     
-    public override init() { super.init() }
+    public init() { }
     
     func checkIndex(_ array:[Any], index: Int) {
         precondition(array.indices.contains(index), "Index \(index) out of bounds")

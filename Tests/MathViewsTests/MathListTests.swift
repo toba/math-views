@@ -25,30 +25,30 @@ final class MathListTests: XCTestCase {
         var atom = finalized.atoms[0];
         XCTAssertEqual(atom.type, .unaryOperator, "Atom 0");
         XCTAssertEqual(atom.nucleus, "−", "Atom 0 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(0, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 0..<1, "Range");
         atom = finalized.atoms[1];
         XCTAssertEqual(atom.type, .number, "Atom 1");
         XCTAssertEqual(atom.nucleus, "52", "Atom 1 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(1, 2)), "Range");
+        XCTAssertEqual(atom.indexRange, 1..<3, "Range");
         atom = finalized.atoms[2];
         XCTAssertEqual(atom.type, .variable, "Atom 2");
         XCTAssertEqual(atom.nucleus, "x", "Atom 2 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(3, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 3..<4, "Range");
         
         let superScr = atom.superScript!
         XCTAssertEqual((superScr.atoms.count), 3, "Super script");
         atom = superScr.atoms[0];
         XCTAssertEqual(atom.type, .number, "Super Atom 0");
         XCTAssertEqual(atom.nucleus, "13", "Super Atom 0 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(0, 2)), "Range");
+        XCTAssertEqual(atom.indexRange, 0..<2, "Range");
         atom = superScr.atoms[1];
         XCTAssertEqual(atom.type, .binaryOperator, "Super Atom 1");
         XCTAssertEqual(atom.nucleus, "+", "Super Atom 1 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(2, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 2..<3, "Range");
         atom = superScr.atoms[2];
         XCTAssertEqual(atom.type, .variable, "Super Atom 2");
         XCTAssertEqual(atom.nucleus, "y", "Super Atom 2 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(3, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 3..<4, "Range");
         
         atom = finalized.atoms[2];
         let subScr = atom.subScript!
@@ -56,41 +56,41 @@ final class MathListTests: XCTestCase {
         atom = subScr.atoms[0];
         XCTAssertEqual(atom.type, .number, "Sub Atom 0");
         XCTAssertEqual(atom.nucleus, "15", "Sub Atom 0 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(0, 2)), "Range");
+        XCTAssertEqual(atom.indexRange, 0..<2, "Range");
         atom = subScr.atoms[1];
         XCTAssertEqual(atom.type, .unaryOperator, "Sub Atom 1");
         XCTAssertEqual(atom.nucleus, "−", "Sub Atom 1 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(2, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 2..<3, "Range");
         
         atom = finalized.atoms[3];
         XCTAssertEqual(atom.type, .binaryOperator, "Atom 3");
         XCTAssertEqual(atom.nucleus, "+", "Atom 3 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(4, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 4..<5, "Range");
         atom = finalized.atoms[4];
         XCTAssertEqual(atom.type, .open, "Atom 4");
         XCTAssertEqual(atom.nucleus, "(", "Atom 4 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(5, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 5..<6, "Range");
         atom = finalized.atoms[5];
         XCTAssertEqual(atom.type, .unaryOperator, "Atom 5");
         XCTAssertEqual(atom.nucleus, "−", "Atom 5 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(6, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 6..<7, "Range");
         atom = finalized.atoms[6];
         XCTAssertEqual(atom.type, .number, "Atom 6");
         XCTAssertEqual(atom.nucleus, "12.3", "Atom 6 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(7, 4)), "Range");
+        XCTAssertEqual(atom.indexRange, 7..<11, "Range");
         atom = finalized.atoms[7];
         XCTAssertEqual(atom.type, .unaryOperator, "Atom 7");
         XCTAssertEqual(atom.nucleus, "*", "Atom 7 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(11, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 11..<12, "Range");
         atom = finalized.atoms[8];
         XCTAssertEqual(atom.type, .close, "Atom 8");
         XCTAssertEqual(atom.nucleus, ")", "Atom 8 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(12, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 12..<13, "Range");
         
         let frac = finalized.atoms[9] as! Fraction
         XCTAssertEqual(frac.type, .fraction, "Atom 9");
         XCTAssertEqual(frac.nucleus, "", "Atom 9 value");
-        XCTAssertTrue(NSEqualRanges(frac.indexRange, NSMakeRange(13, 1)), "Range");
+        XCTAssertEqual(frac.indexRange, 13..<14, "Range");
         
         let numer = frac.numerator!
         XCTAssertNotNil(numer, "Numerator");
@@ -98,11 +98,11 @@ final class MathListTests: XCTestCase {
         atom = numer.atoms[0];
         XCTAssertEqual(atom.type, .unaryOperator, "Numer Atom 0");
         XCTAssertEqual(atom.nucleus, "−", "Numer Atom 0 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(0, 1)), "Range");
+        XCTAssertEqual(atom.indexRange, 0..<1, "Range");
         atom = numer.atoms[1];
         XCTAssertEqual(atom.type, .number, "Numer Atom 1");
         XCTAssertEqual(atom.nucleus, "12", "Numer Atom 1 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(1, 2)), "Range");
+        XCTAssertEqual(atom.indexRange, 1..<3, "Range");
         
         
         let denom = frac.denominator!
@@ -111,7 +111,7 @@ final class MathListTests: XCTestCase {
         atom = denom.atoms[0];
         XCTAssertEqual(atom.type, .number, "Denom Atom 0");
         XCTAssertEqual(atom.nucleus, "15.2", "Denom Atom 0 value");
-        XCTAssertTrue(NSEqualRanges(atom.indexRange, NSMakeRange(0, 4)), "Range");
+        XCTAssertEqual(atom.indexRange, 0..<4, "Range");
         
     }
     

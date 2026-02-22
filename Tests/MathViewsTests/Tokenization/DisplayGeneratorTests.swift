@@ -90,7 +90,7 @@ class DisplayGeneratorTests: XCTestCase {
             groupId: nil,
             parentId: nil,
             originalAtom: atom,
-            indexRange: NSMakeRange(0, 1),
+            indexRange: 0..<1,
             color: nil,
             backgroundColor: nil,
             indivisible: false
@@ -112,7 +112,7 @@ class DisplayGeneratorTests: XCTestCase {
             groupId: nil,
             parentId: nil,
             originalAtom: atom,
-            indexRange: NSMakeRange(0, 1),
+            indexRange: 0..<1,
             color: nil,
             backgroundColor: nil,
             indivisible: true

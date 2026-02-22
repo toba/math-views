@@ -18,7 +18,7 @@ extension Typesetter {
         guard let font = font else { return nil }
         guard !mathList.atoms.isEmpty else {
             // Return empty display instead of nil (matches KaTeX behavior)
-            return MathListDisplay(withDisplays: [], range: NSMakeRange(0, 0))
+            return MathListDisplay(withDisplays: [], range: 0..<0)
         }
 
         // Phase 0: Preprocess atoms to fuse ordinary characters
@@ -42,13 +42,11 @@ extension Typesetter {
         let displays = generator.generateDisplays(from: fittedLines, startPosition: CGPoint.zero)
 
         // Determine range from atoms
-        let range: NSRange
+        let range: Range<Int>
         if let firstAtom = mathList.atoms.first, let lastAtom = mathList.atoms.last {
-            let start = firstAtom.indexRange.location
-            let end = NSMaxRange(lastAtom.indexRange)
-            range = NSMakeRange(start, end - start)
+            range = firstAtom.indexRange.lowerBound..<lastAtom.indexRange.upperBound
         } else {
-            range = NSMakeRange(0, 0)
+            range = 0..<0
         }
 
         // Create and return the math list display

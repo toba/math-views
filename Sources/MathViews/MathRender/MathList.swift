@@ -177,7 +177,7 @@ public class MathAtom: CustomStringConvertible, Equatable {
     
     /// The index range in the MathList this MathAtom tracks. This is used by the finalizing and preprocessing steps
     /// which fuse MathAtoms to track the position of the current MathAtom in the original list.
-    public var indexRange = NSRange(location: 0, length: 0) // indexRange in list that this atom tracks:
+    public var indexRange = 0..<0
     
     /** The font style to be used for the atom. */
     var fontStyle: FontStyle = .defaultStyle
@@ -294,7 +294,7 @@ public class MathAtom: CustomStringConvertible, Equatable {
         self.nucleus += atom.nucleus
         
         // Update range:
-        self.indexRange.length += atom.indexRange.length
+        self.indexRange = self.indexRange.lowerBound..<(self.indexRange.upperBound + atom.indexRange.count)
         
         // Update super/subscript:
         self.superScript = atom.superScript
@@ -914,31 +914,13 @@ public class MathList: Equatable {
     /// This function does not modify the current MathList
     public var finalized: MathList {
         let finalizedList = MathList()
-        let zeroRange = NSMakeRange(0, 0)
-        
         var prevNode: MathAtom? = nil
         for atom in self.atoms {
             let newNode = atom.finalized
-            
-            if NSEqualRanges(zeroRange, atom.indexRange) {
-                // CRITICAL FIX: Check if prevNode has a valid range location before using it
-                // If location is NSNotFound, treat as if there's no prevNode
-                // This prevents negative overflow when creating NSMakeRange
-                let index: Int
-                if prevNode == nil || prevNode!.indexRange.location == NSNotFound {
-                    index = 0
-                } else {
-                    // Additional safety: check for potential overflow
-                    let location = prevNode!.indexRange.location
-                    let length = prevNode!.indexRange.length
-                    // If either value is suspicious (negative or too large), reset to 0
-                    if location < 0 || length < 0 || location > Int.max - length {
-                        index = 0
-                    } else {
-                        index = location + length
-                    }
-                }
-                newNode.indexRange = NSMakeRange(index, 1)
+
+            if atom.indexRange.isEmpty {
+                let index = prevNode?.indexRange.upperBound ?? 0
+                newNode.indexRange = index..<(index + 1)
             }
             
             switch newNode.type {

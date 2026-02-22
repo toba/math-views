@@ -5,7 +5,7 @@ status: in-progress
 type: epic
 priority: normal
 created_at: 2026-02-22T17:07:47Z
-updated_at: 2026-02-22T20:13:14Z
+updated_at: 2026-02-22T20:50:58Z
 parent: 1ve-o8n
 blocking:
     - 0v4-vm2
@@ -25,7 +25,7 @@ Remove Objective-C heritage and enable Swift 6.2 language features. This is the 
 - [ ] Remove NSObject inheritance from `MathAtom` (13 subclasses), `Display` (8+ subclasses), `MathList`
 - [ ] Replace `NSError` with a Swift `Error` enum in `MathListBuilder`
 - [x] Replace `NSDictionary`/`NSNumber` with typed Swift dictionaries in font tables
-- [ ] Replace `NSRange` with `Range<Int>` for `indexRange`
+- [x] Replace `NSRange` with `Range<Int>` for `indexRange`
 - [ ] Remove vestigial `isIos6Supported()` and `Display.initialized`/`.supported` statics
 
 ## Key Files

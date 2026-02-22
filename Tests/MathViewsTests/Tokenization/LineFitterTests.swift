@@ -143,7 +143,7 @@ class LineFitterTests: XCTestCase {
             groupId: nil,
             parentId: nil,
             originalAtom: atom,
-            indexRange: NSMakeRange(0, 1),
+            indexRange: 0..<1,
             color: nil,
             backgroundColor: nil,
             indivisible: false
@@ -165,7 +165,7 @@ class LineFitterTests: XCTestCase {
             groupId: nil,
             parentId: nil,
             originalAtom: atom,
-            indexRange: NSMakeRange(0, 1),
+            indexRange: 0..<1,
             color: nil,
             backgroundColor: nil,
             indivisible: false
@@ -187,7 +187,7 @@ class LineFitterTests: XCTestCase {
             groupId: groupId,
             parentId: nil,
             originalAtom: atom,
-            indexRange: NSMakeRange(0, 1),
+            indexRange: 0..<1,
             color: nil,
             backgroundColor: nil,
             indivisible: false

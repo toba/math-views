@@ -23,7 +23,7 @@ class BreakableElementTests: XCTestCase {
             groupId: nil,
             parentId: nil,
             originalAtom: atom,
-            indexRange: NSMakeRange(0, 1),
+            indexRange: 0..<1,
             color: nil,
             backgroundColor: nil,
             indivisible: false
@@ -125,7 +125,7 @@ class BreakableElementTests: XCTestCase {
             groupId: groupId,
             parentId: nil,
             originalAtom: atom1,
-            indexRange: NSMakeRange(0, 1),
+            indexRange: 0..<1,
             color: nil,
             backgroundColor: nil,
             indivisible: false
@@ -144,7 +144,7 @@ class BreakableElementTests: XCTestCase {
             groupId: groupId,
             parentId: nil,
             originalAtom: atom2,
-            indexRange: NSMakeRange(1, 1),
+            indexRange: 1..<2,
             color: nil,
             backgroundColor: nil,
             indivisible: false
@@ -174,7 +174,7 @@ class BreakableElementTests: XCTestCase {
             groupId: nil,
             parentId: nil,
             originalAtom: atom,
-            indexRange: NSMakeRange(0, 1),
+            indexRange: 0..<1,
             color: nil,
             backgroundColor: nil,
             indivisible: true  // Fractions are indivisible
@@ -209,7 +209,7 @@ class BreakableElementTests: XCTestCase {
             groupId: nil,
             parentId: nil,
             originalAtom: atom,
-            indexRange: NSMakeRange(0, 1),
+            indexRange: 0..<1,
             color: redColor,
             backgroundColor: nil,
             indivisible: false

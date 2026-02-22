@@ -683,12 +683,8 @@ class Typesetter {
     
     // MARK: - Helper Functions
 
-    /// Safely converts an NSRange location to UInt, returning 0 if the location is invalid (NSNotFound)
-    /// This prevents "Negative value is not representable" crashes when converting NSNotFound to UInt
     private func safeUIntFromLocation(_ location: Int) -> UInt {
-        if location == NSNotFound || location < 0 {
-            return 0
-        }
+        if location < 0 { return 0 }
         return UInt(location)
     }
 
@@ -788,8 +784,8 @@ class Typesetter {
         let denominatorDisplay = Typesetter.createLineForMathList(frac.denominator, font:font, style:denominatorStyle, cramped:true)
 
         // Handle empty numerator or denominator by creating empty displays
-        let numDisplay = numeratorDisplay ?? MathListDisplay(withDisplays: [], range: NSMakeRange(0, 0))
-        let denomDisplay = denominatorDisplay ?? MathListDisplay(withDisplays: [], range: NSMakeRange(0, 0))
+        let numDisplay = numeratorDisplay ?? MathListDisplay(withDisplays: [], range: 0..<0)
+        let denomDisplay = denominatorDisplay ?? MathListDisplay(withDisplays: [], range: 0..<0)
 
         // determine the location of the numerator
         var numeratorShiftUp = self.numeratorShiftUp(frac.hasRule)
@@ -898,7 +894,7 @@ class Typesetter {
         
         if glyphDisplay == nil {
             // No constructed display so use the glyph we got.
-            glyphDisplay = GlyphDisplay(withGlpyh: glyph, range: NSMakeRange(NSNotFound, 0), font:styleFont)
+            glyphDisplay = GlyphDisplay(withGlpyh: glyph, range: 0..<0, font:styleFont)
             glyphDisplay!.ascent = glyphAscent;
             glyphDisplay!.descent = glyphDescent;
             glyphDisplay!.width = glyphWidth;
@@ -906,7 +902,7 @@ class Typesetter {
         return glyphDisplay;
     }
     
-    func makeRadical(_ radicand:MathList?, range:NSRange) -> RadicalDisplay? {
+    func makeRadical(_ radicand:MathList?, range:Range<Int>) -> RadicalDisplay? {
         let innerDisplay = Typesetter.createLineForMathList(radicand, font:font, style:style, cramped:true)!
         var clearance = self.radicalVerticalGap()
         let radicalRuleThickness = styleFont.mathTable!.radicalRuleThickness
@@ -1169,7 +1165,7 @@ class Typesetter {
             return opsDisplay;
         } else {
             currentPosition.x += display!.width;
-            self.makeScripts(op, display:display, index:safeUIntFromLocation(op.indexRange.location), delta:delta)
+            self.makeScripts(op, display:display, index:safeUIntFromLocation(op.indexRange.lowerBound), delta:delta)
             return display;
         }
     }
@@ -1253,7 +1249,7 @@ class Typesetter {
         
         if glyphDisplay == nil {
             // Create a glyph display
-            glyphDisplay = GlyphDisplay(withGlpyh: glyph, range: NSMakeRange(NSNotFound, 0), font:styleFont)
+            glyphDisplay = GlyphDisplay(withGlpyh: glyph, range: 0..<0, font:styleFont)
             glyphDisplay!.ascent = glyphAscent;
             glyphDisplay!.descent = glyphDescent;
             glyphDisplay!.width = glyphWidth;
@@ -1795,7 +1791,7 @@ class Typesetter {
                     colDisplays.append(disp)
                 } else {
                     // If display creation fails, create empty display to maintain table structure
-                    let emptyDisplay = MathListDisplay(withDisplays: [], range: NSMakeRange(0, 0))
+                    let emptyDisplay = MathListDisplay(withDisplays: [], range: 0..<0)
                     colDisplays.append(emptyDisplay)
                 }
             }
@@ -1806,7 +1802,7 @@ class Typesetter {
     
     func makeRowWithColumns(_ cols:[Display], forTable table:MathTable?, columnWidths:[CGFloat]) -> MathListDisplay? {
         var columnStart = CGFloat(0)
-        var rowRange = NSMakeRange(NSNotFound, 0);
+        var rowRange = 0..<0;
         for i in 0..<cols.count {
             let col = cols[i]
             let colWidth = columnWidths[i]
@@ -1821,27 +1817,22 @@ class Typesetter {
                     // No changes if left aligned
                     cellPos += 0  // no op
             }
-            // CRITICAL FIX: Only union ranges if both have valid locations AND non-zero length
-            // When table cells are typeset independently, their ranges may have NSNotFound locations
-            // NSUnionRange with invalid locations can cause crashes (negative value not representable)
-            // Also skip ranges with zero length as they don't contribute meaningful info
-            if col.range.location != NSNotFound && col.range.length > 0 {
-                if rowRange.location != NSNotFound {
-                    rowRange = NSUnionRange(rowRange, col.range);
+            if !col.range.isEmpty {
+                if rowRange.isEmpty {
+                    rowRange = col.range
                 } else {
-                    rowRange = col.range;
+                    let lo = min(rowRange.lowerBound, col.range.lowerBound)
+                    let hi = max(rowRange.upperBound, col.range.upperBound)
+                    rowRange = lo..<hi
                 }
             }
-            // If col.range is invalid or has zero length, skip it - don't update rowRange
 
             col.position = CGPointMake(cellPos, 0);
             columnStart += colWidth + table!.interColumnSpacing * styleFont.mathTable!.muUnit;
         }
 
-        // If no valid ranges were found (all cells had zero-length ranges), use a synthetic range
-        // This represents the row conceptually spanning all its columns
-        if rowRange.location == NSNotFound {
-            rowRange = NSMakeRange(0, cols.count);
+        if rowRange.isEmpty {
+            rowRange = 0..<cols.count;
         }
 
         // Create a display for the row

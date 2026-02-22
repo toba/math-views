@@ -65,7 +65,7 @@ public class Display {
     /// Position of the display with respect to the parent view or display.
     var position = CGPoint.zero
     /// The range of characters supported by this item
-    public var range:NSRange=NSMakeRange(0, 0)
+    public var range = 0..<0
     /// Whether the display has a subscript/superscript following it.
     public var hasScript:Bool = false
     /// The text color for this display
@@ -102,7 +102,7 @@ public class CTLineDisplay : Display {
     /// An array of MathAtoms that this CTLine displays. Used for indexing back into the MathList
     public fileprivate(set) var atoms = [MathAtom]()
     
-    init(withString attrString:NSAttributedString?, position:CGPoint, range:NSRange, font:FontInstance?, atoms:[MathAtom]) {
+    init(withString attrString:NSAttributedString?, position:CGPoint, range:Range<Int>, font:FontInstance?, atoms:[MathAtom]) {
         super.init()
         self.position = position
         self.attributedString = attrString
@@ -177,7 +177,7 @@ public class MathListDisplay : Display {
     /// regular list this is NSNotFound
     public var index: Int = 0
     
-    init(withDisplays displays:[Display], range:NSRange) {
+    init(withDisplays displays:[Display], range:Range<Int>) {
         super.init()
         self.subDisplays = displays
         self.position = CGPoint.zero
@@ -262,23 +262,17 @@ public class FractionDisplay : Display {
     var linePosition:CGFloat=0
     var lineThickness:CGFloat=0
     
-    init(withNumerator numerator:MathListDisplay?, denominator:MathListDisplay?, position:CGPoint, range:NSRange) {
+    init(withNumerator numerator:MathListDisplay?, denominator:MathListDisplay?, position:CGPoint, range:Range<Int>) {
         super.init()
         self.numerator = numerator;
         self.denominator = denominator;
         self.position = position;
 
-        // CRITICAL FIX: Handle invalid ranges gracefully
-        // When table cells are typeset independently with maxWidth, atoms may have
-        // ranges that are invalid in the cell's context (e.g., (0,0) or other issues)
-        // Instead of crashing with assertion, normalize the range
-        if range.length == 0 {
-            // Create a dummy range with length 1 at the given location
-            self.range = NSMakeRange(range.location, 1)
+        if range.isEmpty {
+            self.range = range.lowerBound..<(range.lowerBound + 1)
         } else {
             self.range = range;
-            // Still assert for debugging if range length is something unexpected
-            assert(self.range.length == 1, "Fraction range length not 1 - range (\(range.location), \(range.length)")
+            assert(self.range.count == 1, "Fraction range length not 1 - range (\(range.lowerBound), \(range.count))")
         }
     }
 
@@ -386,7 +380,7 @@ class RadicalDisplay : Display {
     var topKern:CGFloat=0
     var lineThickness:CGFloat=0
     
-    init(withRadicand radicand:MathListDisplay?, glyph:Display, position:CGPoint, range:NSRange) {
+    init(withRadicand radicand:MathListDisplay?, glyph:Display, position:CGPoint, range:Range<Int>) {
         super.init()
         self.radicand = radicand
         _radicalGlyph = glyph
@@ -477,7 +471,7 @@ class GlyphDisplay : DisplayDS {
     /// Horizontal scale factor for stretching glyphs (1.0 = no scaling)
     var scaleX: CGFloat = 1.0
 
-    init(withGlpyh glyph:CGGlyph, range:NSRange, font:FontInstance?) {
+    init(withGlpyh glyph:CGGlyph, range:Range<Int>, font:FontInstance?) {
         super.init()
         self.font = font
         self.glyph = glyph
@@ -694,7 +688,7 @@ class LineDisplay : Display {
     var lineShiftUp:CGFloat=0
     var lineThickness:CGFloat=0
     
-    init(withInner inner:MathListDisplay?, position:CGPoint, range:NSRange) {
+    init(withInner inner:MathListDisplay?, position:CGPoint, range:Range<Int>) {
         super.init()
         self.inner = inner;
 
@@ -758,7 +752,7 @@ class AccentDisplay : Display {
      */
     var accent:GlyphDisplay?
     
-    init(withAccent glyph:GlyphDisplay?, accentee:MathListDisplay?, range:NSRange) {
+    init(withAccent glyph:GlyphDisplay?, accentee:MathListDisplay?, range:Range<Int>) {
         super.init()
         self.accent = glyph
         self.accentee = accentee

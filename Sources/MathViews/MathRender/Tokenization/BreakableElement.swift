@@ -66,7 +66,7 @@ struct BreakableElement {
     let originalAtom: MathAtom
 
     /// Index range in the original math list
-    let indexRange: NSRange
+    let indexRange: Range<Int>
 
     // MARK: Optional attributes
 

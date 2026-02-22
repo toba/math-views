@@ -38,7 +38,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(display.range, 0..<1);
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 1);
@@ -51,7 +51,7 @@ final class TypesetterTests: XCTestCase {
             let text = line.attributedString?.string ?? ""
             XCTAssertTrue(text == "𝑥" || text == "x", "Expected x or 𝑥, got '\(text)'");
             XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
-            XCTAssertTrue(NSEqualRanges(line.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(line.range, 0..<1);
             XCTAssertFalse(line.hasScript);
 
             // dimensions
@@ -72,7 +72,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 4)), "Got \(display.range) instead")
+        XCTAssertEqual(display.range, 0..<4, "Got \(display.range) instead")
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertGreaterThan(display.subDisplays.count, 0, "Should have at least one subdisplay");
@@ -89,7 +89,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular)
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero))
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 4)), "Got \(display.range) instead")
+        XCTAssertEqual(display.range, 0..<4, "Got \(display.range) instead")
         XCTAssertFalse(display.hasScript)
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertGreaterThan(display.subDisplays.count, 0, "Should have at least one subdisplay");
@@ -105,7 +105,7 @@ final class TypesetterTests: XCTestCase {
         let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: self.font, style: .display))
         XCTAssertEqual(display.type, .regular)
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero))
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 6)), "Got \(display.range) instead")
+        XCTAssertEqual(display.range, 0..<6, "Got \(display.range) instead")
         XCTAssertFalse(display.hasScript)
         XCTAssertEqual(display.index, NSNotFound)
 
@@ -140,7 +140,7 @@ final class TypesetterTests: XCTestCase {
 
         XCTAssertEqual(display.type, .regular)
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero))
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)))
+        XCTAssertEqual(display.range, 0..<1)
         XCTAssertFalse(display.hasScript)
         XCTAssertEqual(display.index, NSNotFound)
         XCTAssertEqual(display.subDisplays.count, 2)
@@ -159,7 +159,7 @@ final class TypesetterTests: XCTestCase {
         let display2 = sub1 as! MathListDisplay
         XCTAssertEqual(display2.type, .superscript)
         XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointMake(11.44, 7.26)))
-        XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)))
+        XCTAssertEqual(display2.range, 0..<1)
         XCTAssertFalse(display2.hasScript)
         XCTAssertEqual(display2.index, 0)
         XCTAssertEqual(display2.subDisplays.count, 1)
@@ -193,7 +193,7 @@ final class TypesetterTests: XCTestCase {
         let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: self.font, style: .display))
         XCTAssertEqual(display.type, .regular)
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero))
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)))
+        XCTAssertEqual(display.range, 0..<1)
         XCTAssertFalse(display.hasScript)
         XCTAssertEqual(display.index, NSNotFound)
         XCTAssertEqual(display.subDisplays.count, 2)
@@ -212,7 +212,7 @@ final class TypesetterTests: XCTestCase {
         let display2 = sub1 as! MathListDisplay
         XCTAssertEqual(display2.type, .ssubscript)
         XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointMake(11.44, -4.94)))
-        XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)))
+        XCTAssertEqual(display2.range, 0..<1)
         XCTAssertFalse(display2.hasScript)
         XCTAssertEqual(display2.index, 0)
         XCTAssertEqual(display2.subDisplays.count, 1)
@@ -245,7 +245,7 @@ final class TypesetterTests: XCTestCase {
         let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: self.font, style: .display))
         XCTAssertEqual(display.type, .regular)
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero))
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)))
+        XCTAssertEqual(display.range, 0..<1)
         XCTAssertFalse(display.hasScript)
         XCTAssertEqual(display.index, NSNotFound)
         XCTAssertEqual(display.subDisplays.count, 3)
@@ -264,7 +264,7 @@ final class TypesetterTests: XCTestCase {
         let display2 = sub1 as! MathListDisplay
         XCTAssertEqual(display2.type, .superscript)
         XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointMake(11.44, 7.26)))
-        XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)))
+        XCTAssertEqual(display2.range, 0..<1)
         XCTAssertFalse(display2.hasScript)
         XCTAssertEqual(display2.index, 0)
         XCTAssertEqual(display2.subDisplays.count, 1)
@@ -283,7 +283,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertEqual(display3.type, .ssubscript)
         // Positioned differently when both subscript and superscript present.
         XCTAssertTrue(CGPointEqualToPoint(display3.position, CGPointMake(11.44, -5.264)))
-        XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)))
+        XCTAssertEqual(display3.range, 0..<1)
         XCTAssertFalse(display3.hasScript)
         XCTAssertEqual(display3.index, 0)
         XCTAssertEqual(display3.subDisplays.count, 1)
@@ -314,7 +314,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(display.range, 0..<1);
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 1);
@@ -322,7 +322,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is RadicalDisplay);
         if let radical = sub0 as? RadicalDisplay {
-            XCTAssertTrue(NSEqualRanges(radical.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(radical.range, 0..<1);
             XCTAssertFalse(radical.hasScript);
             XCTAssertTrue(CGPointEqualToPoint(radical.position, CGPointZero));
             XCTAssertNotNil(radical.radicand);
@@ -331,7 +331,7 @@ final class TypesetterTests: XCTestCase {
             if let display2 = radical.radicand {
                 XCTAssertEqual(display2.type, .regular)
                 XCTAssertTrue(CGPointMake(16.66, 0).isEqual(to: display2.position, accuracy: 0.01))
-                XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+                XCTAssertEqual(display2.range, 0..<1);
                 XCTAssertFalse(display2.hasScript);
                 XCTAssertEqual(display2.index, NSNotFound);
                 XCTAssertEqual(display2.subDisplays.count, 1);
@@ -342,7 +342,7 @@ final class TypesetterTests: XCTestCase {
                     XCTAssertEqual(line2.atoms.count, 1);
                     XCTAssertEqual(line2.attributedString?.string, "1");
                     XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
-                    XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+                    XCTAssertEqual(line2.range, 0..<1);
                     XCTAssertFalse(line2.hasScript);
                 }
             }
@@ -369,7 +369,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(display.range, 0..<1);
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 1);
@@ -377,7 +377,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is RadicalDisplay);
         if let radical = sub0 as? RadicalDisplay {
-            XCTAssertTrue(NSEqualRanges(radical.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(radical.range, 0..<1);
             XCTAssertFalse(radical.hasScript);
             XCTAssertTrue(CGPointEqualToPoint(radical.position, CGPointZero));
             XCTAssertNotNil(radical.radicand);
@@ -387,7 +387,7 @@ final class TypesetterTests: XCTestCase {
             XCTAssertEqual(display2.type, .regular);
             // Position shifts when degree is present
             XCTAssertGreaterThan(display2.position.x, 15, "Radicand should be shifted right for degree")
-            XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(display2.range, 0..<1);
             XCTAssertFalse(display2.hasScript);
             XCTAssertEqual(display2.index, NSNotFound);
             XCTAssertEqual(display2.subDisplays.count, 1);
@@ -398,7 +398,7 @@ final class TypesetterTests: XCTestCase {
                 XCTAssertEqual(line2.atoms.count, 1);
                 XCTAssertEqual(line2.attributedString?.string, "1");
                 XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+                XCTAssertEqual(line2.range, 0..<1);
                 XCTAssertFalse(line2.hasScript);
             }
 
@@ -407,7 +407,7 @@ final class TypesetterTests: XCTestCase {
             // Degree should be positioned in upper left of radical
             XCTAssertGreaterThan(display3.position.x, 0, "Degree should have positive x position")
             XCTAssertGreaterThan(display3.position.y, 5, "Degree should be raised above baseline")
-            XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(display3.range, 0..<1);
             XCTAssertFalse(display3.hasScript);
             XCTAssertEqual(display3.index, NSNotFound);
             XCTAssertEqual(display3.subDisplays.count, 1);
@@ -418,7 +418,7 @@ final class TypesetterTests: XCTestCase {
                 XCTAssertEqual(line3.atoms.count, 1);
                 XCTAssertEqual(line3.attributedString?.string, "3");
                 XCTAssertTrue(CGPointEqualToPoint(line3.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line3.range, NSMakeRange(0, 1)));
+                XCTAssertEqual(line3.range, 0..<1);
                 XCTAssertFalse(line3.hasScript);
             }
         }
@@ -445,7 +445,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(display.range, 0..<1);
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 1);
@@ -453,7 +453,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is FractionDisplay)
         if let fraction = sub0 as? FractionDisplay {
-            XCTAssertTrue(NSEqualRanges(fraction.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(fraction.range, 0..<1);
             XCTAssertFalse(fraction.hasScript);
             XCTAssertTrue(CGPointEqualToPoint(fraction.position, CGPointZero));
             XCTAssertNotNil(fraction.numerator);
@@ -462,7 +462,7 @@ final class TypesetterTests: XCTestCase {
             let display2 = try XCTUnwrap(fraction.numerator)
             XCTAssertEqual(display2.type, .regular);
             XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointMake(0, 13.54)))
-            XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(display2.range, 0..<1);
             XCTAssertFalse(display2.hasScript);
             XCTAssertEqual(display2.index, NSNotFound);
             XCTAssertEqual(display2.subDisplays.count, 1);
@@ -473,14 +473,14 @@ final class TypesetterTests: XCTestCase {
                 XCTAssertEqual(line2.atoms.count, 1);
                 XCTAssertEqual(line2.attributedString?.string, "1");
                 XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+                XCTAssertEqual(line2.range, 0..<1);
                 XCTAssertFalse(line2.hasScript);
             }
 
             let display3 = try XCTUnwrap(fraction.denominator)
             XCTAssertEqual(display3.type, .regular);
             XCTAssertTrue(CGPointEqualToPoint(display3.position, CGPointMake(0, -13.72)))
-            XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(display3.range, 0..<1);
             XCTAssertFalse(display3.hasScript);
             XCTAssertEqual(display3.index, NSNotFound);
             XCTAssertEqual(display3.subDisplays.count, 1);
@@ -491,7 +491,7 @@ final class TypesetterTests: XCTestCase {
                 XCTAssertEqual(line3.atoms.count, 1);
                 XCTAssertEqual(line3.attributedString?.string, "3");
                 XCTAssertTrue(CGPointEqualToPoint(line3.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line3.range, NSMakeRange(0, 1)));
+                XCTAssertEqual(line3.range, 0..<1);
                 XCTAssertFalse(line3.hasScript);
             }
         }
@@ -517,7 +517,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(display.range, 0..<1);
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 1);
@@ -525,7 +525,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is FractionDisplay)
         if let fraction = sub0 as? FractionDisplay {
-            XCTAssertTrue(NSEqualRanges(fraction.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(fraction.range, 0..<1);
             XCTAssertFalse(fraction.hasScript);
             XCTAssertTrue(CGPointEqualToPoint(fraction.position, CGPointZero));
             XCTAssertNotNil(fraction.numerator);
@@ -534,7 +534,7 @@ final class TypesetterTests: XCTestCase {
             let display2 = try XCTUnwrap(fraction.numerator)
             XCTAssertEqual(display2.type, .regular);
             XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointMake(0, 13.54)))
-            XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(display2.range, 0..<1);
             XCTAssertFalse(display2.hasScript);
             XCTAssertEqual(display2.index, NSNotFound);
             XCTAssertEqual(display2.subDisplays.count, 1);
@@ -545,14 +545,14 @@ final class TypesetterTests: XCTestCase {
                 XCTAssertEqual(line2.atoms.count, 1);
                 XCTAssertEqual(line2.attributedString?.string, "1");
                 XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+                XCTAssertEqual(line2.range, 0..<1);
                 XCTAssertFalse(line2.hasScript);
             }
 
             let display3 = try XCTUnwrap(fraction.denominator)
             XCTAssertEqual(display3.type, .regular);
             XCTAssertTrue(CGPointEqualToPoint(display3.position, CGPointMake(0, -13.72)))
-            XCTAssertTrue(NSEqualRanges(display3.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(display3.range, 0..<1);
             XCTAssertFalse(display3.hasScript);
             XCTAssertEqual(display3.index, NSNotFound);
             XCTAssertEqual(display3.subDisplays.count, 1);
@@ -563,7 +563,7 @@ final class TypesetterTests: XCTestCase {
                 XCTAssertEqual(line3.atoms.count, 1);
                 XCTAssertEqual(line3.attributedString?.string, "3");
                 XCTAssertTrue(CGPointEqualToPoint(line3.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line3.range, NSMakeRange(0, 1)));
+                XCTAssertEqual(line3.range, 0..<1);
                 XCTAssertFalse(line3.hasScript);
             }
         }
@@ -590,7 +590,7 @@ final class TypesetterTests: XCTestCase {
         let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: self.font, style: .display))
         XCTAssertEqual(display.type, .regular)
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero))
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)))
+        XCTAssertEqual(display.range, 0..<1)
         XCTAssertFalse(display.hasScript)
         XCTAssertEqual(display.index, NSNotFound)
 
@@ -617,7 +617,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 2)), "Got \(display.range) instead")
+        XCTAssertEqual(display.range, 0..<2, "Got \(display.range) instead")
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 2);
@@ -627,7 +627,7 @@ final class TypesetterTests: XCTestCase {
         if let line = sub0 as? CTLineDisplay {
             XCTAssertEqual(line.atoms.count, 1);
             XCTAssertEqual(line.attributedString?.string, "sin");
-            XCTAssertTrue(NSEqualRanges(line.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(line.range, 0..<1);
             XCTAssertFalse(line.hasScript);
         }
 
@@ -640,7 +640,7 @@ final class TypesetterTests: XCTestCase {
             XCTAssertTrue(text == "𝑥" || text == "x", "Expected x or 𝑥, got '\(text)'");
             // Position may vary with improved spacing
             XCTAssertGreaterThan(line2.position.x, 20, "x should be positioned after sin with spacing")
-            XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(1, 1)), "Got \(line2.range) instead")
+            XCTAssertEqual(line2.range, 1..<2, "Got \(line2.range) instead")
             XCTAssertFalse(line2.hasScript);
         }
 
@@ -661,7 +661,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 2)), "Got \(display.range) instead")
+        XCTAssertEqual(display.range, 0..<2, "Got \(display.range) instead")
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 2, "Should have operator and x as 2 subdisplays");
@@ -670,7 +670,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is GlyphDisplay, "Operator should be a glyph display");
         let glyph = sub0;
-        XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(glyph.range, 0..<1);
         XCTAssertFalse(glyph.hasScript);
 
         // Check x display - tokenization may produce different display types
@@ -706,7 +706,7 @@ final class TypesetterTests: XCTestCase {
         let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: self.font, style: .display))
         XCTAssertEqual(display.type, .regular)
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero))
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 2)), "Got \(display.range) instead")
+        XCTAssertEqual(display.range, 0..<2, "Got \(display.range) instead")
         XCTAssertFalse(display.hasScript)
         XCTAssertEqual(display.index, NSNotFound)
 
@@ -742,7 +742,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 2)), "Got \(display.range) instead")
+        XCTAssertEqual(display.range, 0..<2, "Got \(display.range) instead")
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         // Tokenization may create more subdisplays - verify we have at least the operator and x
@@ -751,7 +751,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is LargeOpLimitsDisplay)
         if let largeOp = sub0 as? LargeOpLimitsDisplay {
-            XCTAssertTrue(NSEqualRanges(largeOp.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(largeOp.range, 0..<1);
             XCTAssertFalse(largeOp.hasScript);
             XCTAssertNotNil(largeOp.lowerLimit, "Should have lower limit");
             XCTAssertNil(largeOp.upperLimit, "Should not have upper limit");
@@ -760,7 +760,7 @@ final class TypesetterTests: XCTestCase {
             XCTAssertEqual(display2.type, .regular)
             // Position may vary with improved inline layout
             XCTAssertLessThan(display2.position.y, 0, "Lower limit should be below baseline")
-            XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(display2.range, 0..<1);
             XCTAssertFalse(display2.hasScript);
             XCTAssertEqual(display2.index, NSNotFound);
             XCTAssertEqual(display2.subDisplays.count, 1);
@@ -815,7 +815,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 2)), "Got \(display.range) instead")
+        XCTAssertEqual(display.range, 0..<2, "Got \(display.range) instead")
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         // Tokenization may create more subdisplays - verify we have at least the operator and x
@@ -824,7 +824,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is LargeOpLimitsDisplay);
         if let largeOp = sub0 as? LargeOpLimitsDisplay {
-            XCTAssertTrue(NSEqualRanges(largeOp.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(largeOp.range, 0..<1);
             XCTAssertFalse(largeOp.hasScript);
             XCTAssertNotNil(largeOp.lowerLimit, "Should have lower limit");
             XCTAssertNotNil(largeOp.upperLimit, "Should have upper limit");
@@ -833,7 +833,7 @@ final class TypesetterTests: XCTestCase {
             XCTAssertEqual(display2.type, .regular);
             // Lower limit position may vary
             XCTAssertLessThan(display2.position.y, 0, "Lower limit should be below baseline")
-            XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)))
+            XCTAssertEqual(display2.range, 0..<1)
             XCTAssertFalse(display2.hasScript);
             XCTAssertEqual(display2.index, NSNotFound);
             XCTAssertEqual(display2.subDisplays.count, 1);
@@ -849,7 +849,7 @@ final class TypesetterTests: XCTestCase {
 
             let displayU = try XCTUnwrap(largeOp.upperLimit)
             XCTAssertEqual(displayU.type, .regular);
-            XCTAssertTrue(NSEqualRanges(displayU.range, NSMakeRange(0, 1)))
+            XCTAssertEqual(displayU.range, 0..<1)
             XCTAssertFalse(displayU.hasScript);
             XCTAssertEqual(displayU.index, NSNotFound);
             XCTAssertEqual(displayU.subDisplays.count, 1);
@@ -1069,7 +1069,7 @@ final class TypesetterTests: XCTestCase {
         let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: self.font, style: .display))
         XCTAssertEqual(display.type, .regular)
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero))
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)))
+        XCTAssertEqual(display.range, 0..<1)
         XCTAssertFalse(display.hasScript)
         XCTAssertEqual(display.index, NSNotFound)
 
@@ -1095,7 +1095,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(display.range, 0..<1);
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 1);
@@ -1103,7 +1103,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is LineDisplay);
         if let overline = sub0 as? LineDisplay {
-            XCTAssertTrue(NSEqualRanges(overline.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(overline.range, 0..<1);
             XCTAssertFalse(overline.hasScript);
             XCTAssertTrue(CGPointEqualToPoint(overline.position, CGPointZero));
             XCTAssertNotNil(overline.inner);
@@ -1111,7 +1111,7 @@ final class TypesetterTests: XCTestCase {
             let display2 = try XCTUnwrap(overline.inner)
             XCTAssertEqual(display2.type, .regular);
             XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointZero))
-            XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(display2.range, 0..<1);
             XCTAssertFalse(display2.hasScript);
             XCTAssertEqual(display2.index, NSNotFound);
             XCTAssertEqual(display2.subDisplays.count, 1);
@@ -1122,7 +1122,7 @@ final class TypesetterTests: XCTestCase {
                 XCTAssertEqual(line2.atoms.count, 1);
                 XCTAssertEqual(line2.attributedString?.string, "1");
                 XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+                XCTAssertEqual(line2.range, 0..<1);
                 XCTAssertFalse(line2.hasScript);
             }
         }
@@ -1145,7 +1145,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(display.range, 0..<1);
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 1);
@@ -1153,7 +1153,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is LineDisplay)
         if let underline = sub0 as? LineDisplay {
-            XCTAssertTrue(NSEqualRanges(underline.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(underline.range, 0..<1);
             XCTAssertFalse(underline.hasScript);
             XCTAssertTrue(CGPointEqualToPoint(underline.position, CGPointZero));
             XCTAssertNotNil(underline.inner);
@@ -1161,7 +1161,7 @@ final class TypesetterTests: XCTestCase {
             let display2 = try XCTUnwrap(underline.inner)
             XCTAssertEqual(display2.type, .regular);
             XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointZero))
-            XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(display2.range, 0..<1);
             XCTAssertFalse(display2.hasScript);
             XCTAssertEqual(display2.index, NSNotFound);
             XCTAssertEqual(display2.subDisplays.count, 1);
@@ -1172,7 +1172,7 @@ final class TypesetterTests: XCTestCase {
                 XCTAssertEqual(line2.atoms.count, 1);
                 XCTAssertEqual(line2.attributedString?.string, "1");
                 XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+                XCTAssertEqual(line2.range, 0..<1);
                 XCTAssertFalse(line2.hasScript);
             }
         }
@@ -1193,7 +1193,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 3)), "Got \(display.range) instead")
+        XCTAssertEqual(display.range, 0..<3, "Got \(display.range) instead")
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertGreaterThan(display.subDisplays.count, 0, "Should have subdisplays");
@@ -1258,7 +1258,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(display.range, 0..<1);
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 1);
@@ -1292,7 +1292,7 @@ final class TypesetterTests: XCTestCase {
 
             XCTAssertEqual(display.type, .regular);
             XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-            XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)))
+            XCTAssertEqual(display.range, 0..<1)
             XCTAssertFalse(display.hasScript);
             XCTAssertEqual(display.index, NSNotFound);
             XCTAssertEqual(display.subDisplays.count, 1, "Symbol \(symName)");
@@ -1302,7 +1302,7 @@ final class TypesetterTests: XCTestCase {
                 // These large operators are rendered differently;
                 XCTAssertTrue(sub0 is GlyphDisplay);
                 if let glyph = sub0 as? GlyphDisplay {
-                    XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(0, 1)))
+                    XCTAssertEqual(glyph.range, 0..<1)
                     XCTAssertFalse(glyph.hasScript);
                 }
             } else {
@@ -1312,7 +1312,7 @@ final class TypesetterTests: XCTestCase {
                     if atom!.type != .variable {
                         XCTAssertEqual(line.attributedString?.string, atom!.nucleus);
                     }
-                    XCTAssertTrue(NSEqualRanges(line.range, NSMakeRange(0, 1)))
+                    XCTAssertEqual(line.range, 0..<1)
                     XCTAssertFalse(line.hasScript);
                 }
             }
@@ -1359,7 +1359,7 @@ final class TypesetterTests: XCTestCase {
 
             XCTAssertEqual(display.type, .regular);
             XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-            XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)))
+            XCTAssertEqual(display.range, 0..<1)
             XCTAssertFalse(display.hasScript);
             XCTAssertEqual(display.index, NSNotFound);
             XCTAssertEqual(display.subDisplays.count, 1, "Symbol \(atom.nucleus)")
@@ -1369,7 +1369,7 @@ final class TypesetterTests: XCTestCase {
             if let line = sub0 as? CTLineDisplay {
                 XCTAssertEqual(line.atoms.count, 1);
                 XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line.range, NSMakeRange(0, 1)))
+                XCTAssertEqual(line.range, 0..<1)
                 XCTAssertFalse(line.hasScript);
             }
 
@@ -1439,7 +1439,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 5)))
+        XCTAssertEqual(display.range, 0..<5)
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 3);
@@ -1452,7 +1452,7 @@ final class TypesetterTests: XCTestCase {
             let text = line.attributedString?.string ?? ""
             XCTAssertTrue(text == "𝑥" || text == "x", "Expected x or 𝑥, got '\(text)'");
             XCTAssertTrue(CGPointEqualToPoint(line.position, CGPointZero));
-            XCTAssertTrue(NSEqualRanges(line.range, NSMakeRange(0, 1)))
+            XCTAssertEqual(line.range, 0..<1)
             XCTAssertFalse(line.hasScript);
         }
 
@@ -1463,7 +1463,7 @@ final class TypesetterTests: XCTestCase {
             // CHANGED: Accept both italicized and regular y
             let text = line1.attributedString?.string ?? ""
             XCTAssertTrue(text == "𝑦" || text == "y", "Expected y or 𝑦, got '\(text)'");
-            XCTAssertTrue(NSEqualRanges(line1.range, NSMakeRange(2, 1)))
+            XCTAssertEqual(line1.range, 2..<3)
             XCTAssertFalse(line1.hasScript);
         }
 
@@ -1474,7 +1474,7 @@ final class TypesetterTests: XCTestCase {
             // CHANGED: Accept both italicized and regular z
             let text = line2.attributedString?.string ?? ""
             XCTAssertTrue(text == "𝑧" || text == "z", "Expected z or 𝑧, got '\(text)'");
-            XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(4, 1)))
+            XCTAssertEqual(line2.range, 4..<5)
             XCTAssertFalse(line2.hasScript);
         }
     }
@@ -1491,7 +1491,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(display.range, 0..<1);
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 1);
@@ -1499,7 +1499,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is AccentDisplay)
         if let accentDisp = sub0 as? AccentDisplay {
-            XCTAssertTrue(NSEqualRanges(accentDisp.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(accentDisp.range, 0..<1);
             XCTAssertFalse(accentDisp.hasScript);
             XCTAssertTrue(CGPointEqualToPoint(accentDisp.position, CGPointZero));
             XCTAssertNotNil(accentDisp.accentee);
@@ -1508,7 +1508,7 @@ final class TypesetterTests: XCTestCase {
             let display2 = try XCTUnwrap(accentDisp.accentee)
             XCTAssertEqual(display2.type, .regular);
             XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointZero))
-            XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(display2.range, 0..<1);
             XCTAssertFalse(display2.hasScript);
             XCTAssertEqual(display2.index, NSNotFound);
             XCTAssertEqual(display2.subDisplays.count, 1);
@@ -1521,13 +1521,13 @@ final class TypesetterTests: XCTestCase {
                 let text = line2.attributedString?.string ?? ""
                 XCTAssertTrue(text == "𝑥" || text == "x", "Expected x or 𝑥, got '\(text)'");
                 XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 1)));
+                XCTAssertEqual(line2.range, 0..<1);
                 XCTAssertFalse(line2.hasScript);
             }
 
             let glyph = try XCTUnwrap(accentDisp.accent)
             XCTAssertTrue(CGPointMake(11.86, 0).isEqual(to: glyph.position, accuracy: 2.0))
-            XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(0, 1)))
+            XCTAssertEqual(glyph.range, 0..<1)
             XCTAssertFalse(glyph.hasScript);
         }
 
@@ -1548,7 +1548,7 @@ final class TypesetterTests: XCTestCase {
         XCTAssertNotNil(display);
         XCTAssertEqual(display.type, .regular);
         XCTAssertTrue(CGPointEqualToPoint(display.position, CGPointZero));
-        XCTAssertTrue(NSEqualRanges(display.range, NSMakeRange(0, 1)));
+        XCTAssertEqual(display.range, 0..<1);
         XCTAssertFalse(display.hasScript);
         XCTAssertEqual(display.index, NSNotFound);
         XCTAssertEqual(display.subDisplays.count, 1);
@@ -1556,7 +1556,7 @@ final class TypesetterTests: XCTestCase {
         let sub0 = display.subDisplays[0];
         XCTAssertTrue(sub0 is AccentDisplay)
         if let accentDisp = sub0 as? AccentDisplay {
-            XCTAssertTrue(NSEqualRanges(accentDisp.range, NSMakeRange(0, 1)));
+            XCTAssertEqual(accentDisp.range, 0..<1);
             XCTAssertFalse(accentDisp.hasScript);
             XCTAssertTrue(CGPointEqualToPoint(accentDisp.position, CGPointZero));
             XCTAssertNotNil(accentDisp.accentee);
@@ -1565,7 +1565,7 @@ final class TypesetterTests: XCTestCase {
             let display2 = try XCTUnwrap(accentDisp.accentee)
             XCTAssertEqual(display2.type, .regular);
             XCTAssertTrue(CGPointEqualToPoint(display2.position, CGPointZero))
-            XCTAssertTrue(NSEqualRanges(display2.range, NSMakeRange(0, 4)));
+            XCTAssertEqual(display2.range, 0..<4);
             XCTAssertFalse(display2.hasScript);
             XCTAssertEqual(display2.index, NSNotFound);
             XCTAssertEqual(display2.subDisplays.count, 1);
@@ -1576,13 +1576,13 @@ final class TypesetterTests: XCTestCase {
                 XCTAssertEqual(line2.atoms.count, 4);
                 XCTAssertEqual(line2.attributedString?.string, "𝑥𝑦𝑧𝑤");
                 XCTAssertTrue(CGPointEqualToPoint(line2.position, CGPointZero));
-                XCTAssertTrue(NSEqualRanges(line2.range, NSMakeRange(0, 4)));
+                XCTAssertEqual(line2.range, 0..<4);
                 XCTAssertFalse(line2.hasScript);
             }
 
             let glyph = try XCTUnwrap(accentDisp.accent)
             XCTAssertTrue(CGPointMake(3.47, 0).isEqual(to: glyph.position, accuracy: 0.01))
-            XCTAssertTrue(NSEqualRanges(glyph.range, NSMakeRange(0, 1)))
+            XCTAssertEqual(glyph.range, 0..<1)
             XCTAssertFalse(glyph.hasScript);
         }
 
@@ -3557,9 +3557,8 @@ final class TypesetterTests: XCTestCase {
         // Verify all atoms have valid ranges
         if let atoms = finalized?.atoms {
             for atom in atoms {
-                XCTAssertNotEqual(atom.indexRange.location, NSNotFound, "Atom should have valid location")
-                XCTAssertGreaterThanOrEqual(atom.indexRange.location, 0, "Location should be non-negative")
-                XCTAssertGreaterThan(atom.indexRange.length, 0, "Length should be positive")
+                XCTAssertGreaterThanOrEqual(atom.indexRange.lowerBound, 0, "Lower bound should be non-negative")
+                XCTAssertGreaterThan(atom.indexRange.count, 0, "Count should be positive")
             }
         }
 

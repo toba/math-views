@@ -6,6 +6,10 @@ type: milestone
 priority: normal
 created_at: 2026-02-22T16:36:14Z
 updated_at: 2026-02-22T17:08:53Z
+sync:
+    github:
+        issue_number: "2"
+        synced_at: "2026-02-22T17:29:40Z"
 ---
 
 ## Goal
@@ -23,8 +27,8 @@ Modernize math-views for Swift 6.2 (Xcode 16.3+) with iOS 18+ / macOS 15+ platfo
 - swift-tools-version 5.7, no strict concurrency checking
 - 5 `NSLock` instances, 1 `DispatchQueue`, a custom `RWLock` wrapper
 - Zero uses of async/await, actors, or `@Sendable`
-- Dual font system (legacy `MTFont`/`MTFontManager` + modern `MTFontV2`/`MathFont`)
-- UIKit/AppKit view layer (`MTMathUILabel`) with `@IBDesignable`/`@IBInspectable`
+- Dual font system (legacy `FontInstance`/`FontManager` + modern `FontInstanceV2`/`MathFont`)
+- UIKit/AppKit view layer (`MathUILabel`) with `@IBDesignable`/`@IBInspectable`
 
 ## Child Epics
 

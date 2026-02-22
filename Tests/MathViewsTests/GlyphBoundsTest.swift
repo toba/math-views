@@ -5,7 +5,7 @@ import CoreGraphics
 
 final class GlyphBoundsTest: XCTestCase {
 
-    var font: MTFont!
+    var font: FontInstance!
 
     override func setUp() {
         super.setUp()

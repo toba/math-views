@@ -7,6 +7,10 @@ priority: normal
 created_at: 2026-02-22T17:01:27Z
 updated_at: 2026-02-22T17:22:06Z
 parent: 1ve-o8n
+sync:
+    github:
+        issue_number: "9"
+        synced_at: "2026-02-22T17:29:42Z"
 ---
 
 ## Goal
@@ -22,7 +26,7 @@ Update all project identifiers to reflect the current GitHub origin (`toba/math-
 - [x] **Remove file header comments** — Strip `Created by` / `Translated by` / author attribution lines from all source file headers
 - [x] **Update README branding** — Replace "SwiftMath" project name references with "MathViews" (or "math-views") throughout README.md, EXAMPLES.md, MISSING_FEATURES.md
 - [x] **Update example import statements** — `import SwiftMath` → `import MathViews` in README code examples
-- [x] **Remove MT type prefix** — Rename all public types from `MTFoo` to `Foo` (MTMathList → MathList, MTFont → Font, MTTypesetter → Typesetter, etc.) — this is a large mechanical change, may warrant its own sub-task
+- [x] **Remove MT type prefix** — Rename all public types from `MTFoo` to `Foo` (MathList → MathList, FontInstance → Font, Typesetter → Typesetter, etc.) — this is a large mechanical change, may warrant its own sub-task
 - [x] **Verify build and tests pass** after all renames
 
 ## Out of Scope

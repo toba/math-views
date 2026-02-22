@@ -2,33 +2,42 @@ import Foundation
 
 #if os(iOS) || os(visionOS)
     import UIKit
-#elseif os(macOS)
+#endif
+
+#if os(macOS)
     import AppKit
 #endif
 
-public struct MathImage {
-    public var font: MathFont = .latinModernFont
-    public var fontSize: CGFloat
-    public var textColor: MathColor
+public class MathImageRenderer {
+    public var font: FontInstance? = FontManager.fontManager.defaultFont
+    public var fontSize:CGFloat {
+        set {
+            _fontSize = newValue
+            let font = font?.copy(withSize: newValue)
+            self.font = font  // also forces an update
+        }
+        get { _fontSize }
+    }
+    private var _fontSize:CGFloat = 0
+    public let textColor: MathColor
 
-    public var labelMode: MathUILabelMode
-    public var textAlignment: MathTextAlignment
+    public let labelMode: MathUILabelMode
+    public let textAlignment: MathTextAlignment
 
     public var contentInsets: MathEdgeInsets = MathEdgeInsetsZero
     
     public let latex: String
-    
     private(set) var intrinsicContentSize = CGSize.zero
 
     public init(latex: String, fontSize: CGFloat, textColor: MathColor, labelMode: MathUILabelMode = .display, textAlignment: MathTextAlignment = .center) {
         self.latex = latex
-        self.fontSize = fontSize
         self.textColor = textColor
         self.labelMode = labelMode
         self.textAlignment = textAlignment
+        self.fontSize = fontSize
     }
 }
-extension MathImage {
+extension MathImageRenderer {
     public var currentStyle: LineStyle {
         switch labelMode {
             case .display: return .display
@@ -39,16 +48,7 @@ extension MathImage {
         CGSize(width: displayList.width + contentInsets.left + contentInsets.right,
                height: displayList.ascent + displayList.descent + contentInsets.top + contentInsets.bottom)
     }
-    public struct LayoutInfo {
-        public var ascent: CGFloat = 0
-        public var descent: CGFloat = 0
-
-        public init(ascent: CGFloat, descent: CGFloat) {
-            self.ascent = ascent
-            self.descent = descent
-        }
-    }
-    public mutating func asImage() -> (NSError?, PlatformImage?, LayoutInfo?) {
+    public func asImage() -> (NSError?, PlatformImage?) {
         func layoutImage(size: CGSize, displayList: MathListDisplay) {
             var textX = CGFloat(0)
             switch self.textAlignment {
@@ -66,18 +66,17 @@ extension MathImage {
             let textY = (availableHeight - height) / 2 + displayList.descent + contentInsets.bottom
             displayList.position = CGPoint(x: textX, y: textY)
         }
+
         var error: NSError?
-        let fontInst: FontInstance? = font.fontInstance(size: fontSize)
-
         guard let mathList = MathListBuilder.build(fromString: latex, error: &error), error == nil,
-              let displayList = Typesetter.createLineForMathList(mathList, font: fontInst, style: currentStyle) else {
-            return (error, nil, nil)
+              let displayList = Typesetter.createLineForMathList(mathList, font: font, style: currentStyle) else {
+            return (error, nil)
         }
-
+         
         intrinsicContentSize = intrinsicContentSize(displayList)
         displayList.textColor = textColor
-
-        let size = intrinsicContentSize.regularized
+        
+        let size = intrinsicContentSize
         layoutImage(size: size, displayList: displayList)
         
         #if os(iOS) || os(visionOS)
@@ -88,7 +87,7 @@ extension MathImage {
                 displayList.draw(rendererContext.cgContext)
                 rendererContext.cgContext.restoreGState()
             }
-            return (nil, image, LayoutInfo(ascent: displayList.ascent, descent: displayList.descent))
+            return (nil, image)
         #endif
         #if os(macOS)
             let image = NSImage(size: size, flipped: false) { bounds in
@@ -98,7 +97,7 @@ extension MathImage {
                 context.restoreGState()
                 return true
             }
-            return (nil, image, LayoutInfo(ascent: displayList.ascent, descent: displayList.descent))
+            return (nil, image)
         #endif
     }
 }
@@ -107,10 +106,5 @@ private extension CGAffineTransform {
         var transform = CGAffineTransform(scaleX: 1, y: -1)
         transform = transform.translatedBy(x: 0, y: -height)
         return transform
-    }
-}
-extension CGSize {
-    fileprivate var regularized: CGSize {
-        CGSize(width: ceil(width), height: ceil(height))
     }
 }

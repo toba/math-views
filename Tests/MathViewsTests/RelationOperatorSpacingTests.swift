@@ -3,7 +3,7 @@ import XCTest
 
 class RelationOperatorSpacingTests: XCTestCase {
 
-    var font: MTFont!
+    var font: FontInstance!
 
     override func setUp() {
         super.setUp()

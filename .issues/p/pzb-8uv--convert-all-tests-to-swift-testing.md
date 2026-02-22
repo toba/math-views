@@ -3,9 +3,14 @@
 title: Convert all tests to Swift Testing
 status: ready
 type: task
+priority: normal
 created_at: 2026-02-22T17:19:30Z
 updated_at: 2026-02-22T17:19:30Z
 parent: z9b-r1r
+sync:
+    github:
+        issue_number: "8"
+        synced_at: "2026-02-22T17:29:41Z"
 ---
 
 Migrate the entire test suite from XCTest to Swift Testing (https://developer.apple.com/xcode/swift-testing/).

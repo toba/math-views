@@ -3,8 +3,13 @@
 title: Implement \middle delimiter
 status: ready
 type: feature
+priority: normal
 created_at: 2026-02-22T16:44:34Z
 updated_at: 2026-02-22T16:44:34Z
+sync:
+    github:
+        issue_number: "3"
+        synced_at: "2026-02-22T17:29:40Z"
 ---
 
 Support `\middle` for use between `\left` and `\right` to add delimiters in the middle of expressions.

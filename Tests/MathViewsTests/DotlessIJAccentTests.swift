@@ -6,7 +6,7 @@ import XCTest
 /// (using dotless variants imath/jmath) to avoid double dots.
 final class DotlessIJAccentTests: XCTestCase {
 
-    var font: MTFont!
+    var font: FontInstance!
 
     override func setUp() {
         super.setUp()

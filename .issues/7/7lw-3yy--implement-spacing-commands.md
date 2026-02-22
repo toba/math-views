@@ -3,8 +3,13 @@
 title: Implement spacing commands \:, \;, \!
 status: ready
 type: feature
+priority: normal
 created_at: 2026-02-22T16:44:34Z
 updated_at: 2026-02-22T16:44:34Z
+sync:
+    github:
+        issue_number: "1"
+        synced_at: "2026-02-22T17:29:40Z"
 ---
 
 Add support for the remaining fine spacing commands. `\,` (thin space) already works, but the others are missing.
@@ -34,5 +39,5 @@ x \, y \: z \; w                  % mixed spacing
 
 ## Implementation Notes
 
-- Insert proper `MTMathSpace` atoms with appropriate widths
+- Insert proper `MathSpace` atoms with appropriate widths
 - `\,` is already implemented (3/18 em) — use as reference

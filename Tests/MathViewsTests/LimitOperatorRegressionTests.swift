@@ -9,7 +9,7 @@ import XCTest
 /// - Integral sizing (integrals being too small)
 final class LimitOperatorRegressionTests: XCTestCase {
 
-    var font: MTFont?
+    var font: FontInstance?
 
     override func setUpWithError() throws {
         try super.setUpWithError()

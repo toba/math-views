@@ -155,7 +155,7 @@ private class BundleManager {
                     try BundleManager.manager.registerMathTable(mathFont: mathFont)
 
                 } catch {
-                    fatalError("MTMathFonts:\(#function) ondemand loading failed, mathFont \(mathFont.rawValue), reason \(error)")
+                    fatalError("MathFonts:\(#function) ondemand loading failed, mathFont \(mathFont.rawValue), reason \(error)")
                 }
             }
         })

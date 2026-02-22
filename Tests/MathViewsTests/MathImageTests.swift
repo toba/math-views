@@ -109,7 +109,7 @@ extension MathImageResult {
         let formatter = MathImageRenderer(latex: latex, fontSize: fontSize - 1.0,
                                     textColor: textColor,
                                     labelMode: .text, textAlignment: alignment)
-        formatter.font = font.mtfont(size: fontSize)
+        formatter.font = font.fontInstance(size: fontSize)
         let (error, image) = formatter.asImage()
         return MathImageResult(error: error, image: image, layoutInfo: nil)
     }

@@ -3,7 +3,7 @@ import XCTest
 
 final class ArrowStretchingTest: XCTestCase {
 
-    var font: MTFont!
+    var font: FontInstance!
 
     override func setUp() {
         super.setUp()

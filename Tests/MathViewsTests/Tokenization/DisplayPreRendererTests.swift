@@ -1,182 +1,183 @@
-import Testing
 import CoreGraphics
+import Testing
+
 @testable import MathViews
 
 struct DisplayPreRendererTests {
 
-    let font: FontInstance
-    let renderer: DisplayPreRenderer
+  let font: FontInstance
+  let renderer: DisplayPreRenderer
 
-    init() {
-        font = FontInstance(fontWithName: "latinmodern-math", size: 20)
-        renderer = DisplayPreRenderer(font: font, style: .display, cramped: false)
+  init() {
+    font = FontInstance(fontWithName: "latinmodern-math", size: 20)
+    renderer = DisplayPreRenderer(font: font, style: .display, cramped: false)
+  }
+
+  // MARK: - Script Rendering Tests
+
+  @Test func renderSuperscript() {
+    // Create a simple superscript: 2
+    let mathList = MathList()
+    let atom = MathAtom(type: .number, value: "2")
+    mathList.add(atom)
+
+    let display = renderer.renderScript(mathList, isSuper: true)
+
+    #expect(display != nil, "Superscript display should not be nil")
+    #expect(display!.width > 0, "Superscript should have positive width")
+    #expect(display!.ascent > 0, "Superscript should have positive ascent")
+  }
+
+  @Test func renderSubscript() {
+    // Create a simple subscript: i
+    let mathList = MathList()
+    let atom = MathAtom(type: .variable, value: "i")
+    mathList.add(atom)
+
+    let display = renderer.renderScript(mathList, isSuper: false)
+
+    #expect(display != nil, "Subscript display should not be nil")
+    #expect(display!.width > 0, "Subscript should have positive width")
+  }
+
+  @Test func scriptStyleInDisplayMode() {
+    // In display mode, scripts should use script style
+    let displayRenderer = DisplayPreRenderer(font: font, style: .display, cramped: false)
+
+    let mathList = MathList()
+    mathList.add(MathAtom(type: .variable, value: "x"))
+
+    let display = displayRenderer.renderScript(mathList, isSuper: true)
+
+    #expect(display != nil)
+    // Script style should be smaller than display style
+    // We can't directly check the style, but we can verify it renders
+  }
+
+  @Test func scriptStyleInScriptMode() {
+    // In script mode, scripts should use scriptOfScript style
+    let scriptRenderer = DisplayPreRenderer(font: font, style: .script, cramped: false)
+
+    let mathList = MathList()
+    mathList.add(MathAtom(type: .variable, value: "x"))
+
+    let display = scriptRenderer.renderScript(mathList, isSuper: true)
+
+    #expect(display != nil)
+  }
+
+  // MARK: - Math List Rendering Tests
+
+  @Test func renderSimpleMathList() {
+    let mathList = MathList()
+    mathList.add(MathAtom(type: .variable, value: "x"))
+    mathList.add(MathAtom(type: .binaryOperator, value: "+"))
+    mathList.add(MathAtom(type: .variable, value: "y"))
+
+    let display = renderer.renderMathList(mathList)
+
+    #expect(display != nil, "Display should not be nil")
+    #expect(display!.width > 0, "Display should have positive width")
+  }
+
+  @Test func renderNilMathList() {
+    let display = renderer.renderMathList(nil)
+    #expect(display == nil, "Nil math list should produce nil display")
+  }
+
+  @Test func renderEmptyMathList() {
+    let mathList = MathList()
+    let display = renderer.renderMathList(mathList)
+
+    // Empty math list may return nil or empty display depending on implementation
+    // Just verify it doesn't crash
+    if let display {
+      #expect(display.width == 0, "Empty math list should have zero width")
     }
+  }
 
-    // MARK: - Script Rendering Tests
+  @Test func renderWithCustomStyle() {
+    let mathList = MathList()
+    mathList.add(MathAtom(type: .variable, value: "x"))
 
-    @Test func renderSuperscript() {
-        // Create a simple superscript: 2
-        let mathList = MathList()
-        let atom = MathAtom(type: .number, value: "2")
-        mathList.add(atom)
+    // Render with text style instead of display style
+    let display = renderer.renderMathList(mathList, style: .text)
 
-        let display = renderer.renderScript(mathList, isSuper: true)
+    #expect(display != nil)
+    #expect(display!.width > 0)
+  }
 
-        #expect(display != nil, "Superscript display should not be nil")
-        #expect(display!.width > 0, "Superscript should have positive width")
-        #expect(display!.ascent > 0, "Superscript should have positive ascent")
-    }
+  @Test func renderWithCustomCramped() {
+    let mathList = MathList()
+    mathList.add(MathAtom(type: .variable, value: "x"))
 
-    @Test func renderSubscript() {
-        // Create a simple subscript: i
-        let mathList = MathList()
-        let atom = MathAtom(type: .variable, value: "i")
-        mathList.add(atom)
+    // Render with cramped mode
+    let display = renderer.renderMathList(mathList, cramped: true)
 
-        let display = renderer.renderScript(mathList, isSuper: false)
+    #expect(display != nil)
+    #expect(display!.width > 0)
+  }
 
-        #expect(display != nil, "Subscript display should not be nil")
-        #expect(display!.width > 0, "Subscript should have positive width")
-    }
+  // MARK: - Complex Content Tests
 
-    @Test func scriptStyleInDisplayMode() {
-        // In display mode, scripts should use script style
-        let displayRenderer = DisplayPreRenderer(font: font, style: .display, cramped: false)
+  @Test func renderComplexScript() {
+    // Create a complex superscript: a+b
+    let mathList = MathList()
+    mathList.add(MathAtom(type: .variable, value: "a"))
+    mathList.add(MathAtom(type: .binaryOperator, value: "+"))
+    mathList.add(MathAtom(type: .variable, value: "b"))
 
-        let mathList = MathList()
-        mathList.add(MathAtom(type: .variable, value: "x"))
+    let display = renderer.renderScript(mathList, isSuper: true)
 
-        let display = displayRenderer.renderScript(mathList, isSuper: true)
+    #expect(display != nil)
+    #expect(display!.width > 0)
+  }
 
-        #expect(display != nil)
-        // Script style should be smaller than display style
-        // We can't directly check the style, but we can verify it renders
-    }
+  @Test func renderMultipleAtoms() {
+    let mathList = MathList()
+    mathList.add(MathAtom(type: .number, value: "1"))
+    mathList.add(MathAtom(type: .binaryOperator, value: "+"))
+    mathList.add(MathAtom(type: .number, value: "2"))
+    mathList.add(MathAtom(type: .relation, value: "="))
+    mathList.add(MathAtom(type: .number, value: "3"))
 
-    @Test func scriptStyleInScriptMode() {
-        // In script mode, scripts should use scriptOfScript style
-        let scriptRenderer = DisplayPreRenderer(font: font, style: .script, cramped: false)
+    let display = renderer.renderMathList(mathList)
 
-        let mathList = MathList()
-        mathList.add(MathAtom(type: .variable, value: "x"))
+    #expect(display != nil)
+    #expect(display!.width > 0)
+  }
 
-        let display = scriptRenderer.renderScript(mathList, isSuper: true)
+  // MARK: - Font and Style Tests
 
-        #expect(display != nil)
-    }
+  @Test func rendererWithDifferentFonts() {
+    let smallFont = FontInstance(fontWithName: "latinmodern-math", size: 10)
+    let smallRenderer = DisplayPreRenderer(font: smallFont, style: .display, cramped: false)
 
-    // MARK: - Math List Rendering Tests
+    let mathList = MathList()
+    mathList.add(MathAtom(type: .variable, value: "x"))
 
-    @Test func renderSimpleMathList() {
-        let mathList = MathList()
-        mathList.add(MathAtom(type: .variable, value: "x"))
-        mathList.add(MathAtom(type: .binaryOperator, value: "+"))
-        mathList.add(MathAtom(type: .variable, value: "y"))
+    let normalDisplay = renderer.renderMathList(mathList)
+    let smallDisplay = smallRenderer.renderMathList(mathList)
 
-        let display = renderer.renderMathList(mathList)
+    #expect(normalDisplay != nil)
+    #expect(smallDisplay != nil)
 
-        #expect(display != nil, "Display should not be nil")
-        #expect(display!.width > 0, "Display should have positive width")
-    }
+    // Smaller font should produce narrower display
+    #expect(smallDisplay!.width < normalDisplay!.width)
+  }
 
-    @Test func renderNilMathList() {
-        let display = renderer.renderMathList(nil)
-        #expect(display == nil, "Nil math list should produce nil display")
-    }
+  @Test func crampedMode() {
+    let normalRenderer = DisplayPreRenderer(font: font, style: .display, cramped: false)
+    let crampedRenderer = DisplayPreRenderer(font: font, style: .display, cramped: true)
 
-    @Test func renderEmptyMathList() {
-        let mathList = MathList()
-        let display = renderer.renderMathList(mathList)
+    let mathList = MathList()
+    mathList.add(MathAtom(type: .variable, value: "x"))
 
-        // Empty math list may return nil or empty display depending on implementation
-        // Just verify it doesn't crash
-        if let display = display {
-            #expect(display.width == 0, "Empty math list should have zero width")
-        }
-    }
+    let normalDisplay = normalRenderer.renderMathList(mathList)
+    let crampedDisplay = crampedRenderer.renderMathList(mathList)
 
-    @Test func renderWithCustomStyle() {
-        let mathList = MathList()
-        mathList.add(MathAtom(type: .variable, value: "x"))
-
-        // Render with text style instead of display style
-        let display = renderer.renderMathList(mathList, style: .text)
-
-        #expect(display != nil)
-        #expect(display!.width > 0)
-    }
-
-    @Test func renderWithCustomCramped() {
-        let mathList = MathList()
-        mathList.add(MathAtom(type: .variable, value: "x"))
-
-        // Render with cramped mode
-        let display = renderer.renderMathList(mathList, cramped: true)
-
-        #expect(display != nil)
-        #expect(display!.width > 0)
-    }
-
-    // MARK: - Complex Content Tests
-
-    @Test func renderComplexScript() {
-        // Create a complex superscript: a+b
-        let mathList = MathList()
-        mathList.add(MathAtom(type: .variable, value: "a"))
-        mathList.add(MathAtom(type: .binaryOperator, value: "+"))
-        mathList.add(MathAtom(type: .variable, value: "b"))
-
-        let display = renderer.renderScript(mathList, isSuper: true)
-
-        #expect(display != nil)
-        #expect(display!.width > 0)
-    }
-
-    @Test func renderMultipleAtoms() {
-        let mathList = MathList()
-        mathList.add(MathAtom(type: .number, value: "1"))
-        mathList.add(MathAtom(type: .binaryOperator, value: "+"))
-        mathList.add(MathAtom(type: .number, value: "2"))
-        mathList.add(MathAtom(type: .relation, value: "="))
-        mathList.add(MathAtom(type: .number, value: "3"))
-
-        let display = renderer.renderMathList(mathList)
-
-        #expect(display != nil)
-        #expect(display!.width > 0)
-    }
-
-    // MARK: - Font and Style Tests
-
-    @Test func rendererWithDifferentFonts() {
-        let smallFont = FontInstance(fontWithName: "latinmodern-math", size: 10)
-        let smallRenderer = DisplayPreRenderer(font: smallFont, style: .display, cramped: false)
-
-        let mathList = MathList()
-        mathList.add(MathAtom(type: .variable, value: "x"))
-
-        let normalDisplay = renderer.renderMathList(mathList)
-        let smallDisplay = smallRenderer.renderMathList(mathList)
-
-        #expect(normalDisplay != nil)
-        #expect(smallDisplay != nil)
-
-        // Smaller font should produce narrower display
-        #expect(smallDisplay!.width < normalDisplay!.width)
-    }
-
-    @Test func crampedMode() {
-        let normalRenderer = DisplayPreRenderer(font: font, style: .display, cramped: false)
-        let crampedRenderer = DisplayPreRenderer(font: font, style: .display, cramped: true)
-
-        let mathList = MathList()
-        mathList.add(MathAtom(type: .variable, value: "x"))
-
-        let normalDisplay = normalRenderer.renderMathList(mathList)
-        let crampedDisplay = crampedRenderer.renderMathList(mathList)
-
-        #expect(normalDisplay != nil)
-        #expect(crampedDisplay != nil)
-        // Both should render successfully
-    }
+    #expect(normalDisplay != nil)
+    #expect(crampedDisplay != nil)
+    // Both should render successfully
+  }
 }

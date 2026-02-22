@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /** A factory to create commonly used MathAtoms. */
 public class MathAtomFactory {

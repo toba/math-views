@@ -1,9 +1,9 @@
-import Foundation
-import CoreText
+public import Foundation
+public import CoreText
 #if os(iOS) || os(visionOS)
-import UIKit
+public import UIKit
 #elseif os(macOS)
-import AppKit
+public import AppKit
 #endif
 
 /**

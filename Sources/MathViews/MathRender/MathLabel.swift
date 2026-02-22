@@ -1,5 +1,5 @@
-import Foundation
-import SwiftUI
+public import Foundation
+public import SwiftUI
 
 #if os(macOS)
 

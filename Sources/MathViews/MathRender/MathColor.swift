@@ -1,8 +1,8 @@
-import Foundation
+public import Foundation
 #if os(iOS) || os(visionOS)
-import UIKit
+public import UIKit
 #elseif os(macOS)
-import AppKit
+public import AppKit
 #endif
 
 extension MathColor {

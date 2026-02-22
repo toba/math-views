@@ -1,7 +1,7 @@
 #if os(iOS) || os(visionOS)
-import UIKit
+public import UIKit
 #elseif os(macOS)
-import AppKit
+public import AppKit
 #endif
 
 /// Now available for everyone to use

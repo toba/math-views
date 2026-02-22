@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /**
  The type of atom in a `MathList`.

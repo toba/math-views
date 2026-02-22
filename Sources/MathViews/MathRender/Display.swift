@@ -1,7 +1,7 @@
-import Foundation
-import QuartzCore
-import CoreText
-import SwiftUI
+public import Foundation
+public import QuartzCore
+public import CoreText
+public import SwiftUI
 
 // The Downshift protocol allows an Display to be shifted down by a given amount.
 protocol DownShift {

@@ -1,11 +1,11 @@
 ---
 # z9b-r1r
 title: Swift 6.2 Structural Modernization
-status: in-progress
+status: completed
 type: epic
 priority: normal
 created_at: 2026-02-22T17:07:47Z
-updated_at: 2026-02-22T20:52:39Z
+updated_at: 2026-02-22T20:58:30Z
 parent: 1ve-o8n
 blocking:
     - 0v4-vm2
@@ -22,7 +22,7 @@ Remove Objective-C heritage and enable Swift 6.2 language features. This is the 
 
 - [x] Bump `Package.swift` to swift-tools-version 6.2, raise platforms to iOS 18+ / macOS 15+
 - [x] Enable Swift 6.2 upcoming features: `ExistentialAny`, `MemberImportVisibility` (already enabled)
-- [ ] Enable `InternalImportsByDefault` (requires adding `public import` across ~400 call sites)
+- [x] Enable `InternalImportsByDefault` (added `public import` to 13 source files with public API)
 - [ ] Enable concurrency features: `IsolatedDefaultValues`, `@concurrent`, `sending` (deferred to ziw-odj)
 - [x] Remove NSObject inheritance from `MathAtom` (13 subclasses), `Display` (8+ subclasses), `MathList`
 - [x] Replace `NSError` with a Swift `Error` enum in `MathListBuilder`
@@ -77,3 +77,17 @@ func build() throws(ParseError) { ... }
 ### NSDictionary/NSNumber Elimination
 
 `FontMathTable.swift` / `FontMathTableV2.swift` use `NSDictionary`/`NSNumber` for plist-loaded font metrics. Replace with typed Swift dictionaries (`[String: Any]` → `[String: Int]` / `[String: [String: Int]]` where possible). Use `PropertyListDecoder` with `Codable` structs for the math table schema.
+
+
+## Summary of Changes
+
+All non-deferred tasks completed:
+- Swift 6.2 tools version with iOS 18+/macOS 15+ platforms
+- Upcoming features enabled: ExistentialAny, MemberImportVisibility, InternalImportsByDefault
+- NSObject removed from MathAtom (13 subclasses), Display (8 subclasses), MathList
+- NSError replaced with typed ParseError enum
+- NSDictionary/NSNumber replaced with typed Swift collections
+- NSRange replaced with Range<Int>
+- Vestigial statics removed
+
+Concurrency features (IsolatedDefaultValues, @concurrent, sending) deferred to ziw-odj.

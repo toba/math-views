@@ -1,4 +1,4 @@
-import Foundation
+public import Foundation
 
 /** `MathListBuilder` is a class for parsing LaTeX into an `MathList` that
  can be rendered and processed mathematically.

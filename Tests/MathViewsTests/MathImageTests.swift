@@ -98,13 +98,13 @@ final class MathImageTests: XCTestCase {
         queue.async(group: group, execute: workitem)
     }
 }
-public struct MathImageResult {
+struct MathImageResult {
     let error: ParseError?
     let image: PlatformImage?
     let layoutInfo: MathImage.LayoutInfo?
 }
 extension MathImageResult {
-    public static func useMathImageRenderer(latex: String, font: MathFont, fontSize: CGFloat, textColor: MathColor = MathColor.black) -> MathImageResult {
+    static func useMathImageRenderer(latex: String, font: MathFont, fontSize: CGFloat, textColor: MathColor = MathColor.black) -> MathImageResult {
         let alignment = MathTextAlignment.left
         let formatter = MathImageRenderer(latex: latex, fontSize: fontSize - 1.0,
                                     textColor: textColor,
@@ -113,7 +113,7 @@ extension MathImageResult {
         let (error, image) = formatter.asImage()
         return MathImageResult(error: error, image: image, layoutInfo: nil)
     }
-    public static func useMathImage(latex: String, font: MathFont, fontSize: CGFloat, textColor: MathColor = MathColor.black) -> MathImageResult {
+    static func useMathImage(latex: String, font: MathFont, fontSize: CGFloat, textColor: MathColor = MathColor.black) -> MathImageResult {
         let alignment = MathTextAlignment.left
         var formatter = MathImage(latex: latex, fontSize: fontSize - 1.0,
                                   textColor: textColor,

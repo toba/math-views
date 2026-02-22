@@ -1,6 +1,6 @@
-import Foundation
-import CoreGraphics
-import CoreText
+public import Foundation
+public import CoreGraphics
+public import CoreText
 
 extension MathFont {
     public func fontInstance(size: CGFloat) -> FontInstanceV2 {

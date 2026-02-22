@@ -1,6 +1,6 @@
 
-import Foundation
-import CoreText
+public import Foundation
+public import CoreText
 
 //
 //  Created by Mike Griebling on 2022-12-31.

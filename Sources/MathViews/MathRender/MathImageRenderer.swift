@@ -1,11 +1,11 @@
-import Foundation
+public import Foundation
 
 #if os(iOS) || os(visionOS)
-    import UIKit
+    public import UIKit
 #endif
 
 #if os(macOS)
-    import AppKit
+    public import AppKit
 #endif
 
 public class MathImageRenderer {

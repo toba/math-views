@@ -6,6 +6,7 @@ import PackageDescription
 let upcomingFeatures: [SwiftSetting] = [
     .enableUpcomingFeature("ExistentialAny"),
     .enableUpcomingFeature("MemberImportVisibility"),
+    .enableUpcomingFeature("InternalImportsByDefault"),
     .swiftLanguageMode(.v5),
 ]
 

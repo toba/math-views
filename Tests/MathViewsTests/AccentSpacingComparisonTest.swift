@@ -1,16 +1,17 @@
-import XCTest
+import Testing
+import CoreGraphics
+import CoreText
 @testable import MathViews
 
-final class AccentSpacingComparisonTest: XCTestCase {
+struct AccentSpacingComparisonTest {
 
-    var font: FontInstance!
+    let font: FontInstance
 
-    override func setUp() {
-        super.setUp()
-        font = FontManager().termesFont(withSize: 20)
+    init() {
+        font = FontManager().termesFont(withSize: 20)!
     }
 
-    func testCompareSpacing() throws {
+    @Test func compareSpacing() throws {
         // Test with same content for comparison
         let content = "ABC"
 
@@ -28,7 +29,7 @@ final class AccentSpacingComparisonTest: XCTestCase {
         guard let widehatAccentDisp = widehatDisplay?.subDisplays.first as? AccentDisplay,
               let widehatAccentee = widehatAccentDisp.accentee,
               let widehatAccent = widehatAccentDisp.accent else {
-            XCTFail("Could not extract widehat display")
+            Issue.record("Could not extract widehat display")
             return
         }
 
@@ -72,7 +73,7 @@ final class AccentSpacingComparisonTest: XCTestCase {
         guard let arrowAccentDisp = arrowDisplay?.subDisplays.first as? AccentDisplay,
               let arrowAccentee = arrowAccentDisp.accentee,
               let arrowAccent = arrowAccentDisp.accent else {
-            XCTFail("Could not extract arrow display")
+            Issue.record("Could not extract arrow display")
             return
         }
 
@@ -133,7 +134,7 @@ final class AccentSpacingComparisonTest: XCTestCase {
 
         // Baseline gaps will differ because we compensate for different minY values
         // But visual gaps (which account for minY) should be approximately equal
-        XCTAssertEqual(widehatVisualGap, arrowVisualGap, accuracy: 0.5,
+        #expect(abs(widehatVisualGap - arrowVisualGap) <= 0.5,
                       "Visual gaps should be approximately equal after minY compensation")
     }
 }

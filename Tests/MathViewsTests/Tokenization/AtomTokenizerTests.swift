@@ -1,87 +1,81 @@
-import XCTest
+import Testing
+import CoreGraphics
 @testable import MathViews
 
-class AtomTokenizerTests: XCTestCase {
+struct AtomTokenizerTests {
 
-    var font: FontInstance!
-    var tokenizer: AtomTokenizer!
+    let font: FontInstance
+    let tokenizer: AtomTokenizer
 
-    override func setUp() {
-        super.setUp()
+    init() {
         font = FontInstance(fontWithName: "latinmodern-math", size: 20)
         tokenizer = AtomTokenizer(font: font, style: .display, cramped: false)
     }
 
-    override func tearDown() {
-        font = nil
-        tokenizer = nil
-        super.tearDown()
-    }
-
     // MARK: - Basic Tokenization Tests
 
-    func testTokenizeEmptyList() {
+    @Test func tokenizeEmptyList() {
         let elements = tokenizer.tokenize([])
-        XCTAssertEqual(elements.count, 0)
+        #expect(elements.count == 0)
     }
 
-    func testTokenizeSingleOrdinaryAtom() {
+    @Test func tokenizeSingleOrdinaryAtom() {
         let atom = MathAtom(type: .ordinary, value: "x")
         let elements = tokenizer.tokenize([atom])
 
-        XCTAssertEqual(elements.count, 1)
-        XCTAssertTrue(elements[0].isBreakBefore)
-        XCTAssertTrue(elements[0].isBreakAfter)
-        XCTAssertFalse(elements[0].indivisible)
+        #expect(elements.count == 1)
+        #expect(elements[0].isBreakBefore)
+        #expect(elements[0].isBreakAfter)
+        #expect(!elements[0].indivisible)
     }
 
-    func testTokenizeVariable() {
+    @Test func tokenizeVariable() {
         let atom = MathAtom(type: .variable, value: "y")
         let elements = tokenizer.tokenize([atom])
 
-        XCTAssertEqual(elements.count, 1)
+        #expect(elements.count == 1)
         if case .text(let text) = elements[0].content {
-            XCTAssertEqual(text, "y")
+            #expect(text == "y")
         } else {
-            XCTFail("Expected text content")
+            Issue.record("Expected text content")
         }
     }
 
-    func testTokenizeNumber() {
+    @Test func tokenizeNumber() {
         let atom = MathAtom(type: .number, value: "42")
         let elements = tokenizer.tokenize([atom])
 
-        XCTAssertEqual(elements.count, 1)
-        XCTAssertGreaterThan(elements[0].width, 0)
+        #expect(elements.count == 1)
+        #expect(elements[0].width > 0)
     }
 
     // MARK: - Operator Tokenization Tests
 
-    func testTokenizeBinaryOperator() {
+    @Test func tokenizeBinaryOperator() {
         let atom = MathAtom(type: .binaryOperator, value: "+")
         let elements = tokenizer.tokenize([atom])
 
-        XCTAssertEqual(elements.count, 1)
-        XCTAssertEqual(elements[0].penaltyBefore, BreakPenalty.best)
-        XCTAssertEqual(elements[0].penaltyAfter, BreakPenalty.best)
+        #expect(elements.count == 1)
+        #expect(elements[0].penaltyBefore == BreakPenalty.best)
+        #expect(elements[0].penaltyAfter == BreakPenalty.best)
 
         if case .operator(let op, let type) = elements[0].content {
-            XCTAssertEqual(op, "+")
-            XCTAssertEqual(type, .binaryOperator)
+            #expect(op == "+")
+            #expect(type == .binaryOperator)
         } else {
-            XCTFail("Expected operator content")
+            Issue.record("Expected operator content")
         }
     }
 
-    func testTokenizeRelationOperator() {
+    @Test func tokenizeRelationOperator() {
         let atom = MathAtom(type: .relation, value: "=")
         let elements = tokenizer.tokenize([atom])
 
-        XCTAssertEqual(elements.count, 1)
-        XCTAssertEqual(elements[0].penaltyBefore, BreakPenalty.best)
+        #expect(elements.count == 1)
+        #expect(elements[0].penaltyBefore == BreakPenalty.best)
     }
 
-    func testTokenizeMultipleOperators() {
+    @Test func tokenizeMultipleOperators() {
         let atoms = [
             MathAtom(type: .variable, value: "x"),
             MathAtom(type: .binaryOperator, value: "+"),
@@ -89,43 +83,43 @@ class AtomTokenizerTests: XCTestCase {
         ]
         let elements = tokenizer.tokenize(atoms)
 
-        XCTAssertEqual(elements.count, 3)
+        #expect(elements.count == 3)
     }
 
     // MARK: - Delimiter Tokenization Tests
 
-    func testTokenizeOpenDelimiter() {
+    @Test func tokenizeOpenDelimiter() {
         let atom = MathAtom(type: .open, value: "(")
         let elements = tokenizer.tokenize([atom])
 
-        XCTAssertEqual(elements.count, 1)
-        XCTAssertTrue(elements[0].isBreakBefore)
-        XCTAssertFalse(elements[0].isBreakAfter, "Should NOT break after open delimiter")
+        #expect(elements.count == 1)
+        #expect(elements[0].isBreakBefore)
+        #expect(!elements[0].isBreakAfter, "Should NOT break after open delimiter")
     }
 
-    func testTokenizeCloseDelimiter() {
+    @Test func tokenizeCloseDelimiter() {
         let atom = MathAtom(type: .close, value: ")")
         let elements = tokenizer.tokenize([atom])
 
-        XCTAssertEqual(elements.count, 1)
-        XCTAssertFalse(elements[0].isBreakBefore, "Should NOT break before close delimiter")
-        XCTAssertTrue(elements[0].isBreakAfter)
+        #expect(elements.count == 1)
+        #expect(!elements[0].isBreakBefore, "Should NOT break before close delimiter")
+        #expect(elements[0].isBreakAfter)
     }
 
     // MARK: - Punctuation Tokenization Tests
 
-    func testTokenizePunctuation() {
+    @Test func tokenizePunctuation() {
         let atom = MathAtom(type: .punctuation, value: ",")
         let elements = tokenizer.tokenize([atom])
 
-        XCTAssertEqual(elements.count, 1)
-        XCTAssertFalse(elements[0].isBreakBefore, "Should NOT break before punctuation")
-        XCTAssertTrue(elements[0].isBreakAfter)
+        #expect(elements.count == 1)
+        #expect(!elements[0].isBreakBefore, "Should NOT break before punctuation")
+        #expect(elements[0].isBreakAfter)
     }
 
     // MARK: - Script Tokenization Tests
 
-    func testTokenizeAtomWithSuperscript() {
+    @Test func tokenizeAtomWithSuperscript() {
         let atom = MathAtom(type: .variable, value: "x")
         let superScript = MathList()
         superScript.add(MathAtom(type: .number, value: "2"))
@@ -134,22 +128,22 @@ class AtomTokenizerTests: XCTestCase {
         let elements = tokenizer.tokenize([atom])
 
         // Should have base + superscript = 2 elements
-        XCTAssertGreaterThanOrEqual(elements.count, 2)
+        #expect(elements.count >= 2)
 
         // All elements should share same groupId
         if elements.count >= 2 {
-            XCTAssertNotNil(elements[0].groupId)
-            XCTAssertEqual(elements[0].groupId, elements[1].groupId)
+            #expect(elements[0].groupId != nil)
+            #expect(elements[0].groupId == elements[1].groupId)
 
             // Base cannot break after
-            XCTAssertFalse(elements[0].isBreakAfter)
+            #expect(!elements[0].isBreakAfter)
 
             // Superscript cannot break before
-            XCTAssertFalse(elements[1].isBreakBefore)
+            #expect(!elements[1].isBreakBefore)
         }
     }
 
-    func testTokenizeAtomWithSubscript() {
+    @Test func tokenizeAtomWithSubscript() {
         let atom = MathAtom(type: .variable, value: "x")
         let subScript = MathList()
         subScript.add(MathAtom(type: .variable, value: "i"))
@@ -157,16 +151,16 @@ class AtomTokenizerTests: XCTestCase {
 
         let elements = tokenizer.tokenize([atom])
 
-        XCTAssertGreaterThanOrEqual(elements.count, 2)
+        #expect(elements.count >= 2)
 
         if elements.count >= 2 {
             // Should be grouped
-            XCTAssertNotNil(elements[0].groupId)
-            XCTAssertEqual(elements[0].groupId, elements[1].groupId)
+            #expect(elements[0].groupId != nil)
+            #expect(elements[0].groupId == elements[1].groupId)
         }
     }
 
-    func testTokenizeAtomWithBothScripts() {
+    @Test func tokenizeAtomWithBothScripts() {
         let atom = MathAtom(type: .variable, value: "x")
 
         let subScript = MathList()
@@ -180,20 +174,20 @@ class AtomTokenizerTests: XCTestCase {
         let elements = tokenizer.tokenize([atom])
 
         // Should have base + subscript + superscript = 3 elements
-        XCTAssertGreaterThanOrEqual(elements.count, 3)
+        #expect(elements.count >= 3)
 
         if elements.count >= 3 {
             // All should share groupId
             let groupId = elements[0].groupId
-            XCTAssertNotNil(groupId)
-            XCTAssertEqual(elements[1].groupId, groupId)
-            XCTAssertEqual(elements[2].groupId, groupId)
+            #expect(groupId != nil)
+            #expect(elements[1].groupId == groupId)
+            #expect(elements[2].groupId == groupId)
         }
     }
 
     // MARK: - Complex Structure Tests
 
-    func testTokenizeFraction() {
+    @Test func tokenizeFraction() {
         let fraction = Fraction()
         fraction.numerator = MathList()
         fraction.numerator?.add(MathAtom(type: .variable, value: "a"))
@@ -202,30 +196,30 @@ class AtomTokenizerTests: XCTestCase {
 
         let elements = tokenizer.tokenize([fraction])
 
-        XCTAssertEqual(elements.count, 1, "Fraction should be single atomic element")
-        XCTAssertTrue(elements[0].indivisible, "Fraction must be indivisible")
+        #expect(elements.count == 1, "Fraction should be single atomic element")
+        #expect(elements[0].indivisible, "Fraction must be indivisible")
 
         if case .display(let display) = elements[0].content {
-            XCTAssertTrue(display is FractionDisplay)
+            #expect(display is FractionDisplay)
         } else {
-            XCTFail("Expected display content for fraction")
+            Issue.record("Expected display content for fraction")
         }
     }
 
-    func testTokenizeRadical() {
+    @Test func tokenizeRadical() {
         let radical = Radical()
         radical.radicand = MathList()
         radical.radicand?.add(MathAtom(type: .variable, value: "x"))
 
         let elements = tokenizer.tokenize([radical])
 
-        XCTAssertEqual(elements.count, 1, "Radical should be single atomic element")
-        XCTAssertTrue(elements[0].indivisible, "Radical must be indivisible")
+        #expect(elements.count == 1, "Radical should be single atomic element")
+        #expect(elements[0].indivisible, "Radical must be indivisible")
     }
 
     // MARK: - Integration Tests
 
-    func testTokenizeSimpleEquation() {
+    @Test func tokenizeSimpleEquation() {
         // x + y = z
         let atoms = [
             MathAtom(type: .variable, value: "x"),
@@ -237,16 +231,16 @@ class AtomTokenizerTests: XCTestCase {
 
         let elements = tokenizer.tokenize(atoms)
 
-        XCTAssertEqual(elements.count, 5)
+        #expect(elements.count == 5)
 
         // Verify break points: should be able to break before/after operators
-        XCTAssertTrue(elements[1].isBreakBefore)  // + operator
-        XCTAssertTrue(elements[1].isBreakAfter)
-        XCTAssertTrue(elements[3].isBreakBefore)  // = operator
-        XCTAssertTrue(elements[3].isBreakAfter)
+        #expect(elements[1].isBreakBefore)  // + operator
+        #expect(elements[1].isBreakAfter)
+        #expect(elements[3].isBreakBefore)  // = operator
+        #expect(elements[3].isBreakAfter)
     }
 
-    func testTokenizeParenthesizedExpression() {
+    @Test func tokenizeParenthesizedExpression() {
         // (x + y)
         let atoms = [
             MathAtom(type: .open, value: "("),
@@ -258,16 +252,16 @@ class AtomTokenizerTests: XCTestCase {
 
         let elements = tokenizer.tokenize(atoms)
 
-        XCTAssertEqual(elements.count, 5)
+        #expect(elements.count == 5)
 
         // Cannot break after open paren
-        XCTAssertFalse(elements[0].isBreakAfter)
+        #expect(!elements[0].isBreakAfter)
 
         // Cannot break before close paren
-        XCTAssertFalse(elements[4].isBreakBefore)
+        #expect(!elements[4].isBreakBefore)
     }
 
-    func testTokenizeComplexExpression() {
+    @Test func tokenizeComplexExpression() {
         // x^2 + y
         let x = MathAtom(type: .variable, value: "x")
         let superScript = MathList()
@@ -283,12 +277,12 @@ class AtomTokenizerTests: XCTestCase {
         let elements = tokenizer.tokenize(atoms)
 
         // x^2 produces 2 elements (base + script), + is 1, y is 1 = 4 total
-        XCTAssertGreaterThanOrEqual(elements.count, 4)
+        #expect(elements.count >= 4)
     }
 
     // MARK: - Width Tests
 
-    func testElementWidthsArePositive() {
+    @Test func elementWidthsArePositive() {
         let atoms = [
             MathAtom(type: .variable, value: "x"),
             MathAtom(type: .binaryOperator, value: "+"),
@@ -298,26 +292,26 @@ class AtomTokenizerTests: XCTestCase {
         let elements = tokenizer.tokenize(atoms)
 
         for element in elements {
-            XCTAssertGreaterThan(element.width, 0, "All elements should have positive width")
+            #expect(element.width > 0, "All elements should have positive width")
         }
     }
 
     // MARK: - Text Mode Accent Word Boundary Tests
 
     /// Test that accented characters in text mode don't break words
-    /// Issue: "bactéries" was being split as "bacté" + "ries" because the accent
+    /// Issue: "bacteries" was being split as "bacte" + "ries" because the accent
     /// was treated as a separate breakable element
-    func testAccentedCharacterInTextModeWordBoundary() {
-        // Parse LaTeX to get atoms for "bactéries" - the é becomes an accent atom
+    @Test func accentedCharacterInTextModeWordBoundary() {
+        // Parse LaTeX to get atoms for "bacteries" - the e becomes an accent atom
         let latex = "\\text{bactéries}"
         guard let mathList = MathListBuilder.build(fromString: latex) else {
-            XCTFail("Failed to parse LaTeX")
+            Issue.record("Failed to parse LaTeX")
             return
         }
 
         let elements = tokenizer.tokenize(mathList.atoms)
 
-        // Find elements that represent the accent "é" and adjacent characters
+        // Find elements that represent the accent "e" and adjacent characters
         // The word should not be breakable in the middle
         var foundAccent = false
         for (index, element) in elements.enumerated() {
@@ -326,38 +320,38 @@ class AtomTokenizerTests: XCTestCase {
                 foundAccent = true
 
                 // Check that we can't break BEFORE the accent (after "t")
-                XCTAssertFalse(element.isBreakBefore,
+                #expect(!element.isBreakBefore,
                     "Should NOT be able to break before accented character in the middle of a word")
 
                 // Check that we can't break AFTER the accent (before "r")
-                XCTAssertFalse(element.isBreakAfter,
+                #expect(!element.isBreakAfter,
                     "Should NOT be able to break after accented character in the middle of a word")
 
                 // Also check that the preceding element (if any) can't break after
                 if index > 0 {
                     let prevElement = elements[index - 1]
-                    XCTAssertFalse(prevElement.isBreakAfter,
+                    #expect(!prevElement.isBreakAfter,
                         "Previous character should NOT allow break after when followed by accent in word")
                 }
 
                 // And the following element (if any) can't break before
                 if index + 1 < elements.count {
                     let nextElement = elements[index + 1]
-                    XCTAssertFalse(nextElement.isBreakBefore,
+                    #expect(!nextElement.isBreakBefore,
                         "Next character should NOT allow break before when preceded by accent in word")
                 }
             }
         }
 
-        XCTAssertTrue(foundAccent, "Should have found an accent element for 'é'")
+        #expect(foundAccent, "Should have found an accent element for 'e'")
     }
 
     /// Test that multiple accented characters in a word are handled correctly
-    func testMultipleAccentedCharactersInTextMode() {
-        // "après" has an accent
+    @Test func multipleAccentedCharactersInTextMode() {
+        // "apres" has an accent
         let latex = "\\text{après}"
         guard let mathList = MathListBuilder.build(fromString: latex) else {
-            XCTFail("Failed to parse LaTeX")
+            Issue.record("Failed to parse LaTeX")
             return
         }
 
@@ -370,38 +364,38 @@ class AtomTokenizerTests: XCTestCase {
                element.originalAtom.type == .accent {
                 accentCount += 1
 
-                // This is the "è" - check it doesn't allow breaks in word
-                XCTAssertFalse(element.isBreakBefore,
+                // This is the "e" - check it doesn't allow breaks in word
+                #expect(!element.isBreakBefore,
                     "Accent in word should not allow break before")
-                XCTAssertFalse(element.isBreakAfter,
+                #expect(!element.isBreakAfter,
                     "Accent in word should not allow break after")
             }
         }
 
-        XCTAssertGreaterThan(accentCount, 0, "Should have found accent(s)")
+        #expect(accentCount > 0, "Should have found accent(s)")
     }
 
     /// Test that accents at word boundaries DO allow breaks
-    func testAccentAtWordBoundaryAllowsBreak() {
-        // "café noir" - the é is at the end of "café", should allow break after it
+    @Test func accentAtWordBoundaryAllowsBreak() {
+        // "cafe noir" - the e is at the end of "cafe", should allow break after it
         let latex = "\\text{café noir}"
         guard let mathList = MathListBuilder.build(fromString: latex) else {
-            XCTFail("Failed to parse LaTeX")
+            Issue.record("Failed to parse LaTeX")
             return
         }
 
         let elements = tokenizer.tokenize(mathList.atoms)
 
-        // Find the accent for "é" in "café"
+        // Find the accent for "e" in "cafe"
         for (index, element) in elements.enumerated() {
             if case .display = element.content,
                element.originalAtom.type == .accent {
-                // The é is followed by a space, so it SHOULD allow break after
+                // The e is followed by a space, so it SHOULD allow break after
                 // Check the next element - if it's a space, the accent can break after
                 if index + 1 < elements.count {
                     let nextElement = elements[index + 1]
                     if case .text(let text) = nextElement.content, text == " " {
-                        XCTAssertTrue(element.isBreakAfter,
+                        #expect(element.isBreakAfter,
                             "Accent at end of word (before space) should allow break after")
                     }
                 }

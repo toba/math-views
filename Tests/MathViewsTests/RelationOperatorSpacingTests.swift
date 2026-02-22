@@ -1,21 +1,21 @@
-import XCTest
+import Testing
+import CoreGraphics
 @testable import MathViews
 
-class RelationOperatorSpacingTests: XCTestCase {
+struct RelationOperatorSpacingTests {
 
-    var font: FontInstance!
+    let font: FontInstance
 
-    override func setUp() {
-        super.setUp()
-        font = FontManager().termesFont(withSize: 20)
+    init() {
+        font = FontManager().termesFont(withSize: 20)!
     }
 
     /// Test that relation operators (=) have proper spacing
     /// Issue: Space before = was missing in tokenization
-    func testRelationOperatorSpacing() {
+    @Test func relationOperatorSpacing() {
         let latex = "a + b = c"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse LaTeX")
+        #expect(mathList != nil, "Should parse LaTeX")
 
         // Use tokenization path
         let display = Typesetter.createLineForMathListWithTokenization(
@@ -27,8 +27,8 @@ class RelationOperatorSpacingTests: XCTestCase {
             maxWidth: 1000
         )
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThanOrEqual(display!.subDisplays.count, 5, "Should have at least 5 elements: a, +, b, =, c")
+        #expect(display != nil)
+        #expect(display!.subDisplays.count >= 5, "Should have at least 5 elements: a, +, b, =, c")
 
         // Check the positions: each operator should have space before it
         // We should see increasing X positions with gaps for spacing
@@ -51,10 +51,10 @@ class RelationOperatorSpacingTests: XCTestCase {
     }
 
     /// Test binary operator spacing
-    func testBinaryOperatorSpacing() {
+    @Test func binaryOperatorSpacing() {
         let latex = "a + b"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList)
+        #expect(mathList != nil)
 
         let display = Typesetter.createLineForMathListWithTokenization(
             mathList,
@@ -65,7 +65,7 @@ class RelationOperatorSpacingTests: XCTestCase {
             maxWidth: 1000
         )
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThanOrEqual(display!.subDisplays.count, 3, "Should have at least a, +, b")
+        #expect(display != nil)
+        #expect(display!.subDisplays.count >= 3, "Should have at least a, +, b")
     }
 }

@@ -1,23 +1,18 @@
-import XCTest
+import Testing
+import CoreGraphics
 @testable import MathViews
 
-class TypesetterTokenizationTests: XCTestCase {
+struct TypesetterTokenizationTests {
 
-    var font: FontInstance!
+    let font: FontInstance
 
-    override func setUp() {
-        super.setUp()
+    init() {
         font = FontInstance(fontWithName: "latinmodern-math", size: 20)
-    }
-
-    override func tearDown() {
-        font = nil
-        super.tearDown()
     }
 
     // MARK: - Integration Tests
 
-    func testSimpleExpression() {
+    @Test func simpleExpression() {
         // x + y
         let mathList = MathList()
         mathList.add(MathAtom(type: .variable, value: "x"))
@@ -33,12 +28,12 @@ class TypesetterTokenizationTests: XCTestCase {
             maxWidth: 0
         )
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThan(display!.width, 0)
-        XCTAssertGreaterThan(display!.subDisplays.count, 0)
+        #expect(display != nil)
+        #expect(display!.width > 0)
+        #expect(display!.subDisplays.count > 0)
     }
 
-    func testExpressionWithWidthConstraint() {
+    @Test func expressionWithWidthConstraint() {
         // Create a long expression
         let mathList = MathList()
         for i in 0..<10 {
@@ -57,13 +52,13 @@ class TypesetterTokenizationTests: XCTestCase {
             maxWidth: 150
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
         // With width constraint, should create multiple lines
         // Check that display has reasonable dimensions
-        XCTAssertGreaterThan(display!.subDisplays.count, 0)
+        #expect(display!.subDisplays.count > 0)
     }
 
-    func testExpressionWithScripts() {
+    @Test func expressionWithScripts() {
         // x^2 + y
         let mathList = MathList()
 
@@ -85,11 +80,11 @@ class TypesetterTokenizationTests: XCTestCase {
             maxWidth: 0
         )
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThan(display!.width, 0)
+        #expect(display != nil)
+        #expect(display!.width > 0)
     }
 
-    func testFractionInExpression() {
+    @Test func fractionInExpression() {
         let mathList = MathList()
 
         let fraction = Fraction()
@@ -111,11 +106,11 @@ class TypesetterTokenizationTests: XCTestCase {
             maxWidth: 0
         )
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThan(display!.width, 0)
+        #expect(display != nil)
+        #expect(display!.width > 0)
     }
 
-    func testEmptyMathList() {
+    @Test func emptyMathList() {
         let mathList = MathList()
 
         let display = Typesetter.createLineForMathListWithTokenization(
@@ -129,13 +124,13 @@ class TypesetterTokenizationTests: XCTestCase {
 
         // Empty math list should return an empty display (not nil) to match KaTeX behavior
         // This allows empty fraction numerators/denominators to render correctly
-        XCTAssertNotNil(display, "Empty math list should return an empty display (KaTeX compatibility)")
-        XCTAssertEqual(display?.width, 0, "Empty display should have zero width")
-        XCTAssertEqual(display?.ascent, 0, "Empty display should have zero ascent")
-        XCTAssertEqual(display?.descent, 0, "Empty display should have zero descent")
+        #expect(display != nil, "Empty math list should return an empty display (KaTeX compatibility)")
+        #expect(display?.width == 0, "Empty display should have zero width")
+        #expect(display?.ascent == 0, "Empty display should have zero ascent")
+        #expect(display?.descent == 0, "Empty display should have zero descent")
     }
 
-    func testNilMathList() {
+    @Test func nilMathList() {
         let display = Typesetter.createLineForMathListWithTokenization(
             nil,
             font: font,
@@ -145,6 +140,6 @@ class TypesetterTokenizationTests: XCTestCase {
             maxWidth: 0
         )
 
-        XCTAssertNil(display, "Nil math list should return nil")
+        #expect(display == nil, "Nil math list should return nil")
     }
 }

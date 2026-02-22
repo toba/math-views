@@ -1,50 +1,44 @@
-import XCTest
+import Testing
+import CoreGraphics
 @testable import MathViews
 
-class DisplayGeneratorTests: XCTestCase {
+struct DisplayGeneratorTests {
 
-    var font: FontInstance!
-    var generator: DisplayGenerator!
+    let font: FontInstance
+    let generator: DisplayGenerator
 
-    override func setUp() {
-        super.setUp()
+    init() {
         font = FontInstance(fontWithName: "latinmodern-math", size: 20)
         generator = DisplayGenerator(font: font, style: .display)
     }
 
-    override func tearDown() {
-        font = nil
-        generator = nil
-        super.tearDown()
-    }
-
     // MARK: - Basic Generation Tests
 
-    func testGenerateFromEmptyLines() {
+    @Test func generateFromEmptyLines() {
         let displays = generator.generateDisplays(from: [], startPosition: .zero)
-        XCTAssertEqual(displays.count, 0)
+        #expect(displays.count == 0)
     }
 
-    func testGenerateSingleLine() {
+    @Test func generateSingleLine() {
         let element = createTextElement("x", width: 10)
         let lines = [[element]]
 
         let displays = generator.generateDisplays(from: lines, startPosition: .zero)
 
-        XCTAssertGreaterThan(displays.count, 0)
+        #expect(displays.count > 0)
     }
 
-    func testGenerateMultipleLines() {
+    @Test func generateMultipleLines() {
         let line1 = [createTextElement("x", width: 10), createTextElement("+", width: 10)]
         let line2 = [createTextElement("y", width: 10)]
         let lines = [line1, line2]
 
         let displays = generator.generateDisplays(from: lines, startPosition: .zero)
 
-        XCTAssertGreaterThan(displays.count, 0)
+        #expect(displays.count > 0)
     }
 
-    func testGenerateWithPrerenderedDisplay() {
+    @Test func generateWithPrerenderedDisplay() {
         let preDisplay = Display()
         preDisplay.width = 20
         preDisplay.ascent = 10
@@ -55,10 +49,10 @@ class DisplayGeneratorTests: XCTestCase {
 
         let displays = generator.generateDisplays(from: lines, startPosition: .zero)
 
-        XCTAssertGreaterThan(displays.count, 0)
+        #expect(displays.count > 0)
     }
 
-    func testVerticalSpacingBetweenLines() {
+    @Test func verticalSpacingBetweenLines() {
         let line1 = [createTextElement("a", width: 10)]
         let line2 = [createTextElement("b", width: 10)]
         let lines = [line1, line2]
@@ -69,7 +63,7 @@ class DisplayGeneratorTests: XCTestCase {
         if displays.count >= 2 {
             let y1 = displays[0].position.y
             let y2 = displays[1].position.y
-            XCTAssertNotEqual(y1, y2, "Lines should have different y positions")
+            #expect(y1 != y2, "Lines should have different y positions")
         }
     }
 

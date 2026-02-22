@@ -1,11 +1,18 @@
-import XCTest
+import Testing
+import Foundation
+import CoreGraphics
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 @testable import MathViews
 
-class BreakableElementTests: XCTestCase {
+struct BreakableElementTests {
 
     // MARK: - Data Structure Tests
 
-    func testBreakableElementCreation() {
+    @Test func breakableElementCreation() {
         // Create a sample atom
         let atom = MathAtom(type: .ordinary, value: "x")
 
@@ -30,51 +37,51 @@ class BreakableElementTests: XCTestCase {
         )
 
         // Verify properties
-        XCTAssertEqual(element.width, 10.5)
-        XCTAssertEqual(element.height, 12.0)
-        XCTAssertEqual(element.ascent, 8.0)
-        XCTAssertEqual(element.descent, 4.0)
-        XCTAssertTrue(element.isBreakBefore)
-        XCTAssertTrue(element.isBreakAfter)
-        XCTAssertEqual(element.penaltyBefore, BreakPenalty.good)
-        XCTAssertEqual(element.penaltyAfter, BreakPenalty.good)
-        XCTAssertNil(element.groupId)
-        XCTAssertNil(element.parentId)
-        XCTAssertFalse(element.indivisible)
+        #expect(element.width == 10.5)
+        #expect(element.height == 12.0)
+        #expect(element.ascent == 8.0)
+        #expect(element.descent == 4.0)
+        #expect(element.isBreakBefore)
+        #expect(element.isBreakAfter)
+        #expect(element.penaltyBefore == BreakPenalty.good)
+        #expect(element.penaltyAfter == BreakPenalty.good)
+        #expect(element.groupId == nil)
+        #expect(element.parentId == nil)
+        #expect(!element.indivisible)
     }
 
-    func testElementContentText() {
+    @Test func elementContentText() {
         let content = ElementContent.text("hello")
 
         if case .text(let text) = content {
-            XCTAssertEqual(text, "hello")
+            #expect(text == "hello")
         } else {
-            XCTFail("Expected text content")
+            Issue.record("Expected text content")
         }
     }
 
-    func testElementContentOperator() {
+    @Test func elementContentOperator() {
         let content = ElementContent.operator("+", type: .binaryOperator)
 
         if case .operator(let op, let type) = content {
-            XCTAssertEqual(op, "+")
-            XCTAssertEqual(type, .binaryOperator)
+            #expect(op == "+")
+            #expect(type == .binaryOperator)
         } else {
-            XCTFail("Expected operator content")
+            Issue.record("Expected operator content")
         }
     }
 
-    func testElementContentSpace() {
+    @Test func elementContentSpace() {
         let content = ElementContent.space(5.0)
 
         if case .space(let width) = content {
-            XCTAssertEqual(width, 5.0)
+            #expect(width == 5.0)
         } else {
-            XCTFail("Expected space content")
+            Issue.record("Expected space content")
         }
     }
 
-    func testElementContentDisplay() {
+    @Test func elementContentDisplay() {
         // Create a simple display
         let display = Display()
         display.width = 20.0
@@ -84,29 +91,29 @@ class BreakableElementTests: XCTestCase {
         let content = ElementContent.display(display)
 
         if case .display(let disp) = content {
-            XCTAssertEqual(disp.width, 20.0)
-            XCTAssertEqual(disp.ascent, 10.0)
-            XCTAssertEqual(disp.descent, 5.0)
+            #expect(disp.width == 20.0)
+            #expect(disp.ascent == 10.0)
+            #expect(disp.descent == 5.0)
         } else {
-            XCTFail("Expected display content")
+            Issue.record("Expected display content")
         }
     }
 
-    func testElementContentScript() {
+    @Test func elementContentScript() {
         let display = Display()
         display.width = 8.0
 
         let content = ElementContent.script(display, isSuper: true)
 
         if case .script(let disp, let isSuper) = content {
-            XCTAssertEqual(disp.width, 8.0)
-            XCTAssertTrue(isSuper)
+            #expect(disp.width == 8.0)
+            #expect(isSuper)
         } else {
-            XCTFail("Expected script content")
+            Issue.record("Expected script content")
         }
     }
 
-    func testGroupedElements() {
+    @Test func groupedElements() {
         let atom1 = MathAtom(type: .variable, value: "x")
         let atom2 = MathAtom(type: .ordinary, value: "2")
 
@@ -151,13 +158,13 @@ class BreakableElementTests: XCTestCase {
         )
 
         // Verify grouping
-        XCTAssertNotNil(element1.groupId)
-        XCTAssertEqual(element1.groupId, element2.groupId)
-        XCTAssertFalse(element1.isBreakAfter)
-        XCTAssertFalse(element2.isBreakBefore)
+        #expect(element1.groupId != nil)
+        #expect(element1.groupId == element2.groupId)
+        #expect(!element1.isBreakAfter)
+        #expect(!element2.isBreakBefore)
     }
 
-    func testIndivisibleElement() {
+    @Test func indivisibleElement() {
         let atom = MathAtom(type: .fraction, value: "")
         let display = Display()
 
@@ -180,19 +187,19 @@ class BreakableElementTests: XCTestCase {
             indivisible: true  // Fractions are indivisible
         )
 
-        XCTAssertTrue(element.indivisible)
+        #expect(element.indivisible)
     }
 
-    func testPenaltyConstants() {
-        XCTAssertEqual(BreakPenalty.best, 0)
-        XCTAssertEqual(BreakPenalty.good, 10)
-        XCTAssertEqual(BreakPenalty.moderate, 15)
-        XCTAssertEqual(BreakPenalty.acceptable, 50)
-        XCTAssertEqual(BreakPenalty.bad, 100)
-        XCTAssertEqual(BreakPenalty.never, 150)
+    @Test func penaltyConstants() {
+        #expect(BreakPenalty.best == 0)
+        #expect(BreakPenalty.good == 10)
+        #expect(BreakPenalty.moderate == 15)
+        #expect(BreakPenalty.acceptable == 50)
+        #expect(BreakPenalty.bad == 100)
+        #expect(BreakPenalty.never == 150)
     }
 
-    func testElementWithColor() {
+    @Test func elementWithColor() {
         let atom = MathAtom(type: .ordinary, value: "x")
         let redColor = MathColor.red
 
@@ -215,7 +222,7 @@ class BreakableElementTests: XCTestCase {
             indivisible: false
         )
 
-        XCTAssertNotNil(element.color)
-        XCTAssertEqual(element.color, redColor)
+        #expect(element.color != nil)
+        #expect(element.color == redColor)
     }
 }

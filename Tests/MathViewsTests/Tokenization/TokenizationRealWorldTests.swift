@@ -1,26 +1,21 @@
-import XCTest
+import Testing
+import CoreGraphics
 @testable import MathViews
 
-class TokenizationRealWorldTests: XCTestCase {
+struct TokenizationRealWorldTests {
 
-    var font: FontInstance!
+    let font: FontInstance
 
-    override func setUp() {
-        super.setUp()
+    init() {
         font = FontInstance(fontWithName: "latinmodern-math", size: 20)
     }
 
-    override func tearDown() {
-        font = nil
-        super.tearDown()
-    }
-
     // MARK: - Spec Example 1: Radical with Long Text
-    // From spec: "Approximate √61 and compute the two decimal solutions"
-    // Problem: After √61 (at x=116px), there's 119px of space remaining,
+    // From spec: "Approximate sqrt(61) and compute the two decimal solutions"
+    // Problem: After sqrt(61) (at x=116px), there's 119px of space remaining,
     // but text (263px) breaks to next line instead of fitting partial text
 
-    func testSpecExample1_ApproximateRadical() {
+    @Test func specExample1_ApproximateRadical() {
         // Test with tokenization enabled
 
         let latex = "\\text{Approximate }\\sqrt{61}\\text{ and compute the two decimal solutions}"
@@ -34,24 +29,24 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 235
         )
 
-        XCTAssertNotNil(display, "Display should be created")
+        #expect(display != nil, "Display should be created")
 
         // With tokenization, should utilize available width better
         // Check that we're using more horizontal space
-        XCTAssertGreaterThan(display!.width, 150, "Should use significant width")
+        #expect(display!.width > 150, "Should use significant width")
 
         // Verify we have multiple line breaks (can't fit all on one line)
         let yPositions = Set(display!.subDisplays.map { $0.position.y })
-        XCTAssertGreaterThan(yPositions.count, 1, "Should break into multiple lines")
+        #expect(yPositions.count > 1, "Should break into multiple lines")
 
-        print("✓ Spec Example 1: Width used = \(display!.width), Lines = \(yPositions.count)")
+        print("Spec Example 1: Width used = \(display!.width), Lines = \(yPositions.count)")
     }
 
     // MARK: - Spec Example 2: Equation with Integrand
-    // From spec: "Integrate each term of the integrand x²+v"
+    // From spec: "Integrate each term of the integrand x^2+v"
     // Problem: Breaks after text instead of keeping equation on same line
 
-    func testSpecExample2_IntegrateEquation() {
+    @Test func specExample2_IntegrateEquation() {
 
         let latex = "\\text{Integrate each term of the integrand }x^2+v\\text{ separately}"
         let mathList = MathListBuilder.build(fromString: latex)
@@ -63,15 +58,15 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 350
         )
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThan(display!.width, 200, "Should use available width")
+        #expect(display != nil)
+        #expect(display!.width > 200, "Should use available width")
 
-        print("✓ Spec Example 2: Width = \(display!.width)")
+        print("Spec Example 2: Width = \(display!.width)")
     }
 
     // MARK: - Operator Breaking Tests
 
-    func testBreakAtBinaryOperators() {
+    @Test func breakAtBinaryOperators() {
 
         // Simple arithmetic that should break at + operators
         let latex = "a+b-c\\times d\\div e"
@@ -84,13 +79,13 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 100
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
         // Should break at operators when needed
-        print("✓ Binary operators: Width = \(display!.width)")
+        print("Binary operators: Width = \(display!.width)")
     }
 
-    func testBreakAtRelationOperators() {
+    @Test func breakAtRelationOperators() {
 
         let latex = "x=y<z>w\\leq a\\geq b\\neq c"
         let mathList = MathListBuilder.build(fromString: latex)
@@ -102,16 +97,16 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 120
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
-        print("✓ Relation operators: Width = \(display!.width)")
+        print("Relation operators: Width = \(display!.width)")
     }
 
     // MARK: - Script Grouping Tests
 
-    func testScriptsStayGrouped() {
+    @Test func scriptsStayGrouped() {
 
-        // x² should stay together
+        // x^2 should stay together
         let latex = "x^{2}+y^{3}+z^{4}+a^{5}+b^{6}"
         let mathList = MathListBuilder.build(fromString: latex)
 
@@ -122,13 +117,13 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 100
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
         // Each base+script should stay together
-        print("✓ Script grouping: Width = \(display!.width)")
+        print("Script grouping: Width = \(display!.width)")
     }
 
-    func testSubscriptAndSuperscript() {
+    @Test func subscriptAndSuperscript() {
 
         let latex = "x_{i}^{2}+y_{j}^{3}+z_{k}^{4}"
         let mathList = MathListBuilder.build(fromString: latex)
@@ -140,14 +135,14 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 120
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
-        print("✓ Sub+superscript: Width = \(display!.width)")
+        print("Sub+superscript: Width = \(display!.width)")
     }
 
     // MARK: - Fraction Tests
 
-    func testFractionBreaking() {
+    @Test func fractionBreaking() {
 
         let latex = "\\frac{a}{b}+\\frac{c}{d}+\\frac{e}{f}+\\frac{g}{h}"
         let mathList = MathListBuilder.build(fromString: latex)
@@ -159,13 +154,13 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 150
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
         // Fractions should remain atomic
-        print("✓ Fractions: Width = \(display!.width)")
+        print("Fractions: Width = \(display!.width)")
     }
 
-    func testFractionWithSuperscript() {
+    @Test func fractionWithSuperscript() {
 
         let latex = "\\frac{a}{b}^{n}+c+d+e"
         let mathList = MathListBuilder.build(fromString: latex)
@@ -177,15 +172,15 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 100
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
         // Fraction and superscript should stay grouped
-        print("✓ Fraction with script: Width = \(display!.width)")
+        print("Fraction with script: Width = \(display!.width)")
     }
 
     // MARK: - Radical Tests
 
-    func testRadicalBreaking() {
+    @Test func radicalBreaking() {
 
         let latex = "\\sqrt{a}+\\sqrt{b}+\\sqrt{c}+\\sqrt{d}"
         let mathList = MathListBuilder.build(fromString: latex)
@@ -197,15 +192,15 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 120
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
         // Radicals should remain atomic
-        print("✓ Radicals: Width = \(display!.width)")
+        print("Radicals: Width = \(display!.width)")
     }
 
     // MARK: - Delimiter Tests
 
-    func testParenthesesBreaking() {
+    @Test func parenthesesBreaking() {
 
         let latex = "(a+b)+(c-d)+(e\\times f)"
         let mathList = MathListBuilder.build(fromString: latex)
@@ -217,15 +212,15 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 120
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
         // Should not break after ( or before )
-        print("✓ Parentheses: Width = \(display!.width)")
+        print("Parentheses: Width = \(display!.width)")
     }
 
     // MARK: - Mixed Content Tests
 
-    func testMixedTextAndMath() {
+    @Test func mixedTextAndMath() {
 
         let latex = "\\text{The quick brown fox jumps over }x+y=z\\text{ lazily}"
         let mathList = MathListBuilder.build(fromString: latex)
@@ -237,14 +232,14 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 250
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
-        print("✓ Mixed content: Width = \(display!.width)")
+        print("Mixed content: Width = \(display!.width)")
     }
 
     // MARK: - Width Utilization Test
 
-    func testWidthUtilization() {
+    @Test func widthUtilization() {
         let latex = "\\text{Calculate }\\sqrt{x^2+y^2}\\text{ and simplify the result}"
 
         let display = Typesetter.createLineForMathList(
@@ -254,19 +249,19 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 250
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
         let width = display!.width
 
-        print("✓ Width utilization: \(width) pts with max 250 pts")
+        print("Width utilization: \(width) pts with max 250 pts")
 
         // Should efficiently use available width
-        XCTAssertGreaterThan(width, 200, "Should use most of available width")
+        #expect(width > 200, "Should use most of available width")
     }
 
     // MARK: - Edge Cases
 
-    func testEmptyExpression() {
+    @Test func emptyExpression() {
 
         let mathList = MathList()
         let display = Typesetter.createLineForMathList(
@@ -278,13 +273,13 @@ class TokenizationRealWorldTests: XCTestCase {
 
         // Empty math list should return an empty display (not nil) to match KaTeX behavior
         // This allows empty fraction numerators/denominators to render correctly
-        XCTAssertNotNil(display, "Empty expression should return an empty display (KaTeX compatibility)")
-        XCTAssertEqual(display?.width, 0, "Empty display should have zero width")
-        XCTAssertEqual(display?.ascent, 0, "Empty display should have zero ascent")
-        XCTAssertEqual(display?.descent, 0, "Empty display should have zero descent")
+        #expect(display != nil, "Empty expression should return an empty display (KaTeX compatibility)")
+        #expect(display?.width == 0, "Empty display should have zero width")
+        #expect(display?.ascent == 0, "Empty display should have zero ascent")
+        #expect(display?.descent == 0, "Empty display should have zero descent")
     }
 
-    func testSingleAtom() {
+    @Test func singleAtom() {
 
         let latex = "x"
         let mathList = MathListBuilder.build(fromString: latex)
@@ -296,11 +291,11 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 100
         )
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThan(display!.width, 0)
+        #expect(display != nil)
+        #expect(display!.width > 0)
     }
 
-    func testVeryLongExpression() {
+    @Test func veryLongExpression() {
 
         // Generate a+b+c+...
         var latex = ""
@@ -320,12 +315,12 @@ class TokenizationRealWorldTests: XCTestCase {
             maxWidth: 200
         )
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
 
         // Should break into multiple lines
         let yPositions = Set(display!.subDisplays.map { $0.position.y })
-        XCTAssertGreaterThan(yPositions.count, 1, "Should require multiple lines")
+        #expect(yPositions.count > 1, "Should require multiple lines")
 
-        print("✓ Very long expression: \(yPositions.count) lines")
+        print("Very long expression: \(yPositions.count) lines")
     }
 }

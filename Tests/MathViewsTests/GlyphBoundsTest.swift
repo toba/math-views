@@ -1,18 +1,17 @@
-import XCTest
+import Testing
 @testable import MathViews
 import CoreText
 import CoreGraphics
 
-final class GlyphBoundsTest: XCTestCase {
+struct GlyphBoundsTest {
 
-    var font: FontInstance!
+    let font: FontInstance
 
-    override func setUp() {
-        super.setUp()
-        font = FontManager().termesFont(withSize: 20)
+    init() {
+        font = FontManager().termesFont(withSize: 20)!
     }
 
-    func testGlyphBounds() throws {
+    @Test func glyphBounds() throws {
         // Get the actual glyph objects
         let circumflexGlyph = font.get(glyphWithName: "circumflex")
         let arrowGlyph = font.get(glyphWithName: "arrowright") // rightarrow for stretchy overrightarrow

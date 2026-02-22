@@ -1,7 +1,15 @@
-import XCTest
+import Testing
+import Foundation
+import CoreGraphics
+import CoreText
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 @testable import MathViews
 
-class MathUILabelLineWrappingTests: XCTestCase {
+struct MathUILabelLineWrappingTests {
 
     // MARK: - Helper Functions for Punctuation Tests
 
@@ -67,7 +75,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
     // MARK: - Equals Sign Clipping Tests
 
-    func testEqualsSignClipping_InlineFraction() {
+    @Test func equalsSignClipping_InlineFraction() {
         // Test for equals sign clipping in inline math with fractions
         // Issue: "=" sign may be clipped when line breaking with width constraints
         let label = MathUILabel()
@@ -84,8 +92,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         print("Unconstrained size: \(unconstrainedSize)")
 
         if label.error != nil {
-            print("⚠️ Parsing error: \(label.error!)")
-            XCTFail("LaTeX parsing failed: \(label.error!)")
+            print("Warning: Parsing error: \(label.error!)")
+            Issue.record("LaTeX parsing failed: \(label.error!)")
             return
         }
 
@@ -113,22 +121,22 @@ class MathUILabelLineWrappingTests: XCTestCase {
                     print("    Sub[\(i)]: x=\(sub.position.x), width=\(sub.width), rightEdge=\(rightEdge)")
 
                     if rightEdge > size.width + 1.0 {
-                        print("      ⚠️ CLIPPING DETECTED: rightEdge \(rightEdge) > intrinsicSize.width \(size.width)")
+                        print("      Warning: CLIPPING DETECTED: rightEdge \(rightEdge) > intrinsicSize.width \(size.width)")
 
                         // If it's a text line, try to see what content might be clipped
-                        if let ctLine = sub as? CTLineDisplay {
+                        if let _ = sub as? CTLineDisplay {
                             print("      CTLine content might be clipped")
                         }
                     }
                 }
             }
 
-            XCTAssertNotNil(label.displayList, "Display list should be created")
-            XCTAssertNil(label.error, "Should have no rendering error")
+            #expect(label.displayList != nil, "Display list should be created")
+            #expect(label.error == nil, "Should have no rendering error")
         }
     }
 
-    func testEqualsSignClipping_DisplayMath() {
+    @Test func equalsSignClipping_DisplayMath() {
         // Test for equals sign clipping in display math with multiple equations
         let label = MathUILabel()
         label.latex = "\\[\\frac{3}{\\sqrt{9+c^{2}}}=\\frac{1}{2}\\Rightarrow \\sqrt{9+c^{2}}=6\\Rightarrow 9+c^{2}=36\\Rightarrow c^{2}=27\\Rightarrow c=3\\sqrt{3}\\]"
@@ -168,27 +176,27 @@ class MathUILabelLineWrappingTests: XCTestCase {
                     let rightEdge = sub.position.x + sub.width
                     let clipped = rightEdge > size.width + 1.0
 
-                    print("    Sub[\(i)]: type=\(type(of: sub)), y=\(sub.position.y), x=\(sub.position.x), width=\(sub.width), rightEdge=\(rightEdge)\(clipped ? " ⚠️ CLIPPED" : "")")
+                    print("    Sub[\(i)]: type=\(type(of: sub)), y=\(sub.position.y), x=\(sub.position.x), width=\(sub.width), rightEdge=\(rightEdge)\(clipped ? " CLIPPED" : "")")
 
                     if clipped {
                         hasClipping = true
-                        print("      ⚠️ CLIPPING: rightEdge \(rightEdge) > intrinsicSize.width \(size.width)")
+                        print("      CLIPPING: rightEdge \(rightEdge) > intrinsicSize.width \(size.width)")
                         print("      Overflow amount: \(rightEdge - size.width)")
                     }
                 }
 
                 if hasClipping {
-                    print("  ❌ CLIPPING DETECTED - content exceeds reported intrinsicContentSize.width")
-                    XCTFail("Content clipping detected at width \(width): display content exceeds intrinsicContentSize.width \(size.width)")
+                    print("  CLIPPING DETECTED - content exceeds reported intrinsicContentSize.width")
+                    Issue.record("Content clipping detected at width \(width): display content exceeds intrinsicContentSize.width \(size.width)")
                 }
             }
 
-            XCTAssertNotNil(label.displayList, "Display list should be created")
-            XCTAssertNil(label.error, "Should have no rendering error")
+            #expect(label.displayList != nil, "Display list should be created")
+            #expect(label.error == nil, "Should have no rendering error")
         }
     }
 
-    func testEqualsSignClipping_UserReportedCases() {
+    @Test func equalsSignClipping_UserReportedCases() {
         // Test the exact cases reported by the user with width constraint 235
         print("\n=== testEqualsSignClipping_UserReportedCases ===")
 
@@ -205,15 +213,15 @@ class MathUILabelLineWrappingTests: XCTestCase {
         print("  Constraint width: 235.0")
         print("  Result size: \(size1)")
 
-        XCTAssertNotNil(label1.mathList, "Should parse LaTeX")
-        XCTAssertNil(label1.error, "Should have no error")
+        #expect(label1.mathList != nil, "Should parse LaTeX")
+        #expect(label1.error == nil, "Should have no error")
 
         // Verify no content exceeds the reported width
         if let display = label1.displayList {
             for (i, sub) in display.subDisplays.enumerated() {
                 let rightEdge = sub.position.x + sub.width
                 if rightEdge > size1.width + 1.0 {
-                    XCTFail("Case 1: SubDisplay[\(i)] rightEdge \(rightEdge) exceeds size.width \(size1.width)")
+                    Issue.record("Case 1: SubDisplay[\(i)] rightEdge \(rightEdge) exceeds size.width \(size1.width)")
                 }
             }
         }
@@ -231,23 +239,23 @@ class MathUILabelLineWrappingTests: XCTestCase {
         print("  Constraint width: 235.0")
         print("  Result size: \(size2)")
 
-        XCTAssertNotNil(label2.mathList, "Should parse LaTeX")
-        XCTAssertNil(label2.error, "Should have no error")
+        #expect(label2.mathList != nil, "Should parse LaTeX")
+        #expect(label2.error == nil, "Should have no error")
 
         // Verify no content exceeds the reported width
         if let display = label2.displayList {
             for (i, sub) in display.subDisplays.enumerated() {
                 let rightEdge = sub.position.x + sub.width
                 if rightEdge > size2.width + 1.0 {
-                    XCTFail("Case 2: SubDisplay[\(i)] rightEdge \(rightEdge) exceeds size.width \(size2.width)")
+                    Issue.record("Case 2: SubDisplay[\(i)] rightEdge \(rightEdge) exceeds size.width \(size2.width)")
                 }
             }
         }
 
-        print("\n✅ Both user-reported cases handle width constraints without clipping")
+        print("\nBoth user-reported cases handle width constraints without clipping")
     }
 
-    func testLongTextTermClipping() {
+    @Test func longTextTermClipping() {
         // Test user-reported case with long text that should break properly
         let label = MathUILabel()
         label.latex = #"\(\text{Assume }f(x)=3x^{2}+5x-2\text{ so that we can differentiate the polynomial term by term.}\)"#
@@ -257,8 +265,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
         let size = label.intrinsicContentSize
 
-        XCTAssertNotNil(label.mathList, "Should parse LaTeX")
-        XCTAssertNil(label.error, "Should have no error")
+        #expect(label.mathList != nil, "Should parse LaTeX")
+        #expect(label.error == nil, "Should have no error")
 
         // Verify no content exceeds the constraint (allowing for intrinsicContentSize which might be wider)
         if let display = label.displayList {
@@ -266,13 +274,13 @@ class MathUILabelLineWrappingTests: XCTestCase {
                 let rightEdge = sub.position.x + sub.width
                 // Content should not exceed its own reported width
                 if rightEdge > size.width + 1.0 {
-                    XCTFail("SubDisplay[\(i)] rightEdge \(rightEdge) exceeds size.width \(size.width)")
+                    Issue.record("SubDisplay[\(i)] rightEdge \(rightEdge) exceeds size.width \(size.width)")
                 }
             }
         }
     }
 
-    func testLogSubscriptLineBreaking() {
+    @Test func logSubscriptLineBreaking() {
         // Test that atoms with subscripts break properly when added after flushed content
         // Bug: \log_{3}(x) was being placed on first line even though it exceeded width constraint
         let label = MathUILabel()
@@ -283,8 +291,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
         _ = label.intrinsicContentSize
 
-        XCTAssertNotNil(label.mathList, "Should parse LaTeX")
-        XCTAssertNil(label.error, "Should have no error")
+        #expect(label.mathList != nil, "Should parse LaTeX")
+        #expect(label.error == nil, "Should have no error")
 
         // Verify no content exceeds the width constraint
         if let display = label.displayList {
@@ -292,13 +300,13 @@ class MathUILabelLineWrappingTests: XCTestCase {
                 let rightEdge = sub.position.x + sub.width
                 // Content should not exceed the width constraint (with small tolerance)
                 if rightEdge > 235.0 + 1.0 {
-                    XCTFail("SubDisplay[\(i)] rightEdge \(rightEdge) exceeds constraint 235.0")
+                    Issue.record("SubDisplay[\(i)] rightEdge \(rightEdge) exceeds constraint 235.0")
                 }
             }
         }
     }
 
-    func testAntiderivativeLineBreaking() {
+    @Test func antiderivativeLineBreaking() {
         // Test long text with embedded math that needs multiple line breaks
         let label = MathUILabel()
         label.latex = #"\(\text{Treat }v\text{ as a constant and find an antiderivative of }x^{2}+v\text{.}\)"#
@@ -308,8 +316,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
         _ = label.intrinsicContentSize
 
-        XCTAssertNotNil(label.mathList, "Should parse LaTeX")
-        XCTAssertNil(label.error, "Should have no error")
+        #expect(label.mathList != nil, "Should parse LaTeX")
+        #expect(label.error == nil, "Should have no error")
 
         // Verify no content exceeds the width constraint
         if let display = label.displayList {
@@ -317,29 +325,29 @@ class MathUILabelLineWrappingTests: XCTestCase {
                 let rightEdge = sub.position.x + sub.width
                 // Content should not exceed the width constraint (with small tolerance)
                 if rightEdge > 235.0 + 1.0 {
-                    XCTFail("SubDisplay[\(i)] rightEdge \(rightEdge) exceeds constraint 235.0")
+                    Issue.record("SubDisplay[\(i)] rightEdge \(rightEdge) exceeds constraint 235.0")
                 }
             }
         }
     }
 
-    func testBasicIntrinsicContentSize() {
+    @Test func basicIntrinsicContentSize() {
         let label = MathUILabel()
         label.latex = "\\(x + y\\)"
         label.font = FontManager.fontManager.defaultFont
 
         // Debug: check if parsing worked
-        XCTAssertNotNil(label.mathList, "Math list should not be nil")
-        XCTAssertNil(label.error, "Should have no parsing error, got: \(String(describing: label.error))")
-        XCTAssertNotNil(label.font, "Font should not be nil")
+        #expect(label.mathList != nil, "Math list should not be nil")
+        #expect(label.error == nil, "Should have no parsing error, got: \(String(describing: label.error))")
+        #expect(label.font != nil, "Font should not be nil")
 
         let size = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(size.width, 0, "Width should be greater than 0, got \(size.width)")
-        XCTAssertGreaterThan(size.height, 0, "Height should be greater than 0, got \(size.height)")
+        #expect(size.width > 0, "Width should be greater than 0, got \(size.width)")
+        #expect(size.height > 0, "Height should be greater than 0, got \(size.height)")
     }
 
-    func testTextModeIntrinsicContentSize() {
+    @Test func textModeIntrinsicContentSize() {
         let label = MathUILabel()
         label.latex = "\\(\\text{Hello World}\\)"
         label.font = FontManager.fontManager.defaultFont
@@ -347,11 +355,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
         let size = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(size.width, 0, "Width should be greater than 0, got \(size.width)")
-        XCTAssertGreaterThan(size.height, 0, "Height should be greater than 0, got \(size.height)")
+        #expect(size.width > 0, "Width should be greater than 0, got \(size.width)")
+        #expect(size.height > 0, "Height should be greater than 0, got \(size.height)")
     }
 
-    func testLongTextIntrinsicContentSize() {
+    @Test func longTextIntrinsicContentSize() {
         let label = MathUILabel()
         label.latex = "\\(\\text{Rappelons la conversion : 1 km équivaut à 1000 m.}\\)"
         label.font = FontManager.fontManager.defaultFont
@@ -359,22 +367,22 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
         let size = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(size.width, 0, "Width should be greater than 0, got \(size.width)")
-        XCTAssertGreaterThan(size.height, 0, "Height should be greater than 0, got \(size.height)")
+        #expect(size.width > 0, "Width should be greater than 0, got \(size.width)")
+        #expect(size.height > 0, "Height should be greater than 0, got \(size.height)")
     }
 
-    func testSizeThatFitsWithoutConstraint() {
+    @Test func sizeThatFitsWithoutConstraint() {
         let label = MathUILabel()
         label.latex = "\\(\\text{Hello World}\\)"
         label.font = FontManager.fontManager.defaultFont
 
         let size = label.sizeThatFits(CGSize.zero)
 
-        XCTAssertGreaterThan(size.width, 0, "Width should be greater than 0, got \(size.width)")
-        XCTAssertGreaterThan(size.height, 0, "Height should be greater than 0, got \(size.height)")
+        #expect(size.width > 0, "Width should be greater than 0, got \(size.width)")
+        #expect(size.height > 0, "Height should be greater than 0, got \(size.height)")
     }
 
-    func testSizeThatFitsWithWidthConstraint() {
+    @Test func sizeThatFitsWithWidthConstraint() {
         let label = MathUILabel()
         label.latex = "\\(\\text{Rappelons la conversion : 1 km équivaut à 1000 m.}\\)"
         label.font = FontManager.fontManager.defaultFont
@@ -382,21 +390,21 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
         // Get unconstrained size first
         let unconstrainedSize = label.sizeThatFits(CGSize.zero)
-        XCTAssertGreaterThan(unconstrainedSize.width, 0, "Unconstrained width should be > 0")
+        #expect(unconstrainedSize.width > 0, "Unconstrained width should be > 0")
 
         // Test with width constraint (use 300 since longest word might be ~237pt)
         let constrainedSize = label.sizeThatFits(CGSize(width: 300, height: CGFloat.greatestFiniteMagnitude))
 
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Constrained width should be greater than 0, got \(constrainedSize.width)")
-        XCTAssertLessThan(constrainedSize.width, unconstrainedSize.width, "Constrained width (\(constrainedSize.width)) should be less than unconstrained (\(unconstrainedSize.width))")
-        XCTAssertGreaterThan(constrainedSize.height, 0, "Constrained height should be greater than 0, got \(constrainedSize.height)")
+        #expect(constrainedSize.width > 0, "Constrained width should be greater than 0, got \(constrainedSize.width)")
+        #expect(constrainedSize.width < unconstrainedSize.width, "Constrained width (\(constrainedSize.width)) should be less than unconstrained (\(unconstrainedSize.width))")
+        #expect(constrainedSize.height > 0, "Constrained height should be greater than 0, got \(constrainedSize.height)")
 
         // When constrained, height should increase when text wraps
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height,
+        #expect(constrainedSize.height > unconstrainedSize.height,
                             "Constrained height (\(constrainedSize.height)) should be > unconstrained (\(unconstrainedSize.height)) when text wraps")
     }
 
-    func testPreferredMaxLayoutWidth() {
+    @Test func preferredMaxLayoutWidth() {
         let label = MathUILabel()
         label.latex = "\\(\\text{Rappelons la conversion : 1 km équivaut à 1000 m.}\\)"
         label.font = FontManager.fontManager.defaultFont
@@ -409,12 +417,12 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 300
         let constrainedSize = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be greater than 0, got \(constrainedSize.width)")
-        XCTAssertLessThan(constrainedSize.width, unconstrainedSize.width, "Constrained width (\(constrainedSize.width)) should be < unconstrained (\(unconstrainedSize.width))")
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Constrained height (\(constrainedSize.height)) should be > unconstrained (\(unconstrainedSize.height)) due to wrapping")
+        #expect(constrainedSize.width > 0, "Width should be greater than 0, got \(constrainedSize.width)")
+        #expect(constrainedSize.width < unconstrainedSize.width, "Constrained width (\(constrainedSize.width)) should be < unconstrained (\(unconstrainedSize.width))")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Constrained height (\(constrainedSize.height)) should be > unconstrained (\(unconstrainedSize.height)) due to wrapping")
     }
 
-    func testWordBoundaryBreaking() {
+    @Test func wordBoundaryBreaking() {
         let label = MathUILabel()
         label.latex = "\\(\\text{Word1 Word2 Word3 Word4 Word5}\\)"
         label.font = FontManager.fontManager.defaultFont
@@ -423,8 +431,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
         let size = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(size.width, 0, "Width should be greater than 0, got \(size.width)")
-        XCTAssertGreaterThan(size.height, 0, "Height should be greater than 0, got \(size.height)")
+        #expect(size.width > 0, "Width should be greater than 0, got \(size.width)")
+        #expect(size.height > 0, "Height should be greater than 0, got \(size.height)")
 
         // Verify it actually uses the layout
         label.frame = CGRect(origin: .zero, size: size)
@@ -434,10 +442,10 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
+        #expect(label.displayList != nil, "Display list should be created")
     }
 
-    func testEmptyLatex() {
+    @Test func emptyLatex() {
         let label = MathUILabel()
         label.latex = ""
         label.font = FontManager.fontManager.defaultFont
@@ -445,11 +453,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         let size = label.intrinsicContentSize
 
         // Empty latex should still return a valid size (might be zero or minimal)
-        XCTAssertGreaterThanOrEqual(size.width, 0, "Width should be >= 0 for empty latex, got \(size.width)")
-        XCTAssertGreaterThanOrEqual(size.height, 0, "Height should be >= 0 for empty latex, got \(size.height)")
+        #expect(size.width >= 0, "Width should be >= 0 for empty latex, got \(size.width)")
+        #expect(size.height >= 0, "Height should be >= 0 for empty latex, got \(size.height)")
     }
 
-    func testMathAndTextMixed() {
+    @Test func mathAndTextMixed() {
         let label = MathUILabel()
         label.latex = "\\(\\text{Result: } x^2 + y^2 = z^2\\)"
         label.font = FontManager.fontManager.defaultFont
@@ -457,11 +465,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
         let size = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(size.width, 0, "Width should be greater than 0, got \(size.width)")
-        XCTAssertGreaterThan(size.height, 0, "Height should be greater than 0, got \(size.height)")
+        #expect(size.width > 0, "Width should be greater than 0, got \(size.width)")
+        #expect(size.height > 0, "Height should be greater than 0, got \(size.height)")
     }
 
-    func testDebugSizeThatFitsWithConstraint() {
+    @Test func debugSizeThatFitsWithConstraint() {
         let label = MathUILabel()
         label.latex = "\\(\\text{Word1 Word2 Word3 Word4 Word5}\\)"
         label.font = FontManager.fontManager.defaultFont
@@ -470,11 +478,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         let unconstr = label.sizeThatFits(CGSize.zero)
         let constr = label.sizeThatFits(CGSize(width: 150, height: 999))
 
-        XCTAssertLessThan(constr.width, unconstr.width, "Constrained (\(constr.width)) should be < unconstrained (\(unconstr.width))")
-        XCTAssertGreaterThan(constr.height, unconstr.height, "Constrained height (\(constr.height)) should be > unconstrained (\(unconstr.height))")
+        #expect(constr.width < unconstr.width, "Constrained (\(constr.width)) should be < unconstrained (\(unconstr.width))")
+        #expect(constr.height > unconstr.height, "Constrained height (\(constr.height)) should be > unconstrained (\(unconstr.height))")
     }
 
-    func testAccentedCharactersWithLineWrapping() {
+    @Test func accentedCharactersWithLineWrapping() {
         let label = MathUILabel()
         // French text with accented characters: è, é, à
         label.latex = "\\(\\text{Rappelons la relation entre kilomètres et mètres.}\\)"
@@ -489,9 +497,9 @@ class MathUILabelLineWrappingTests: XCTestCase {
         let constrainedSize = label.intrinsicContentSize
 
         // Verify wrapping occurred
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
-        XCTAssertLessThan(constrainedSize.width, unconstrainedSize.width, "Constrained width should be < unconstrained")
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Height should increase when wrapped")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
+        #expect(constrainedSize.width < unconstrainedSize.width, "Constrained width should be < unconstrained")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Height should increase when wrapped")
 
         // Verify the label can render without errors
         label.frame = CGRect(origin: .zero, size: constrainedSize)
@@ -501,11 +509,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testVectorArrowsWithLineWrapping() {
+    @Test func vectorArrowsWithLineWrapping() {
         let label = MathUILabel()
         label.fontSize = 20
         #if os(macOS)
@@ -536,14 +544,14 @@ class MathUILabelLineWrappingTests: XCTestCase {
             #endif
 
             // Verify label has content and no errors
-            XCTAssertGreaterThan(size.width, 0, "Should have width: \(latex)")
-            XCTAssertGreaterThan(size.height, 0, "Should have height: \(latex)")
-            XCTAssertNotNil(label.displayList, "Display list should be created for: \(latex)")
-            XCTAssertNil(label.error, "Should have no rendering error for: \(latex)")
+            #expect(size.width > 0, "Should have width: \(latex)")
+            #expect(size.height > 0, "Should have height: \(latex)")
+            #expect(label.displayList != nil, "Display list should be created for: \(latex)")
+            #expect(label.error == nil, "Should have no rendering error for: \(latex)")
         }
     }
 
-    func testUnicodeWordBreaking_EquivautCase() {
+    @Test func unicodeWordBreaking_EquivautCase() {
         // Specific test for the reported issue: "équivaut" should not break at "é"
         let label = MathUILabel()
         label.latex = "\\(\\text{Rappelons la conversion : 1 km équivaut à 1000 m.}\\)"
@@ -562,21 +570,21 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
 
         // Verify that the text wrapped (multiple lines)
-        XCTAssertGreaterThan(constrainedSize.height, 20, "Should have wrapped to multiple lines")
+        #expect(constrainedSize.height > 20, "Should have wrapped to multiple lines")
 
         // The critical check: ensure "équivaut" is not broken in the middle
         // We can't easily check the exact line breaks, but we can verify:
         // 1. The rendering succeeded without crashes
         // 2. The display has reasonable dimensions
-        XCTAssertGreaterThan(constrainedSize.width, 100, "Width should be reasonable")
-        XCTAssertLessThan(constrainedSize.width, 250, "Width should respect constraint")
+        #expect(constrainedSize.width > 100, "Width should be reasonable")
+        #expect(constrainedSize.width < 250, "Width should respect constraint")
     }
 
-    func testMixedTextMathNoTruncation() {
+    @Test func mixedTextMathNoTruncation() {
         // Test for truncation bug: content should wrap, not be lost
         // Input: \(\text{Calculer le discriminant }\Delta=b^{2}-4ac\text{ avec }a=1\text{, }b=-1\text{, }c=-5\)
         let label = MathUILabel()
@@ -596,19 +604,19 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
 
         // Verify content is not truncated - should wrap to multiple lines
-        XCTAssertGreaterThan(constrainedSize.height, 30, "Should wrap to multiple lines (not truncate)")
+        #expect(constrainedSize.height > 30, "Should wrap to multiple lines (not truncate)")
 
         // Check that we have multiple display elements (wrapped content)
         if let displayList = label.displayList {
-            XCTAssertGreaterThan(displayList.subDisplays.count, 1, "Should have multiple display elements from wrapping")
+            #expect(displayList.subDisplays.count > 1, "Should have multiple display elements from wrapping")
         }
     }
 
-    func testNumberProtection_FrenchDecimal() {
+    @Test func numberProtection_FrenchDecimal() {
         let label = MathUILabel()
         // French decimal number should NOT be broken
         label.latex = "\\(\\text{La valeur de pi est approximativement 3,14 dans ce calcul simple.}\\)"
@@ -627,11 +635,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testNumberProtection_ThousandsSeparator() {
+    @Test func numberProtection_ThousandsSeparator() {
         let label = MathUILabel()
         // Number with comma separator should stay together
         label.latex = "\\(\\text{The population is approximately 1,000,000 people in this city.}\\)"
@@ -648,11 +656,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testNumberProtection_MixedWithText() {
+    @Test func numberProtection_MixedWithText() {
         let label = MathUILabel()
         // Mixed numbers and text - numbers should be protected
         label.latex = "\\(\\text{Results: 3.14, 2.71, and 1.41 are important constants.}\\)"
@@ -669,13 +677,13 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
     // MARK: - International Text Tests
 
-    func testChineseTextWrapping() {
+    @Test func chineseTextWrapping() {
         let label = MathUILabel()
         // Chinese text: "Mathematical equations are an important tool for describing natural phenomena"
         label.latex = "\\(\\text{数学方程式は自然現象を記述するための重要なツールです。}\\)"
@@ -690,17 +698,17 @@ class MathUILabelLineWrappingTests: XCTestCase {
         let constrainedSize = label.intrinsicContentSize
 
         // Chinese should wrap (can break between characters)
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
         // NOTE: intrinsicContentSize returns actual content width (no clamping) to prevent clipping
         // Content may exceed preferredMaxLayoutWidth if it cannot fit even with line breaking
         // This is correct behavior - the view should not clip content
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Height should increase when wrapped")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Height should increase when wrapped")
 
         // Verify no content is clipped at the returned size
         if let display = label.displayList {
             for sub in display.subDisplays {
                 let rightEdge = sub.position.x + sub.width
-                XCTAssertLessThanOrEqual(rightEdge, constrainedSize.width + 1.0, "No content should be clipped")
+                #expect(rightEdge <= constrainedSize.width + 1.0, "No content should be clipped")
             }
         }
 
@@ -711,11 +719,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testJapaneseTextWrapping() {
+    @Test func japaneseTextWrapping() {
         let label = MathUILabel()
         // Japanese text (Hiragana + Kanji): "This is a mathematics explanation"
         label.latex = "\\(\\text{これは数学の説明です。計算式を使います。}\\)"
@@ -727,15 +735,15 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 180
         let constrainedSize = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
         // NOTE: intrinsicContentSize returns actual content width to prevent clipping
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Height should increase when wrapped")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Height should increase when wrapped")
 
         // Verify no content is clipped
         if let display = label.displayList {
             for sub in display.subDisplays {
                 let rightEdge = sub.position.x + sub.width
-                XCTAssertLessThanOrEqual(rightEdge, constrainedSize.width + 1.0, "No content should be clipped")
+                #expect(rightEdge <= constrainedSize.width + 1.0, "No content should be clipped")
             }
         }
 
@@ -746,11 +754,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testKoreanTextWrapping() {
+    @Test func koreanTextWrapping() {
         let label = MathUILabel()
         // Korean text: "Mathematics is a very important subject"
         label.latex = "\\(\\text{수학은 매우 중요한 과목입니다. 방정식을 배웁니다.}\\)"
@@ -761,14 +769,14 @@ class MathUILabelLineWrappingTests: XCTestCase {
         let constrainedSize = label.intrinsicContentSize
 
         // Korean uses spaces, should wrap at word boundaries
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
         // NOTE: intrinsicContentSize returns actual content width to prevent clipping
 
         // Verify no content is clipped
         if let display = label.displayList {
             for sub in display.subDisplays {
                 let rightEdge = sub.position.x + sub.width
-                XCTAssertLessThanOrEqual(rightEdge, constrainedSize.width + 1.0, "No content should be clipped")
+                #expect(rightEdge <= constrainedSize.width + 1.0, "No content should be clipped")
             }
         }
 
@@ -779,11 +787,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testMixedLatinCJKWrapping() {
+    @Test func mixedLatinCJKWrapping() {
         let label = MathUILabel()
         // Mixed English and Chinese
         label.latex = "\\(\\text{The equation is 方程式: } x^2 + y^2 = r^2 \\text{ です。}\\)"
@@ -793,14 +801,14 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 250
         let constrainedSize = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
         // NOTE: intrinsicContentSize returns actual content width to prevent clipping
 
         // Verify no content is clipped
         if let display = label.displayList {
             for sub in display.subDisplays {
                 let rightEdge = sub.position.x + sub.width
-                XCTAssertLessThanOrEqual(rightEdge, constrainedSize.width + 1.0, "No content should be clipped")
+                #expect(rightEdge <= constrainedSize.width + 1.0, "No content should be clipped")
             }
         }
 
@@ -811,11 +819,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testEmojiGraphemeClusters() {
+    @Test func emojiGraphemeClusters() {
         let label = MathUILabel()
         // Emoji and complex grapheme clusters should not be broken
         label.latex = "\\(\\text{Math is fun! 🎉📐📊 The formula is } E = mc^2 \\text{ 🚀✨}\\)"
@@ -826,9 +834,9 @@ class MathUILabelLineWrappingTests: XCTestCase {
         let size = label.intrinsicContentSize
 
         // Should wrap but not break emoji
-        XCTAssertGreaterThan(size.width, 0, "Width should be > 0")
+        #expect(size.width > 0, "Width should be > 0")
         let tolerance_200 = max(200 * 0.05, 10.0)
-        XCTAssertLessThanOrEqual(size.width, 200 + tolerance_200, "Width should not significantly exceed constraint (within 5% tolerance)")
+        #expect(size.width <= 200 + tolerance_200, "Width should not significantly exceed constraint (within 5% tolerance)")
 
         label.frame = CGRect(origin: .zero, size: size)
         #if os(macOS)
@@ -837,11 +845,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testLongEnglishMultiSentence() {
+    @Test func longEnglishMultiSentence() {
         let label = MathUILabel()
         // Standard English multi-sentence paragraph
         label.latex = "\\(\\text{Mathematics is the study of numbers, shapes, and patterns. It is used in science, engineering, and everyday life. Equations help us solve problems.}\\)"
@@ -854,15 +862,15 @@ class MathUILabelLineWrappingTests: XCTestCase {
         let constrainedSize = label.intrinsicContentSize
 
         // Should wrap at word boundaries (spaces)
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
         // NOTE: intrinsicContentSize returns actual content width to prevent clipping
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Height should increase when wrapped")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Height should increase when wrapped")
 
         // Verify no content is clipped
         if let display = label.displayList {
             for sub in display.subDisplays {
                 let rightEdge = sub.position.x + sub.width
-                XCTAssertLessThanOrEqual(rightEdge, constrainedSize.width + 1.0, "No content should be clipped")
+                #expect(rightEdge <= constrainedSize.width + 1.0, "No content should be clipped")
             }
         }
 
@@ -873,11 +881,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testSpanishAccentedText() {
+    @Test func spanishAccentedText() {
         let label = MathUILabel()
         // Spanish with various accents
         label.latex = "\\(\\text{La ecuación es muy útil para cálculos científicos y matemáticos.}\\)"
@@ -889,10 +897,10 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 220
         let constrainedSize = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
         let tolerance_220 = max(220 * 0.05, 10.0)
-        XCTAssertLessThanOrEqual(constrainedSize.width, 220 + tolerance_220, "Width should not significantly exceed constraint (within 5% tolerance)")
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Height should increase when wrapped")
+        #expect(constrainedSize.width <= 220 + tolerance_220, "Width should not significantly exceed constraint (within 5% tolerance)")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Height should increase when wrapped")
 
         label.frame = CGRect(origin: .zero, size: constrainedSize)
         #if os(macOS)
@@ -901,11 +909,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testGermanUmlautsWrapping() {
+    @Test func germanUmlautsWrapping() {
         let label = MathUILabel()
         // German with umlauts
         label.latex = "\\(\\text{Mathematische Gleichungen können für Berechnungen verwendet werden.}\\)"
@@ -917,10 +925,10 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 250
         let constrainedSize = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
         let tolerance_250 = max(250 * 0.05, 10.0)
-        XCTAssertLessThanOrEqual(constrainedSize.width, 250 + tolerance_250, "Width should not significantly exceed constraint (within 5% tolerance)")
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Height should increase when wrapped")
+        #expect(constrainedSize.width <= 250 + tolerance_250, "Width should not significantly exceed constraint (within 5% tolerance)")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Height should increase when wrapped")
 
         label.frame = CGRect(origin: .zero, size: constrainedSize)
         #if os(macOS)
@@ -929,13 +937,13 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
     // MARK: - Tests for Complex Math Expressions with Line Breaking
 
-    func testComplexExpressionWithRadicalWrapping() {
+    @Test func complexExpressionWithRadicalWrapping() {
         // This is the reported issue: y=x^{2}+3x+4x+9x+8x+8+\sqrt{\dfrac{3x^{2}+5x}{\cos x}}
         // The sqrt part is displayed on the second line and overlaps the first line
         let label = MathUILabel()
@@ -944,17 +952,17 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
         // Get unconstrained size first
         let unconstrainedSize = label.intrinsicContentSize
-        XCTAssertGreaterThan(unconstrainedSize.width, 0, "Unconstrained width should be > 0")
-        XCTAssertGreaterThan(unconstrainedSize.height, 0, "Unconstrained height should be > 0")
+        #expect(unconstrainedSize.width > 0, "Unconstrained width should be > 0")
+        #expect(unconstrainedSize.height > 0, "Unconstrained height should be > 0")
 
         // Now constrain the width to force wrapping
         label.preferredMaxLayoutWidth = 200
         let constrainedSize = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
         let tolerance_200 = max(200 * 0.05, 10.0)
-        XCTAssertLessThanOrEqual(constrainedSize.width, 200 + tolerance_200, "Width should not significantly exceed constraint (within 5% tolerance)")
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Height should increase when wrapped")
+        #expect(constrainedSize.width <= 200 + tolerance_200, "Width should not significantly exceed constraint (within 5% tolerance)")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Height should increase when wrapped")
 
         // Layout and check for overlapping
         label.frame = CGRect(origin: .zero, size: constrainedSize)
@@ -964,8 +972,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
 
         // Check that displays don't overlap by examining positions
         // Group displays by line (similar y positions) and check for overlap between lines
@@ -975,7 +983,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
             var currentLineDisplays: [Display] = []
             var currentLineY: CGFloat? = nil
             let yTolerance: CGFloat = 15.0  // Displays within 15 units are considered on same line (accounts for superscripts/subscripts)
-            
+
             for display in displayList.subDisplays {
                 if let lineY = currentLineY {
                     if abs(display.position.y - lineY) < yTolerance {
@@ -996,28 +1004,28 @@ class MathUILabelLineWrappingTests: XCTestCase {
             if !currentLineDisplays.isEmpty {
                 lineGroups.append(currentLineDisplays)
             }
-            
+
             // Check for overlap between consecutive lines
             for i in 1..<lineGroups.count {
                 let previousLine = lineGroups[i-1]
                 let currentLine = lineGroups[i]
-                
+
                 // Find the minimum bottom edge of previous line (Y-up: bottom = pos - desc, smaller Y)
                 let previousLineMinBottom = previousLine.map { $0.position.y - $0.descent }.min() ?? 0
-                
+
                 // Find the maximum top edge of current line (Y-up: top = pos + asc, larger Y)
                 let currentLineMaxTop = currentLine.map { $0.position.y + $0.ascent }.max() ?? 0
-                
+
                 // Check for overlap: if current line's top > previous line's bottom, they overlap
                 // (In Y-up coordinate system: positive Y is upward, negative Y is downward)
                 // Allow 0.5 points tolerance for floating-point precision and small adjustments
-                XCTAssertLessThanOrEqual(currentLineMaxTop, previousLineMinBottom + 0.5,
+                #expect(currentLineMaxTop <= previousLineMinBottom + 0.5,
                                        "Line \(i) (top at \(currentLineMaxTop)) overlaps with line \(i-1) (bottom at \(previousLineMinBottom))")
             }
         }
     }
 
-    func testRadicalWithFractionInsideWrapping() {
+    @Test func radicalWithFractionInsideWrapping() {
         // Simplified version: just a radical with a fraction inside
         let label = MathUILabel()
         label.latex = "x+y+z+\\sqrt{\\dfrac{a}{b}}"
@@ -1029,8 +1037,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 80
         let constrainedSize = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Height should increase when wrapped")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Height should increase when wrapped")
 
         label.frame = CGRect(origin: .zero, size: constrainedSize)
         #if os(macOS)
@@ -1039,11 +1047,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testTallElementsOnSecondLine() {
+    @Test func tallElementsOnSecondLine() {
         // Test case with tall fractions and radicals breaking to second line
         let label = MathUILabel()
         label.latex = "a+b+c+\\dfrac{x^2+y^2}{z^2}+\\sqrt{\\dfrac{p}{q}}"
@@ -1054,8 +1062,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 150
         let constrainedSize = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Height should increase when wrapped")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Height should increase when wrapped")
 
         label.frame = CGRect(origin: .zero, size: constrainedSize)
         #if os(macOS)
@@ -1064,8 +1072,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
 
         // Verify no overlapping displays between lines
         if let displayList = label.displayList {
@@ -1074,7 +1082,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
             var currentLineDisplays: [Display] = []
             var currentLineY: CGFloat? = nil
             let yTolerance: CGFloat = 15.0
-            
+
             for display in displayList.subDisplays {
                 if let lineY = currentLineY {
                     if abs(display.position.y - lineY) < yTolerance {
@@ -1092,23 +1100,23 @@ class MathUILabelLineWrappingTests: XCTestCase {
             if !currentLineDisplays.isEmpty {
                 lineGroups.append(currentLineDisplays)
             }
-            
+
             // Check for overlap between consecutive lines
             for i in 1..<lineGroups.count {
                 let previousLine = lineGroups[i-1]
                 let currentLine = lineGroups[i]
-                
+
                 let previousLineMinBottom = previousLine.map { $0.position.y - $0.descent }.min() ?? 0
                 let currentLineMaxTop = currentLine.map { $0.position.y + $0.ascent }.max() ?? 0
-                
+
                 // Allow 0.5 points tolerance for floating-point precision
-                XCTAssertLessThanOrEqual(currentLineMaxTop, previousLineMinBottom + 0.5,
+                #expect(currentLineMaxTop <= previousLineMinBottom + 0.5,
                                        "Line \(i) overlaps with line \(i-1)")
             }
         }
     }
 
-    func testMultipleLinesWithVaryingHeights() {
+    @Test func multipleLinesWithVaryingHeights() {
         // Test expression that should wrap to multiple lines with different heights
         let label = MathUILabel()
         label.latex = "x+y+z+a+b+c+\\sqrt{d}+e+f+g+h+\\dfrac{i}{j}+k"
@@ -1119,8 +1127,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 120
         let constrainedSize = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(constrainedSize.width, 0, "Width should be > 0")
-        XCTAssertGreaterThan(constrainedSize.height, unconstrainedSize.height, "Height should increase when wrapped")
+        #expect(constrainedSize.width > 0, "Width should be > 0")
+        #expect(constrainedSize.height > unconstrainedSize.height, "Height should increase when wrapped")
 
         label.frame = CGRect(origin: .zero, size: constrainedSize)
         #if os(macOS)
@@ -1129,11 +1137,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
     }
 
-    func testAccentedCharacterWidthCalculation() {
+    @Test func accentedCharacterWidthCalculation() {
         // Test that accented characters like "é" have their full visual width calculated
         // including the accent, not just the typographic advance width.
         // This prevents clipping when the character appears at the end of a line.
@@ -1149,8 +1157,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 300
         let size = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(size.width, 0, "Width should be > 0")
-        XCTAssertGreaterThan(size.height, 0, "Height should be > 0")
+        #expect(size.width > 0, "Width should be > 0")
+        #expect(size.height > 0, "Height should be > 0")
 
         label.frame = CGRect(origin: .zero, size: size)
 
@@ -1160,14 +1168,14 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
 
         // Now verify that any text containing accented characters has proper width
-        XCTAssertNotNil(label.displayList, "Display list should exist")
+        #expect(label.displayList != nil, "Display list should exist")
     }
 
-    func testAccentedCharacterAtLineEnd() {
+    @Test func accentedCharacterAtLineEnd() {
         // Specific test for accented character appearing exactly at line end
         let label = MathUILabel()
 
@@ -1189,14 +1197,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
 
         // Check that the display width includes the accent extent
-        guard let displayList = label.displayList else {
-            XCTFail("Display list should exist")
-            return
-        }
+        let displayList = try? #require(label.displayList)
 
         func findAccentedTextDisplay(_ display: Display) -> CTLineDisplay? {
             if let lineDisplay = display as? CTLineDisplay {
@@ -1217,18 +1222,19 @@ class MathUILabelLineWrappingTests: XCTestCase {
             return nil
         }
 
-        if let accentedDisplay = findAccentedTextDisplay(displayList) {
+        if let displayList = displayList,
+           let accentedDisplay = findAccentedTextDisplay(displayList) {
             let bounds = CTLineGetBoundsWithOptions(accentedDisplay.line, .useGlyphPathBounds)
             let visualWidth = CGRectGetMaxX(bounds) - CGRectGetMinX(bounds)
             let reportedWidth = accentedDisplay.width
 
             // This should pass after the fix
-            XCTAssertGreaterThanOrEqual(reportedWidth, visualWidth - 0.5,
+            #expect(reportedWidth >= visualWidth - 0.5,
                  "Reported width should include full visual extent of accented characters")
         }
     }
 
-    func testTextBlockWordBreaking() {
+    @Test func textBlockWordBreaking() {
         // Test that words inside \text{...} blocks don't get broken mid-word
         // Regression test for: "of" being broken into "o" | "f" on different lines
         let label = MathUILabel()
@@ -1239,8 +1245,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 235.0
         let size = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(size.width, 0, "Width should be > 0")
-        XCTAssertGreaterThan(size.height, 0, "Height should be > 0")
+        #expect(size.width > 0, "Width should be > 0")
+        #expect(size.height > 0, "Height should be > 0")
 
         label.frame = CGRect(origin: .zero, size: size)
         #if os(macOS)
@@ -1249,8 +1255,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
 
         // Check that no words are broken mid-word
         if let displayList = label.displayList {
@@ -1322,7 +1328,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
                                 // Only fail if there's NO space on the previous line
                                 // (which would mean the last char is truly mid-word)
                                 if !hasSpaceOnPrevLine {
-                                    XCTFail("Word broken mid-word: '\(lastPrevDisplay.text)' | '\(firstDisplay.text)' across lines")
+                                    Issue.record("Word broken mid-word: '\(lastPrevDisplay.text)' | '\(firstDisplay.text)' across lines")
                                 }
                             }
                         }
@@ -1332,7 +1338,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
         }
     }
 
-    func testTextBlockContractions() {
+    @Test func textBlockContractions() {
         // Test that contractions like "don't" and hyphenated words aren't broken
         let label = MathUILabel()
         label.latex = "\\(\\text{We don't break contractions or well-known hyphenated words incorrectly.}\\)"
@@ -1342,8 +1348,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 200.0
         let size = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(size.width, 0, "Width should be > 0")
-        XCTAssertGreaterThan(size.height, 0, "Height should be > 0")
+        #expect(size.width > 0, "Width should be > 0")
+        #expect(size.height > 0, "Height should be > 0")
 
         label.frame = CGRect(origin: .zero, size: size)
         #if os(macOS)
@@ -1352,8 +1358,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
 
         // Check that contractions and hyphenated words aren't broken
         if let displayList = label.displayList {
@@ -1374,26 +1380,26 @@ class MathUILabelLineWrappingTests: XCTestCase {
                         // Pattern 1: letter | apostrophe (e.g., "don" | "'t")
                         if let prevLast = prevText.last, prevLast.isLetter,
                            let currFirst = text.first, currFirst == "'" {
-                            XCTFail("Bad break in contraction: '\(prevText)' | '\(text)' across lines")
+                            Issue.record("Bad break in contraction: '\(prevText)' | '\(text)' across lines")
                         }
 
                         // Pattern 2: apostrophe | letter (e.g., "don'" | "t")
                         if let prevLast = prevText.last, prevLast == "'",
                            let currFirst = text.first, currFirst.isLetter {
-                            XCTFail("Bad break in contraction: '\(prevText)' | '\(text)' across lines")
+                            Issue.record("Bad break in contraction: '\(prevText)' | '\(text)' across lines")
                         }
 
                         // Check for bad breaks in hyphenated words
                         // Pattern 3: letter | hyphen (e.g., "well" | "-known")
                         if let prevLast = prevText.last, prevLast.isLetter,
                            let currFirst = text.first, currFirst == "-" {
-                            XCTFail("Bad break in hyphenated word: '\(prevText)' | '\(text)' across lines")
+                            Issue.record("Bad break in hyphenated word: '\(prevText)' | '\(text)' across lines")
                         }
 
                         // Pattern 4: hyphen | letter (e.g., "well-" | "known")
                         if let prevLast = prevText.last, prevLast == "-",
                            let currFirst = text.first, currFirst.isLetter {
-                            XCTFail("Bad break in hyphenated word: '\(prevText)' | '\(text)' across lines")
+                            Issue.record("Bad break in hyphenated word: '\(prevText)' | '\(text)' across lines")
                         }
                     }
 
@@ -1404,7 +1410,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
         }
     }
 
-    func testTextBlockUnicodeText() {
+    @Test func textBlockUnicodeText() {
         // Test Unicode word boundary detection with international text
         let label = MathUILabel()
         label.latex = "\\(\\text{Testing café résumé naïve Zürich—em-dash…ellipsis correctly.}\\)"
@@ -1414,8 +1420,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.preferredMaxLayoutWidth = 200.0
         let size = label.intrinsicContentSize
 
-        XCTAssertGreaterThan(size.width, 0, "Width should be > 0")
-        XCTAssertGreaterThan(size.height, 0, "Height should be > 0")
+        #expect(size.width > 0, "Width should be > 0")
+        #expect(size.height > 0, "Height should be > 0")
 
         label.frame = CGRect(origin: .zero, size: size)
         #if os(macOS)
@@ -1424,8 +1430,8 @@ class MathUILabelLineWrappingTests: XCTestCase {
         label.layoutSubviews()
         #endif
 
-        XCTAssertNotNil(label.displayList, "Display list should be created")
-        XCTAssertNil(label.error, "Should have no rendering error")
+        #expect(label.displayList != nil, "Display list should be created")
+        #expect(label.error == nil, "Should have no rendering error")
 
         // Verify no words with accented characters are broken
         if let displayList = label.displayList {
@@ -1466,7 +1472,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
         // text is handled correctly without crashes or corruption
     }
 
-    func testUnicodeWordBoundaryRules() {
+    @Test func unicodeWordBoundaryRules() {
         // Test that our word boundary detection correctly handles ALL cases
         // including contractions, hyphens, and international text
 
@@ -1497,7 +1503,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
             }
 
             let hasBoundary = hasWordBoundaryBetween(text1, and: text2)
-            XCTAssertEqual(hasBoundary, shouldBreak,
+            #expect(hasBoundary == shouldBreak,
                           "\(description): '\(text1)' + '\(text2)' should \(shouldBreak ? "allow" : "prevent") breaking")
         }
 
@@ -1536,7 +1542,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
     // MARK: - Latin Punctuation Tests
 
-    func testLatinPunctuation_SentenceEnding() throws {
+    @Test func latinPunctuation_SentenceEnding() throws {
 
         // Test that commas, periods, semicolons, etc. stay at end of line, not beginning
         let label = MathUILabel()
@@ -1558,7 +1564,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
             // Check that lines don't start with commas
             if let display = label.displayList {
-                XCTAssert(checkNoLineStartsWith(",", in: display),
+                #expect(checkNoLineStartsWith(",", in: display),
                          "No line should start with comma")
             }
         }
@@ -1577,7 +1583,7 @@ class MathUILabelLineWrappingTests: XCTestCase {
             #endif
 
             if let display = label.displayList {
-                XCTAssert(checkNoLineStartsWith(".", in: display),
+                #expect(checkNoLineStartsWith(".", in: display),
                          "No line should start with period")
             }
         }
@@ -1596,13 +1602,13 @@ class MathUILabelLineWrappingTests: XCTestCase {
             #endif
 
             if let display = label.displayList {
-                XCTAssert(checkNoLineStartsWith(";", in: display),
+                #expect(checkNoLineStartsWith(";", in: display),
                          "No line should start with semicolon")
             }
         }
     }
 
-    func testLatinPunctuation_OpeningClosing() throws {
+    @Test func latinPunctuation_OpeningClosing() throws {
 
         // Test that opening brackets/quotes don't end lines, closing brackets/quotes don't start lines
         let label = MathUILabel()
@@ -1624,10 +1630,10 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
             if let display = label.displayList {
                 // Opening parenthesis should not be at line end
-                XCTAssert(checkNoLineEndsWith("(", in: display),
+                #expect(checkNoLineEndsWith("(", in: display),
                          "No line should end with opening parenthesis")
                 // Closing parenthesis should not be at line start
-                XCTAssert(checkNoLineStartsWith(")", in: display),
+                #expect(checkNoLineStartsWith(")", in: display),
                          "No line should start with closing parenthesis")
             }
         }
@@ -1646,15 +1652,15 @@ class MathUILabelLineWrappingTests: XCTestCase {
             #endif
 
             if let display = label.displayList {
-                XCTAssert(checkNoLineEndsWith("[", in: display),
+                #expect(checkNoLineEndsWith("[", in: display),
                          "No line should end with opening bracket")
-                XCTAssert(checkNoLineStartsWith("]", in: display),
+                #expect(checkNoLineStartsWith("]", in: display),
                          "No line should start with closing bracket")
             }
         }
     }
 
-    func testLatinPunctuation_QuestionExclamation() throws {
+    @Test func latinPunctuation_QuestionExclamation() throws {
 
         // Test that question marks and exclamation marks don't start lines
         let label = MathUILabel()
@@ -1674,9 +1680,9 @@ class MathUILabelLineWrappingTests: XCTestCase {
             #endif
 
             if let display = label.displayList {
-                XCTAssert(checkNoLineStartsWith("?", in: display),
+                #expect(checkNoLineStartsWith("?", in: display),
                          "No line should start with question mark")
-                XCTAssert(checkNoLineStartsWith("!", in: display),
+                #expect(checkNoLineStartsWith("!", in: display),
                          "No line should start with exclamation mark")
             }
         }
@@ -1684,14 +1690,14 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
     // MARK: - CJK Punctuation Tests
 
-    func testCJKPunctuation_Japanese() throws {
+    @Test func cjkPunctuation_Japanese() throws {
 
-        // Test Japanese kinsoku rules (禁則処理)
+        // Test Japanese kinsoku rules
         let label = MathUILabel()
         label.font = FontManager.fontManager.defaultFont
         label.labelMode = .text
 
-        // Test with Japanese sentence-ending punctuation (。、)
+        // Test with Japanese sentence-ending punctuation
         // These should NEVER appear at line start
         label.latex = "\\text{これは日本語の文章です。これも文章です。さらに文章があります。}"
         label.preferredMaxLayoutWidth = 120
@@ -1706,14 +1712,14 @@ class MathUILabelLineWrappingTests: XCTestCase {
             #endif
 
             if let display = label.displayList {
-                XCTAssert(checkNoLineStartsWith("。", in: display),
+                #expect(checkNoLineStartsWith("。", in: display),
                          "No line should start with Japanese period")
-                XCTAssert(checkNoLineStartsWith("、", in: display),
+                #expect(checkNoLineStartsWith("、", in: display),
                          "No line should start with Japanese comma")
             }
         }
 
-        // Test with Japanese brackets (「」『』（）)
+        // Test with Japanese brackets
         // Opening brackets should not end lines, closing brackets should not start lines
         label.latex = "\\text{これは「引用文」です。『二重引用』もあります。（括弧）も使います。}"
         label.preferredMaxLayoutWidth = 130
@@ -1729,31 +1735,31 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
             if let display = label.displayList {
                 // Opening brackets should not end lines
-                XCTAssert(checkNoLineEndsWith("「", in: display),
+                #expect(checkNoLineEndsWith("「", in: display),
                          "No line should end with Japanese opening quote")
-                XCTAssert(checkNoLineEndsWith("『", in: display),
+                #expect(checkNoLineEndsWith("『", in: display),
                          "No line should end with Japanese double opening quote")
-                XCTAssert(checkNoLineEndsWith("（", in: display),
+                #expect(checkNoLineEndsWith("（", in: display),
                          "No line should end with Japanese opening paren")
                 // Closing brackets should not start lines
-                XCTAssert(checkNoLineStartsWith("」", in: display),
+                #expect(checkNoLineStartsWith("」", in: display),
                          "No line should start with Japanese closing quote")
-                XCTAssert(checkNoLineStartsWith("』", in: display),
+                #expect(checkNoLineStartsWith("』", in: display),
                          "No line should start with Japanese double closing quote")
-                XCTAssert(checkNoLineStartsWith("）", in: display),
+                #expect(checkNoLineStartsWith("）", in: display),
                          "No line should start with Japanese closing paren")
             }
         }
     }
 
-    func testCJKPunctuation_SmallKana() throws {
+    @Test func cjkPunctuation_SmallKana() throws {
 
-        // Test that small kana (っゃゅょゎ etc.) don't start lines
+        // Test that small kana don't start lines
         let label = MathUILabel()
         label.font = FontManager.fontManager.defaultFont
         label.labelMode = .text
 
-        // Small tsu (っ) is commonly used for gemination
+        // Small tsu is commonly used for gemination
         label.latex = "\\text{がっこう がっき ずっと きっぷ けっこん}"
         label.preferredMaxLayoutWidth = 80
 
@@ -1768,13 +1774,13 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
             if let display = label.displayList {
                 // Small kana should not start lines
-                XCTAssert(checkNoLineStartsWith("っ", in: display),
+                #expect(checkNoLineStartsWith("っ", in: display),
                          "No line should start with small tsu")
-                XCTAssert(checkNoLineStartsWith("ゃ", in: display),
+                #expect(checkNoLineStartsWith("ゃ", in: display),
                          "No line should start with small ya")
-                XCTAssert(checkNoLineStartsWith("ゅ", in: display),
+                #expect(checkNoLineStartsWith("ゅ", in: display),
                          "No line should start with small yu")
-                XCTAssert(checkNoLineStartsWith("ょ", in: display),
+                #expect(checkNoLineStartsWith("ょ", in: display),
                          "No line should start with small yo")
             }
         }
@@ -1793,17 +1799,17 @@ class MathUILabelLineWrappingTests: XCTestCase {
             #endif
 
             if let display = label.displayList {
-                XCTAssert(checkNoLineStartsWith("ェ", in: display),
+                #expect(checkNoLineStartsWith("ェ", in: display),
                          "No line should start with small katakana e")
-                XCTAssert(checkNoLineStartsWith("ャ", in: display),
+                #expect(checkNoLineStartsWith("ャ", in: display),
                          "No line should start with small katakana ya")
-                XCTAssert(checkNoLineStartsWith("ュ", in: display),
+                #expect(checkNoLineStartsWith("ュ", in: display),
                          "No line should start with small katakana yu")
             }
         }
     }
 
-    func testCJKPunctuation_Chinese() throws {
+    @Test func cjkPunctuation_Chinese() throws {
 
         // Test Chinese punctuation rules (similar to Japanese kinsoku)
         let label = MathUILabel()
@@ -1824,9 +1830,9 @@ class MathUILabelLineWrappingTests: XCTestCase {
             #endif
 
             if let display = label.displayList {
-                XCTAssert(checkNoLineStartsWith("。", in: display),
+                #expect(checkNoLineStartsWith("。", in: display),
                          "No line should start with Chinese period")
-                XCTAssert(checkNoLineStartsWith("，", in: display),
+                #expect(checkNoLineStartsWith("，", in: display),
                          "No line should start with Chinese comma")
             }
         }
@@ -1846,24 +1852,24 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
             if let display = label.displayList {
                 // Opening brackets should not end lines
-                XCTAssert(checkNoLineEndsWith("「", in: display),
+                #expect(checkNoLineEndsWith("「", in: display),
                          "No line should end with Chinese opening quote")
-                XCTAssert(checkNoLineEndsWith("（", in: display),
+                #expect(checkNoLineEndsWith("（", in: display),
                          "No line should end with Chinese opening paren")
-                XCTAssert(checkNoLineEndsWith("【", in: display),
+                #expect(checkNoLineEndsWith("【", in: display),
                          "No line should end with Chinese lenticular bracket")
                 // Closing brackets should not start lines
-                XCTAssert(checkNoLineStartsWith("」", in: display),
+                #expect(checkNoLineStartsWith("」", in: display),
                          "No line should start with Chinese closing quote")
-                XCTAssert(checkNoLineStartsWith("）", in: display),
+                #expect(checkNoLineStartsWith("）", in: display),
                          "No line should start with Chinese closing paren")
-                XCTAssert(checkNoLineStartsWith("】", in: display),
+                #expect(checkNoLineStartsWith("】", in: display),
                          "No line should start with Chinese lenticular bracket close")
             }
         }
     }
 
-    func testCJKPunctuation_Mixed() throws {
+    @Test func cjkPunctuation_Mixed() throws {
 
         // Test mixed Latin and CJK punctuation
         let label = MathUILabel()
@@ -1885,11 +1891,11 @@ class MathUILabelLineWrappingTests: XCTestCase {
 
             if let display = label.displayList {
                 // Both Latin and CJK punctuation should not start lines
-                XCTAssert(checkNoLineStartsWith(".", in: display),
+                #expect(checkNoLineStartsWith(".", in: display),
                          "No line should start with Latin period")
-                XCTAssert(checkNoLineStartsWith(",", in: display),
+                #expect(checkNoLineStartsWith(",", in: display),
                          "No line should start with Latin comma")
-                XCTAssert(checkNoLineStartsWith("。", in: display),
+                #expect(checkNoLineStartsWith("。", in: display),
                          "No line should start with CJK period")
             }
         }

@@ -1,26 +1,20 @@
-import XCTest
+import Testing
+import CoreGraphics
 @testable import MathViews
 
-class DisplayPreRendererTests: XCTestCase {
+struct DisplayPreRendererTests {
 
-    var font: FontInstance!
-    var renderer: DisplayPreRenderer!
+    let font: FontInstance
+    let renderer: DisplayPreRenderer
 
-    override func setUp() {
-        super.setUp()
+    init() {
         font = FontInstance(fontWithName: "latinmodern-math", size: 20)
         renderer = DisplayPreRenderer(font: font, style: .display, cramped: false)
     }
 
-    override func tearDown() {
-        font = nil
-        renderer = nil
-        super.tearDown()
-    }
-
     // MARK: - Script Rendering Tests
 
-    func testRenderSuperscript() {
+    @Test func renderSuperscript() {
         // Create a simple superscript: 2
         let mathList = MathList()
         let atom = MathAtom(type: .number, value: "2")
@@ -28,12 +22,12 @@ class DisplayPreRendererTests: XCTestCase {
 
         let display = renderer.renderScript(mathList, isSuper: true)
 
-        XCTAssertNotNil(display, "Superscript display should not be nil")
-        XCTAssertGreaterThan(display!.width, 0, "Superscript should have positive width")
-        XCTAssertGreaterThan(display!.ascent, 0, "Superscript should have positive ascent")
+        #expect(display != nil, "Superscript display should not be nil")
+        #expect(display!.width > 0, "Superscript should have positive width")
+        #expect(display!.ascent > 0, "Superscript should have positive ascent")
     }
 
-    func testRenderSubscript() {
+    @Test func renderSubscript() {
         // Create a simple subscript: i
         let mathList = MathList()
         let atom = MathAtom(type: .variable, value: "i")
@@ -41,11 +35,11 @@ class DisplayPreRendererTests: XCTestCase {
 
         let display = renderer.renderScript(mathList, isSuper: false)
 
-        XCTAssertNotNil(display, "Subscript display should not be nil")
-        XCTAssertGreaterThan(display!.width, 0, "Subscript should have positive width")
+        #expect(display != nil, "Subscript display should not be nil")
+        #expect(display!.width > 0, "Subscript should have positive width")
     }
 
-    func testScriptStyleInDisplayMode() {
+    @Test func scriptStyleInDisplayMode() {
         // In display mode, scripts should use script style
         let displayRenderer = DisplayPreRenderer(font: font, style: .display, cramped: false)
 
@@ -54,12 +48,12 @@ class DisplayPreRendererTests: XCTestCase {
 
         let display = displayRenderer.renderScript(mathList, isSuper: true)
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
         // Script style should be smaller than display style
         // We can't directly check the style, but we can verify it renders
     }
 
-    func testScriptStyleInScriptMode() {
+    @Test func scriptStyleInScriptMode() {
         // In script mode, scripts should use scriptOfScript style
         let scriptRenderer = DisplayPreRenderer(font: font, style: .script, cramped: false)
 
@@ -68,12 +62,12 @@ class DisplayPreRendererTests: XCTestCase {
 
         let display = scriptRenderer.renderScript(mathList, isSuper: true)
 
-        XCTAssertNotNil(display)
+        #expect(display != nil)
     }
 
     // MARK: - Math List Rendering Tests
 
-    func testRenderSimpleMathList() {
+    @Test func renderSimpleMathList() {
         let mathList = MathList()
         mathList.add(MathAtom(type: .variable, value: "x"))
         mathList.add(MathAtom(type: .binaryOperator, value: "+"))
@@ -81,51 +75,51 @@ class DisplayPreRendererTests: XCTestCase {
 
         let display = renderer.renderMathList(mathList)
 
-        XCTAssertNotNil(display, "Display should not be nil")
-        XCTAssertGreaterThan(display!.width, 0, "Display should have positive width")
+        #expect(display != nil, "Display should not be nil")
+        #expect(display!.width > 0, "Display should have positive width")
     }
 
-    func testRenderNilMathList() {
+    @Test func renderNilMathList() {
         let display = renderer.renderMathList(nil)
-        XCTAssertNil(display, "Nil math list should produce nil display")
+        #expect(display == nil, "Nil math list should produce nil display")
     }
 
-    func testRenderEmptyMathList() {
+    @Test func renderEmptyMathList() {
         let mathList = MathList()
         let display = renderer.renderMathList(mathList)
 
         // Empty math list may return nil or empty display depending on implementation
         // Just verify it doesn't crash
         if let display = display {
-            XCTAssertEqual(display.width, 0, "Empty math list should have zero width")
+            #expect(display.width == 0, "Empty math list should have zero width")
         }
     }
 
-    func testRenderWithCustomStyle() {
+    @Test func renderWithCustomStyle() {
         let mathList = MathList()
         mathList.add(MathAtom(type: .variable, value: "x"))
 
         // Render with text style instead of display style
         let display = renderer.renderMathList(mathList, style: .text)
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThan(display!.width, 0)
+        #expect(display != nil)
+        #expect(display!.width > 0)
     }
 
-    func testRenderWithCustomCramped() {
+    @Test func renderWithCustomCramped() {
         let mathList = MathList()
         mathList.add(MathAtom(type: .variable, value: "x"))
 
         // Render with cramped mode
         let display = renderer.renderMathList(mathList, cramped: true)
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThan(display!.width, 0)
+        #expect(display != nil)
+        #expect(display!.width > 0)
     }
 
     // MARK: - Complex Content Tests
 
-    func testRenderComplexScript() {
+    @Test func renderComplexScript() {
         // Create a complex superscript: a+b
         let mathList = MathList()
         mathList.add(MathAtom(type: .variable, value: "a"))
@@ -134,11 +128,11 @@ class DisplayPreRendererTests: XCTestCase {
 
         let display = renderer.renderScript(mathList, isSuper: true)
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThan(display!.width, 0)
+        #expect(display != nil)
+        #expect(display!.width > 0)
     }
 
-    func testRenderMultipleAtoms() {
+    @Test func renderMultipleAtoms() {
         let mathList = MathList()
         mathList.add(MathAtom(type: .number, value: "1"))
         mathList.add(MathAtom(type: .binaryOperator, value: "+"))
@@ -148,13 +142,13 @@ class DisplayPreRendererTests: XCTestCase {
 
         let display = renderer.renderMathList(mathList)
 
-        XCTAssertNotNil(display)
-        XCTAssertGreaterThan(display!.width, 0)
+        #expect(display != nil)
+        #expect(display!.width > 0)
     }
 
     // MARK: - Font and Style Tests
 
-    func testRendererWithDifferentFonts() {
+    @Test func rendererWithDifferentFonts() {
         let smallFont = FontInstance(fontWithName: "latinmodern-math", size: 10)
         let smallRenderer = DisplayPreRenderer(font: smallFont, style: .display, cramped: false)
 
@@ -164,14 +158,14 @@ class DisplayPreRendererTests: XCTestCase {
         let normalDisplay = renderer.renderMathList(mathList)
         let smallDisplay = smallRenderer.renderMathList(mathList)
 
-        XCTAssertNotNil(normalDisplay)
-        XCTAssertNotNil(smallDisplay)
+        #expect(normalDisplay != nil)
+        #expect(smallDisplay != nil)
 
         // Smaller font should produce narrower display
-        XCTAssertLessThan(smallDisplay!.width, normalDisplay!.width)
+        #expect(smallDisplay!.width < normalDisplay!.width)
     }
 
-    func testCrampedMode() {
+    @Test func crampedMode() {
         let normalRenderer = DisplayPreRenderer(font: font, style: .display, cramped: false)
         let crampedRenderer = DisplayPreRenderer(font: font, style: .display, cramped: true)
 
@@ -181,8 +175,8 @@ class DisplayPreRendererTests: XCTestCase {
         let normalDisplay = normalRenderer.renderMathList(mathList)
         let crampedDisplay = crampedRenderer.renderMathList(mathList)
 
-        XCTAssertNotNil(normalDisplay)
-        XCTAssertNotNil(crampedDisplay)
+        #expect(normalDisplay != nil)
+        #expect(crampedDisplay != nil)
         // Both should render successfully
     }
 }

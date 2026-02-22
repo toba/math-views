@@ -1,4 +1,5 @@
-import XCTest
+import CoreGraphics
+import Testing
 @testable import MathViews
 
 /// Regression tests for limit operators and integral rendering
@@ -7,35 +8,25 @@ import XCTest
 /// - Subscript font sizing (subscripts not using proper script-sized font)
 /// - Vertical spacing between operator and limits
 /// - Integral sizing (integrals being too small)
-final class LimitOperatorRegressionTests: XCTestCase {
+struct LimitOperatorRegressionTests {
 
-    var font: FontInstance?
+    let font: FontInstance
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        self.font = FontManager.fontManager.defaultFont
-    }
-
-    override func tearDownWithError() throws {
-        try super.tearDownWithError()
+    init() {
+        font = FontManager.fontManager.defaultFont!
     }
 
     // MARK: - Limit Operator Tests
 
-    func testLimSubscript_NoDoubleRendering() throws {
+    @Test func limSubscript_noDoubleRendering() throws {
         // Regression test: Subscript should render only once, not duplicated
         // Bug: Subscript was appearing twice - once below (too large) and once to the side
-        guard let font = self.font else {
-            XCTFail("Font should be initialized")
-            return
-        }
-
         let latex = "\\lim_{x\\to\\infty}f(x)"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse LaTeX")
+        #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: font, style: .text))
-        XCTAssertEqual(display.type, .regular)
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: font, style: .text))
+        #expect(display.type == .regular)
 
         // Find the limit operator display
         var limitsDisplay: LargeOpLimitsDisplay?
@@ -46,31 +37,31 @@ final class LimitOperatorRegressionTests: XCTestCase {
             }
         }
 
-        let limOp = try XCTUnwrap(limitsDisplay, "Should have LargeOpLimitsDisplay for \\lim")
+        let limOp = try #require(limitsDisplay, "Should have LargeOpLimitsDisplay for \\lim")
 
         // Verify lower limit exists (subscript)
-        XCTAssertNotNil(limOp.lowerLimit, "Should have lower limit (x→∞)")
+        #expect(limOp.lowerLimit != nil, "Should have lower limit (x->infinity)")
 
         // Verify subscript is positioned below (negative y position relative to baseline)
-        let lowerLimit = try XCTUnwrap(limOp.lowerLimit)
-        XCTAssertLessThan(lowerLimit.position.y, 0, "Subscript should be below baseline")
+        let lowerLimit = try #require(limOp.lowerLimit)
+        #expect(lowerLimit.position.y < 0, "Subscript should be below baseline")
 
         // CRITICAL: Verify no script rendering on the nucleus display itself
         // The nucleus should not have hasScript = true, as scripts are already in the limits display
-        XCTAssertFalse(limOp.hasScript, "Limit operator should not have separate scripts (they're in limits display)")
+        #expect(!limOp.hasScript, "Limit operator should not have separate scripts (they're in limits display)")
     }
 
-    func testLimSubscript_ProperFontScaling() throws {
+    @Test func limSubscript_properFontScaling() throws {
         // Regression test: Subscript should use script-sized font (~70% of base)
         // Bug: Subscript was rendering at full size (not scaled to script style)
         let baseFontSize: CGFloat = 20.0
-        let testFont = try XCTUnwrap(FontManager.fontManager.termesFont(withSize: baseFontSize))
+        let testFont = try #require(FontManager.fontManager.termesFont(withSize: baseFontSize))
 
         let latex = "\\lim_{x\\to\\infty}f(x)"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse LaTeX")
+        #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: testFont, style: .text))
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: testFont, style: .text))
 
         // Find the limit operator display
         var limitsDisplay: LargeOpLimitsDisplay?
@@ -81,12 +72,12 @@ final class LimitOperatorRegressionTests: XCTestCase {
             }
         }
 
-        let limOp = try XCTUnwrap(limitsDisplay)
-        let lowerLimit = try XCTUnwrap(limOp.lowerLimit, "Should have lower limit")
+        let limOp = try #require(limitsDisplay)
+        let lowerLimit = try #require(limOp.lowerLimit, "Should have lower limit")
 
         // Calculate expected script font size
         // Script style is typically 70% of base (scriptScaleDown from MATH table)
-        let mathTable = try XCTUnwrap(testFont.mathTable)
+        let mathTable = try #require(testFont.mathTable)
 
         // The subscript height should be proportional to script font size
         // A full-size subscript at 20pt would be ~8-10pt tall
@@ -96,28 +87,28 @@ final class LimitOperatorRegressionTests: XCTestCase {
 
         // Verify subscript is noticeably smaller than full size
         // Allow some tolerance for glyph metrics variation
-        XCTAssertLessThan(lowerLimit.ascent, fullSizeHeight * 0.85,
-                         "Subscript ascent should be smaller than full size (properly scaled)")
-        XCTAssertGreaterThan(lowerLimit.ascent, expectedScriptHeight * 0.8,
-                            "Subscript should not be too small (sanity check)")
+        #expect(lowerLimit.ascent < fullSizeHeight * 0.85,
+               "Subscript ascent should be smaller than full size (properly scaled)")
+        #expect(lowerLimit.ascent > expectedScriptHeight * 0.8,
+               "Subscript should not be too small (sanity check)")
 
         // Verify overall dimensions are reasonable for script style
         let totalSubscriptHeight = lowerLimit.ascent + lowerLimit.descent
-        XCTAssertLessThan(totalSubscriptHeight, fullSizeHeight * 0.9,
-                         "Total subscript height should be smaller than full size")
+        #expect(totalSubscriptHeight < fullSizeHeight * 0.9,
+               "Total subscript height should be smaller than full size")
     }
 
-    func testLimSubscript_VerticalSpacing() throws {
+    @Test func limSubscript_verticalSpacing() throws {
         // Regression test: Vertical spacing between lim and subscript should match OpenType MATH metrics
         // Bug: Originally had 50% reduction in text mode, making spacing too tight
         let baseFontSize: CGFloat = 20.0
-        let testFont = try XCTUnwrap(FontManager.fontManager.termesFont(withSize: baseFontSize))
+        let testFont = try #require(FontManager.fontManager.termesFont(withSize: baseFontSize))
 
         let latex = "\\lim_{x\\to\\infty}f(x)"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse LaTeX")
+        #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: testFont, style: .text))
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: testFont, style: .text))
 
         // Find the limit operator display
         var limitsDisplay: LargeOpLimitsDisplay?
@@ -128,86 +119,73 @@ final class LimitOperatorRegressionTests: XCTestCase {
             }
         }
 
-        let limOp = try XCTUnwrap(limitsDisplay)
+        let limOp = try #require(limitsDisplay)
 
         // The lowerLimitGap should be set according to OpenType MATH metrics
         // Expected: max(lowerLimitGapMin, lowerLimitBaselineDropMin - subscript.ascent)
-        // For typical fonts: lowerLimitGapMin ≈ 0.166 em, lowerLimitBaselineDropMin ≈ 0.6 em
-        let mathTable = try XCTUnwrap(testFont.mathTable)
+        // For typical fonts: lowerLimitGapMin ~ 0.166 em, lowerLimitBaselineDropMin ~ 0.6 em
+        let mathTable = try #require(testFont.mathTable)
 
         // Calculate expected gap
-        let lowerLimit = try XCTUnwrap(limOp.lowerLimit)
+        let lowerLimit = try #require(limOp.lowerLimit)
         let expectedMinGap = mathTable.lowerLimitGapMin
         let expectedBaselineDrop = mathTable.lowerLimitBaselineDropMin - lowerLimit.ascent
         let expectedGap = max(expectedMinGap, expectedBaselineDrop)
 
         // Verify the gap is set correctly (should match expected gap, not reduced by 50%)
-        XCTAssertEqual(limOp.lowerLimitGap, expectedGap, accuracy: 0.1,
-                      "Lower limit gap should use full MATH table metrics")
+        #expect(abs(limOp.lowerLimitGap - expectedGap) <= 0.1,
+               "Lower limit gap should use full MATH table metrics")
 
         // Verify gap is reasonable (not too tight)
         // The gap should be at least lowerLimitGapMin (typically ~0.166 em = ~3.3pt at 20pt)
         // But allow some tolerance since the actual gap is max(gapMin, baselineDrop - ascent)
         let minimumExpectedGap: CGFloat = mathTable.lowerLimitGapMin * 0.5
-        XCTAssertGreaterThan(limOp.lowerLimitGap, minimumExpectedGap,
-                            "Gap should be reasonable (at least half of lowerLimitGapMin)")
+        #expect(limOp.lowerLimitGap > minimumExpectedGap,
+               "Gap should be reasonable (at least half of lowerLimitGapMin)")
     }
 
-    func testMaxMinSupInf_SameBehaviorAsLim() throws {
-        // Regression test: Other limit operators (max, min, sup, inf) should behave same as lim
-        guard let font = self.font else {
-            XCTFail("Font should be initialized")
-            return
-        }
+    @Test(arguments: ["max", "min", "sup", "inf"])
+    func maxMinSupInf_sameBehaviorAsLim(_ op: String) throws {
+        // Regression test: Other limit operators should behave same as lim
+        let latex = "\\\(op)_{x\\to\\infty}f(x)"
+        let mathList = MathListBuilder.build(fromString: latex)
+        #expect(mathList != nil, "Should parse \\\(op)")
 
-        let operators = ["max", "min", "sup", "inf"]
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: font, style: .text))
 
-        for op in operators {
-            let latex = "\\\(op)_{x\\to\\infty}f(x)"
-            let mathList = MathListBuilder.build(fromString: latex)
-            XCTAssertNotNil(mathList, "Should parse \\\(op)")
+        // Find the limit operator display
+        var foundLimitsDisplay = false
+        for subDisplay in display.subDisplays {
+            if let limOp = subDisplay as? LargeOpLimitsDisplay {
+                foundLimitsDisplay = true
 
-            let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: font, style: .text))
+                // Verify has lower limit
+                #expect(limOp.lowerLimit != nil, "\\\(op) should have lower limit")
 
-            // Find the limit operator display
-            var foundLimitsDisplay = false
-            for subDisplay in display.subDisplays {
-                if let limOp = subDisplay as? LargeOpLimitsDisplay {
-                    foundLimitsDisplay = true
-
-                    // Verify has lower limit
-                    XCTAssertNotNil(limOp.lowerLimit, "\\\(op) should have lower limit")
-
-                    // Verify subscript is below
-                    if let lowerLimit = limOp.lowerLimit {
-                        XCTAssertLessThan(lowerLimit.position.y, 0,
-                                         "\\\(op) subscript should be below baseline")
-                    }
-
-                    // Verify no double scripting
-                    XCTAssertFalse(limOp.hasScript,
-                                  "\\\(op) should not have separate scripts")
-
-                    break
+                // Verify subscript is below
+                if let lowerLimit = limOp.lowerLimit {
+                    #expect(lowerLimit.position.y < 0,
+                           "\\\(op) subscript should be below baseline")
                 }
-            }
 
-            XCTAssertTrue(foundLimitsDisplay, "\\\(op) should use LargeOpLimitsDisplay")
+                // Verify no double scripting
+                #expect(!limOp.hasScript,
+                       "\\\(op) should not have separate scripts")
+
+                break
+            }
         }
+
+        #expect(foundLimitsDisplay, "\\\(op) should use LargeOpLimitsDisplay")
     }
 
-    func testLimSuperscript_ProperPositioning() throws {
+    @Test func limSuperscript_properPositioning() throws {
         // Test that superscripts (upper limits) work correctly too
-        guard let font = self.font else {
-            XCTFail("Font should be initialized")
-            return
-        }
-
         let latex = "\\limsup^{n\\to\\infty}f(x)"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse LaTeX")
+        #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: font, style: .text))
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: font, style: .text))
 
         // Find the limit operator display
         var limitsDisplay: LargeOpLimitsDisplay?
@@ -218,31 +196,26 @@ final class LimitOperatorRegressionTests: XCTestCase {
             }
         }
 
-        let limOp = try XCTUnwrap(limitsDisplay)
+        let limOp = try #require(limitsDisplay)
 
         // Verify has upper limit
-        XCTAssertNotNil(limOp.upperLimit, "Should have upper limit")
+        #expect(limOp.upperLimit != nil, "Should have upper limit")
 
         // Verify superscript is above (positive y position)
-        let upperLimit = try XCTUnwrap(limOp.upperLimit)
-        XCTAssertGreaterThan(upperLimit.position.y, 0,
-                            "Superscript should be above baseline")
+        let upperLimit = try #require(limOp.upperLimit)
+        #expect(upperLimit.position.y > 0,
+               "Superscript should be above baseline")
 
         // Verify no double scripting
-        XCTAssertFalse(limOp.hasScript,
-                      "Limit operator should not have separate scripts")
+        #expect(!limOp.hasScript,
+               "Limit operator should not have separate scripts")
     }
 
-    func testLimBothLimits_ProperPositioning() throws {
+    @Test func limBothLimits_properPositioning() throws {
         // Test operator with both subscript and superscript
         // Create manually since we don't have a standard operator with both
-        guard let font = self.font else {
-            XCTFail("Font should be initialized")
-            return
-        }
-
         let mathList = MathList()
-        let op = try XCTUnwrap(MathAtomFactory.atom(forLatexSymbol: "lim"))
+        let op = try #require(MathAtomFactory.atom(forLatexSymbol: "lim"))
 
         // Add subscript
         op.subScript = MathList()
@@ -254,7 +227,7 @@ final class LimitOperatorRegressionTests: XCTestCase {
 
         mathList.add(op)
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: font, style: .text))
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: font, style: .text))
 
         // Find the limit operator display
         var limitsDisplay: LargeOpLimitsDisplay?
@@ -265,38 +238,33 @@ final class LimitOperatorRegressionTests: XCTestCase {
             }
         }
 
-        let limOp = try XCTUnwrap(limitsDisplay)
+        let limOp = try #require(limitsDisplay)
 
         // Verify both limits exist
-        XCTAssertNotNil(limOp.lowerLimit, "Should have lower limit")
-        XCTAssertNotNil(limOp.upperLimit, "Should have upper limit")
+        #expect(limOp.lowerLimit != nil, "Should have lower limit")
+        #expect(limOp.upperLimit != nil, "Should have upper limit")
 
         // Verify positioning
-        let lowerLimit = try XCTUnwrap(limOp.lowerLimit)
-        let upperLimit = try XCTUnwrap(limOp.upperLimit)
+        let lowerLimit = try #require(limOp.lowerLimit)
+        let upperLimit = try #require(limOp.upperLimit)
 
-        XCTAssertLessThan(lowerLimit.position.y, 0, "Lower limit should be below")
-        XCTAssertGreaterThan(upperLimit.position.y, 0, "Upper limit should be above")
+        #expect(lowerLimit.position.y < 0, "Lower limit should be below")
+        #expect(upperLimit.position.y > 0, "Upper limit should be above")
 
         // Verify no double scripting
-        XCTAssertFalse(limOp.hasScript, "Should not have separate scripts")
+        #expect(!limOp.hasScript, "Should not have separate scripts")
     }
 
     // MARK: - Integral Size Tests
 
-    func testIntegral_DisplayModeSize() throws {
+    @Test func integral_displayModeSize() throws {
         // Regression test: Integrals in display mode should be enlarged (~2.2 em)
         // Bug: Integrals were too small, not using larger variants
-        guard let font = self.font else {
-            XCTFail("Font should be initialized")
-            return
-        }
-
         let latex = "\\int f(x) dx"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse LaTeX")
+        #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: font, style: .display))
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: font, style: .display))
 
         // Find the integral glyph
         var integralGlyph: GlyphDisplay?
@@ -310,34 +278,34 @@ final class LimitOperatorRegressionTests: XCTestCase {
             }
         }
 
-        let integral = try XCTUnwrap(integralGlyph, "Should find integral glyph")
+        let integral = try #require(integralGlyph, "Should find integral glyph")
 
         // In display mode, integral should be significantly taller than base font
         // Expected: ~2.2 em = 2.2 * fontSize
         let totalHeight = integral.ascent + integral.descent
 
-        XCTAssertGreaterThan(totalHeight, font.fontSize * 1.8,
-                            "Display mode integral should be tall (using larger variant)")
-        XCTAssertLessThan(totalHeight, font.fontSize * 2.6,
-                         "Display mode integral should not be excessively tall")
+        #expect(totalHeight > font.fontSize * 1.8,
+               "Display mode integral should be tall (using larger variant)")
+        #expect(totalHeight < font.fontSize * 2.6,
+               "Display mode integral should not be excessively tall")
 
         // Verify it's noticeably taller than surrounding content
         // f(x) should be approximately font size height
-        XCTAssertGreaterThan(totalHeight, font.fontSize * 1.5,
-                            "Integral should be taller than surrounding text")
+        #expect(totalHeight > font.fontSize * 1.5,
+               "Integral should be taller than surrounding text")
     }
 
-    func testIntegral_TextModeSize() throws {
+    @Test func integral_textModeSize() throws {
         // Regression test: Integrals in text mode should be taller than surrounding text
         // Bug: Integrals in inline mode were not higher than f(x)
         let baseFontSize: CGFloat = 20.0
-        let testFont = try XCTUnwrap(FontManager.fontManager.termesFont(withSize: baseFontSize))
+        let testFont = try #require(FontManager.fontManager.termesFont(withSize: baseFontSize))
 
         let latex = "\\int f(x) dx"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse LaTeX")
+        #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: testFont, style: .text))
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: testFont, style: .text))
 
         // Find the integral glyph
         var integralGlyph: GlyphDisplay?
@@ -352,55 +320,45 @@ final class LimitOperatorRegressionTests: XCTestCase {
             }
         }
 
-        let integral = try XCTUnwrap(integralGlyph, "Should find integral glyph")
+        let integral = try #require(integralGlyph, "Should find integral glyph")
 
         // In text mode, integral should still be taller than base font
         // Expected: at least 1.1x base font size (using incremental variant selection)
         let totalHeight = integral.ascent + integral.descent
 
-        XCTAssertGreaterThan(totalHeight, baseFontSize * 1.1,
-                            "Text mode integral should be taller than base font")
+        #expect(totalHeight > baseFontSize * 1.1,
+               "Text mode integral should be taller than base font")
 
         // The integral should extend both above and below the baseline
         // to be visually taller than f(x)
-        XCTAssertGreaterThan(integral.ascent, baseFontSize * 0.6,
-                            "Integral should extend above baseline")
-        XCTAssertGreaterThan(integral.descent, baseFontSize * 0.3,
-                            "Integral should extend below baseline")
+        #expect(integral.ascent > baseFontSize * 0.6,
+               "Integral should extend above baseline")
+        #expect(integral.descent > baseFontSize * 0.3,
+               "Integral should extend below baseline")
     }
 
-    func testIntegral_WithScripts() throws {
+    @Test func integral_withScripts() throws {
         // Test that integral with scripts (bounds) renders correctly
-        guard let font = self.font else {
-            XCTFail("Font should be initialized")
-            return
-        }
-
         let latex = "\\int_0^1 f(x) dx"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse LaTeX")
+        #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: font, style: .display))
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: font, style: .display))
 
         // Integral with scripts should have reasonable dimensions
-        XCTAssertGreaterThan(display.ascent, font.fontSize,
-                            "Should have significant ascent for integral + superscript")
-        XCTAssertGreaterThan(display.descent, font.fontSize * 0.3,
-                            "Should have descent for integral + subscript")
+        #expect(display.ascent > font.fontSize,
+               "Should have significant ascent for integral + superscript")
+        #expect(display.descent > font.fontSize * 0.3,
+               "Should have descent for integral + subscript")
     }
 
-    func testMultipleIntegrals_ConsistentSizing() throws {
+    @Test func multipleIntegrals_consistentSizing() throws {
         // Test that multiple integrals maintain consistent sizing
-        guard let font = self.font else {
-            XCTFail("Font should be initialized")
-            return
-        }
-
         let latex = "\\int\\int\\int f(x,y,z) dx dy dz"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse LaTeX")
+        #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: font, style: .display))
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: font, style: .display))
 
         // Find all integral glyphs
         var integralGlyphs: [GlyphDisplay] = []
@@ -412,69 +370,56 @@ final class LimitOperatorRegressionTests: XCTestCase {
             }
         }
 
-        XCTAssertGreaterThanOrEqual(integralGlyphs.count, 3, "Should have at least 3 integrals")
+        #expect(integralGlyphs.count >= 3, "Should have at least 3 integrals")
 
         // All integrals should have similar height
         if integralGlyphs.count >= 2 {
             let firstHeight = integralGlyphs[0].ascent + integralGlyphs[0].descent
             for integral in integralGlyphs {
                 let height = integral.ascent + integral.descent
-                XCTAssertEqual(height, firstHeight, accuracy: 1.0,
-                              "All integrals should have consistent sizing")
+                #expect(abs(height - firstHeight) <= 1.0,
+                       "All integrals should have consistent sizing")
             }
         }
     }
 
-    func testOtherIntegralSymbols_SameBehavior() throws {
+    @Test(arguments: ["oint", "iint", "iiint"])
+    func otherIntegralSymbols_sameBehavior(_ op: String) throws {
         // Test other integral variants (oint, iint, etc.)
-        guard let font = self.font else {
-            XCTFail("Font should be initialized")
-            return
-        }
+        let latex = "\\\(op) f(x) dx"
+        let mathList = MathListBuilder.build(fromString: latex)
+        #expect(mathList != nil, "Should parse \\\(op)")
 
-        let operators = ["oint", "iint", "iiint"]
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: font, style: .display))
 
-        for op in operators {
-            let latex = "\\\(op) f(x) dx"
-            let mathList = MathListBuilder.build(fromString: latex)
-            XCTAssertNotNil(mathList, "Should parse \\\(op)")
+        // Find the integral glyph
+        var foundLargeIntegral = false
+        for subDisplay in display.subDisplays {
+            if let glyph = subDisplay as? GlyphDisplay {
+                let totalHeight = glyph.ascent + glyph.descent
+                if totalHeight > font.fontSize * 1.5 {
+                    foundLargeIntegral = true
 
-            let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: font, style: .display))
-
-            // Find the integral glyph
-            var foundLargeIntegral = false
-            for subDisplay in display.subDisplays {
-                if let glyph = subDisplay as? GlyphDisplay {
-                    let totalHeight = glyph.ascent + glyph.descent
-                    if totalHeight > font.fontSize * 1.5 {
-                        foundLargeIntegral = true
-
-                        // Verify it's tall like regular integral
-                        XCTAssertGreaterThan(totalHeight, font.fontSize * 1.8,
-                                            "\\\(op) should be tall in display mode")
-                        break
-                    }
+                    // Verify it's tall like regular integral
+                    #expect(totalHeight > font.fontSize * 1.8,
+                           "\\\(op) should be tall in display mode")
+                    break
                 }
             }
-
-            XCTAssertTrue(foundLargeIntegral, "\\\(op) should render as large integral")
         }
+
+        #expect(foundLargeIntegral, "\\\(op) should render as large integral")
     }
 
     // MARK: - Combined Tests
 
-    func testComplexExpression_LimitAndIntegral() throws {
+    @Test func complexExpression_limitAndIntegral() throws {
         // Test complex expression with both limit operator and integral
-        guard let font = self.font else {
-            XCTFail("Font should be initialized")
-            return
-        }
-
         let latex = "\\lim_{x\\to\\infty}\\int_0^x f(t) dt"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse LaTeX")
+        #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: font, style: .text))
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: font, style: .text))
 
         // Should have both limit operator and integral
         var hasLimitOperator = false
@@ -491,26 +436,21 @@ final class LimitOperatorRegressionTests: XCTestCase {
             }
         }
 
-        XCTAssertTrue(hasLimitOperator, "Should have limit operator display")
-        XCTAssertTrue(hasLargeIntegral, "Should have enlarged integral")
+        #expect(hasLimitOperator, "Should have limit operator display")
+        #expect(hasLargeIntegral, "Should have enlarged integral")
     }
 
-    func testRealWorldExpression_NoRegressions() throws {
+    @Test func realWorldExpression_noRegressions() throws {
         // Real-world expression combining limits, integrals, and fractions
-        guard let font = self.font else {
-            XCTFail("Font should be initialized")
-            return
-        }
-
         let latex = "\\lim_{n\\to\\infty}\\sum_{i=1}^{n}\\frac{1}{n}\\int_0^1 f(x) dx"
         let mathList = MathListBuilder.build(fromString: latex)
-        XCTAssertNotNil(mathList, "Should parse complex LaTeX")
+        #expect(mathList != nil, "Should parse complex LaTeX")
 
-        let display = try XCTUnwrap(Typesetter.createLineForMathList(mathList, font: font, style: .text))
+        let display = try #require(Typesetter.createLineForMathList(mathList, font: font, style: .text))
 
         // Should render without errors
-        XCTAssertGreaterThan(display.width, 0, "Should have positive width")
-        XCTAssertGreaterThan(display.ascent, 0, "Should have positive ascent")
+        #expect(display.width > 0, "Should have positive width")
+        #expect(display.ascent > 0, "Should have positive ascent")
 
         // Should have limit operator displays
         var limitOperatorCount = 0
@@ -520,7 +460,7 @@ final class LimitOperatorRegressionTests: XCTestCase {
             }
         }
 
-        XCTAssertGreaterThanOrEqual(limitOperatorCount, 1,
-                                   "Should have at least one limit operator (lim or sum)")
+        #expect(limitOperatorCount >= 1,
+               "Should have at least one limit operator (lim or sum)")
     }
 }

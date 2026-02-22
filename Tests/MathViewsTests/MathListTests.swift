@@ -1,4 +1,5 @@
-import XCTest
+import CoreGraphics
+import Testing
 @testable import MathViews
 
 //
@@ -8,9 +9,9 @@ import XCTest
 //  Created by Mike Griebling on 2023-01-02.
 //
 
-final class MathListTests: XCTestCase {
-    
-    func testSubScript() throws {
+struct MathListTests {
+
+    @Test func subScript() throws {
         let str = "-52x^{13+y}_{15-} + (-12.3 *)\\frac{-12}{15.2}"
         let list = MathListBuilder.build(fromString: str)!
         let finalized = list.finalized
@@ -18,158 +19,158 @@ final class MathListTests: XCTestCase {
         // refinalizing a finalized list should not cause any more changes
         try self.checkListContents(finalized.finalized)
     }
-    
+
     func checkListContents(_ finalized:MathList) throws {
         // check
-        XCTAssertEqual((finalized.atoms.count), 10, "Num atoms");
+        #expect((finalized.atoms.count) == 10, "Num atoms");
         var atom = finalized.atoms[0];
-        XCTAssertEqual(atom.type, .unaryOperator, "Atom 0");
-        XCTAssertEqual(atom.nucleus, "−", "Atom 0 value");
-        XCTAssertEqual(atom.indexRange, 0..<1, "Range");
+        #expect(atom.type == .unaryOperator, "Atom 0");
+        #expect(atom.nucleus == "−", "Atom 0 value");
+        #expect(atom.indexRange == 0..<1, "Range");
         atom = finalized.atoms[1];
-        XCTAssertEqual(atom.type, .number, "Atom 1");
-        XCTAssertEqual(atom.nucleus, "52", "Atom 1 value");
-        XCTAssertEqual(atom.indexRange, 1..<3, "Range");
+        #expect(atom.type == .number, "Atom 1");
+        #expect(atom.nucleus == "52", "Atom 1 value");
+        #expect(atom.indexRange == 1..<3, "Range");
         atom = finalized.atoms[2];
-        XCTAssertEqual(atom.type, .variable, "Atom 2");
-        XCTAssertEqual(atom.nucleus, "x", "Atom 2 value");
-        XCTAssertEqual(atom.indexRange, 3..<4, "Range");
-        
+        #expect(atom.type == .variable, "Atom 2");
+        #expect(atom.nucleus == "x", "Atom 2 value");
+        #expect(atom.indexRange == 3..<4, "Range");
+
         let superScr = atom.superScript!
-        XCTAssertEqual((superScr.atoms.count), 3, "Super script");
+        #expect((superScr.atoms.count) == 3, "Super script");
         atom = superScr.atoms[0];
-        XCTAssertEqual(atom.type, .number, "Super Atom 0");
-        XCTAssertEqual(atom.nucleus, "13", "Super Atom 0 value");
-        XCTAssertEqual(atom.indexRange, 0..<2, "Range");
+        #expect(atom.type == .number, "Super Atom 0");
+        #expect(atom.nucleus == "13", "Super Atom 0 value");
+        #expect(atom.indexRange == 0..<2, "Range");
         atom = superScr.atoms[1];
-        XCTAssertEqual(atom.type, .binaryOperator, "Super Atom 1");
-        XCTAssertEqual(atom.nucleus, "+", "Super Atom 1 value");
-        XCTAssertEqual(atom.indexRange, 2..<3, "Range");
+        #expect(atom.type == .binaryOperator, "Super Atom 1");
+        #expect(atom.nucleus == "+", "Super Atom 1 value");
+        #expect(atom.indexRange == 2..<3, "Range");
         atom = superScr.atoms[2];
-        XCTAssertEqual(atom.type, .variable, "Super Atom 2");
-        XCTAssertEqual(atom.nucleus, "y", "Super Atom 2 value");
-        XCTAssertEqual(atom.indexRange, 3..<4, "Range");
-        
+        #expect(atom.type == .variable, "Super Atom 2");
+        #expect(atom.nucleus == "y", "Super Atom 2 value");
+        #expect(atom.indexRange == 3..<4, "Range");
+
         atom = finalized.atoms[2];
         let subScr = atom.subScript!
-        XCTAssertEqual((subScr.atoms.count), 2, "Sub script");
+        #expect((subScr.atoms.count) == 2, "Sub script");
         atom = subScr.atoms[0];
-        XCTAssertEqual(atom.type, .number, "Sub Atom 0");
-        XCTAssertEqual(atom.nucleus, "15", "Sub Atom 0 value");
-        XCTAssertEqual(atom.indexRange, 0..<2, "Range");
+        #expect(atom.type == .number, "Sub Atom 0");
+        #expect(atom.nucleus == "15", "Sub Atom 0 value");
+        #expect(atom.indexRange == 0..<2, "Range");
         atom = subScr.atoms[1];
-        XCTAssertEqual(atom.type, .unaryOperator, "Sub Atom 1");
-        XCTAssertEqual(atom.nucleus, "−", "Sub Atom 1 value");
-        XCTAssertEqual(atom.indexRange, 2..<3, "Range");
-        
+        #expect(atom.type == .unaryOperator, "Sub Atom 1");
+        #expect(atom.nucleus == "−", "Sub Atom 1 value");
+        #expect(atom.indexRange == 2..<3, "Range");
+
         atom = finalized.atoms[3];
-        XCTAssertEqual(atom.type, .binaryOperator, "Atom 3");
-        XCTAssertEqual(atom.nucleus, "+", "Atom 3 value");
-        XCTAssertEqual(atom.indexRange, 4..<5, "Range");
+        #expect(atom.type == .binaryOperator, "Atom 3");
+        #expect(atom.nucleus == "+", "Atom 3 value");
+        #expect(atom.indexRange == 4..<5, "Range");
         atom = finalized.atoms[4];
-        XCTAssertEqual(atom.type, .open, "Atom 4");
-        XCTAssertEqual(atom.nucleus, "(", "Atom 4 value");
-        XCTAssertEqual(atom.indexRange, 5..<6, "Range");
+        #expect(atom.type == .open, "Atom 4");
+        #expect(atom.nucleus == "(", "Atom 4 value");
+        #expect(atom.indexRange == 5..<6, "Range");
         atom = finalized.atoms[5];
-        XCTAssertEqual(atom.type, .unaryOperator, "Atom 5");
-        XCTAssertEqual(atom.nucleus, "−", "Atom 5 value");
-        XCTAssertEqual(atom.indexRange, 6..<7, "Range");
+        #expect(atom.type == .unaryOperator, "Atom 5");
+        #expect(atom.nucleus == "−", "Atom 5 value");
+        #expect(atom.indexRange == 6..<7, "Range");
         atom = finalized.atoms[6];
-        XCTAssertEqual(atom.type, .number, "Atom 6");
-        XCTAssertEqual(atom.nucleus, "12.3", "Atom 6 value");
-        XCTAssertEqual(atom.indexRange, 7..<11, "Range");
+        #expect(atom.type == .number, "Atom 6");
+        #expect(atom.nucleus == "12.3", "Atom 6 value");
+        #expect(atom.indexRange == 7..<11, "Range");
         atom = finalized.atoms[7];
-        XCTAssertEqual(atom.type, .unaryOperator, "Atom 7");
-        XCTAssertEqual(atom.nucleus, "*", "Atom 7 value");
-        XCTAssertEqual(atom.indexRange, 11..<12, "Range");
+        #expect(atom.type == .unaryOperator, "Atom 7");
+        #expect(atom.nucleus == "*", "Atom 7 value");
+        #expect(atom.indexRange == 11..<12, "Range");
         atom = finalized.atoms[8];
-        XCTAssertEqual(atom.type, .close, "Atom 8");
-        XCTAssertEqual(atom.nucleus, ")", "Atom 8 value");
-        XCTAssertEqual(atom.indexRange, 12..<13, "Range");
-        
+        #expect(atom.type == .close, "Atom 8");
+        #expect(atom.nucleus == ")", "Atom 8 value");
+        #expect(atom.indexRange == 12..<13, "Range");
+
         let frac = finalized.atoms[9] as! Fraction
-        XCTAssertEqual(frac.type, .fraction, "Atom 9");
-        XCTAssertEqual(frac.nucleus, "", "Atom 9 value");
-        XCTAssertEqual(frac.indexRange, 13..<14, "Range");
-        
+        #expect(frac.type == .fraction, "Atom 9");
+        #expect(frac.nucleus == "", "Atom 9 value");
+        #expect(frac.indexRange == 13..<14, "Range");
+
         let numer = frac.numerator!
-        XCTAssertNotNil(numer, "Numerator");
-        XCTAssertEqual((numer.atoms.count), 2, "Numer script");
+        #expect(numer != nil, "Numerator");
+        #expect((numer.atoms.count) == 2, "Numer script");
         atom = numer.atoms[0];
-        XCTAssertEqual(atom.type, .unaryOperator, "Numer Atom 0");
-        XCTAssertEqual(atom.nucleus, "−", "Numer Atom 0 value");
-        XCTAssertEqual(atom.indexRange, 0..<1, "Range");
+        #expect(atom.type == .unaryOperator, "Numer Atom 0");
+        #expect(atom.nucleus == "−", "Numer Atom 0 value");
+        #expect(atom.indexRange == 0..<1, "Range");
         atom = numer.atoms[1];
-        XCTAssertEqual(atom.type, .number, "Numer Atom 1");
-        XCTAssertEqual(atom.nucleus, "12", "Numer Atom 1 value");
-        XCTAssertEqual(atom.indexRange, 1..<3, "Range");
-        
-        
+        #expect(atom.type == .number, "Numer Atom 1");
+        #expect(atom.nucleus == "12", "Numer Atom 1 value");
+        #expect(atom.indexRange == 1..<3, "Range");
+
+
         let denom = frac.denominator!
-        XCTAssertNotNil(denom, "Denominator");
-        XCTAssertEqual((denom.atoms.count), 1, "Denom script");
+        #expect(denom != nil, "Denominator");
+        #expect((denom.atoms.count) == 1, "Denom script");
         atom = denom.atoms[0];
-        XCTAssertEqual(atom.type, .number, "Denom Atom 0");
-        XCTAssertEqual(atom.nucleus, "15.2", "Denom Atom 0 value");
-        XCTAssertEqual(atom.indexRange, 0..<4, "Range");
-        
+        #expect(atom.type == .number, "Denom Atom 0");
+        #expect(atom.nucleus == "15.2", "Denom Atom 0 value");
+        #expect(atom.indexRange == 0..<4, "Range");
+
     }
-    
-    func testAdd() throws {
+
+    @Test func add() throws {
         let list = MathList()
-        XCTAssertEqual(list.atoms.count, 0);
+        #expect(list.atoms.count == 0);
         let atom = MathAtomFactory.placeholder()
         list.add(atom)
-        XCTAssertEqual(list.atoms.count, 1);
-        XCTAssertEqual(list.atoms[0], atom);
+        #expect(list.atoms.count == 1);
+        #expect(list.atoms[0] == atom);
         let atom2 = MathAtomFactory.placeholder()
         list.add(atom2);
-        XCTAssertEqual(list.atoms.count, 2);
-        XCTAssertEqual(list.atoms[0], atom);
-        XCTAssertEqual(list.atoms[1], atom2);
+        #expect(list.atoms.count == 2);
+        #expect(list.atoms[0] == atom);
+        #expect(list.atoms[1] == atom2);
     }
-    
 
 
-    func testAddErrors() throws {
+
+    @Test func addErrors() throws {
         // Test adding nil atom (should be silently ignored)
         let list = MathList()
         let atom: MathAtom? = nil
         list.add(atom)
-        XCTAssertEqual(list.atoms.count, 0, "Adding nil should not add to list")
+        #expect(list.atoms.count == 0, "Adding nil should not add to list")
         // Note: Adding a boundary atom triggers preconditionFailure which is not testable in-process
     }
 
-    func testInsert() throws {
+    @Test func insert() throws {
         let list = MathList()
-        XCTAssertEqual(list.atoms.count, 0);
+        #expect(list.atoms.count == 0);
         let atom = MathAtomFactory.placeholder()
         list.insert(atom, at: 0)
-        XCTAssertEqual(list.atoms.count, 1);
-        XCTAssertEqual(list.atoms[0], atom);
+        #expect(list.atoms.count == 1);
+        #expect(list.atoms[0] == atom);
         let atom2 = MathAtomFactory.placeholder()
         list.insert(atom2, at: 0)
-        XCTAssertEqual(list.atoms.count, 2);
-        XCTAssertEqual(list.atoms[0], atom2);
-        XCTAssertEqual(list.atoms[1], atom);
+        #expect(list.atoms.count == 2);
+        #expect(list.atoms[0] == atom2);
+        #expect(list.atoms[1] == atom);
         let atom3 = MathAtomFactory.placeholder()
         list.insert(atom3, at: 2)
-        XCTAssertEqual(list.atoms.count, 3);
-        XCTAssertEqual(list.atoms[0], atom2);
-        XCTAssertEqual(list.atoms[1], atom);
-        XCTAssertEqual(list.atoms[2], atom3);
+        #expect(list.atoms.count == 3);
+        #expect(list.atoms[0] == atom2);
+        #expect(list.atoms[1] == atom);
+        #expect(list.atoms[2] == atom3);
     }
 
-    func testInsertErrors() throws {
+    @Test func insertErrors() throws {
         // Test inserting nil atom (should be silently ignored)
         let list = MathList()
         let atom: MathAtom? = nil
         list.insert(atom, at: 0)
-        XCTAssertEqual(list.atoms.count, 0, "Inserting nil should not add to list")
+        #expect(list.atoms.count == 0, "Inserting nil should not add to list")
         // Note: Inserting a boundary atom triggers preconditionFailure which is not testable in-process
     }
 
-    func testAppend() throws {
+    @Test func append() throws {
         let list1 = MathList()
         let atom = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.placeholder()
@@ -177,56 +178,56 @@ final class MathListTests: XCTestCase {
         list1.add(atom)
         list1.add(atom2)
         list1.add(atom3)
-        
+
         let list2 = MathList()
         let atom5 = MathAtomFactory.times()
         let atom6 = MathAtomFactory.divide()
         list2.add(atom5)
         list2.add(atom6)
-        
-        XCTAssertEqual(list1.atoms.count, 3);
-        XCTAssertEqual(list2.atoms.count, 2);
-        
+
+        #expect(list1.atoms.count == 3);
+        #expect(list2.atoms.count == 2);
+
         list1.append(list2)
-        XCTAssertEqual(list1.atoms.count, 5);
-        XCTAssertEqual(list1.atoms[3], atom5);
-        XCTAssertEqual(list1.atoms[4], atom6);
+        #expect(list1.atoms.count == 5);
+        #expect(list1.atoms[3] == atom5);
+        #expect(list1.atoms[4] == atom6);
     }
 
-    func testRemoveLast() throws {
+    @Test func removeLast() throws {
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
         list.add(atom)
-        XCTAssertEqual(list.atoms.count, 1);
+        #expect(list.atoms.count == 1);
         list.removeLastAtom()
-        XCTAssertEqual(list.atoms.count, 0);
+        #expect(list.atoms.count == 0);
         // Removing from empty list.
         list.removeLastAtom()
-        XCTAssertEqual(list.atoms.count, 0);
+        #expect(list.atoms.count == 0);
         let atom2 = MathAtomFactory.placeholder()
         list.add(atom)
         list.add(atom2);
-        XCTAssertEqual(list.atoms.count, 2);
+        #expect(list.atoms.count == 2);
         list.removeLastAtom()
-        XCTAssertEqual(list.atoms.count, 1);
-        XCTAssertEqual(list.atoms[0], atom);
+        #expect(list.atoms.count == 1);
+        #expect(list.atoms[0] == atom);
     }
 
-    func testRemoveAtomAtIndex() throws {
+    @Test func removeAtomAtIndex() throws {
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.placeholder()
         list.add(atom)
         list.add(atom2);
-        XCTAssertEqual(list.atoms.count, 2);
+        #expect(list.atoms.count == 2);
         list.removeAtom(at:0)
-        XCTAssertEqual(list.atoms.count, 1);
-        XCTAssertEqual(list.atoms[0], atom2);
-        
+        #expect(list.atoms.count == 1);
+        #expect(list.atoms[0] == atom2);
+
         // Note: Removing at out-of-bounds index triggers precondition which is not testable in-process
     }
 
-    func testRemoveAtomsInRange() throws {
+    @Test func removeAtomsInRange() throws {
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.placeholder()
@@ -234,10 +235,10 @@ final class MathListTests: XCTestCase {
         list.add(atom)
         list.add(atom2);
         list.add(atom3)
-        XCTAssertEqual(list.atoms.count, 3)
+        #expect(list.atoms.count == 3)
         list.removeAtoms(in: 1...2)
-        XCTAssertEqual(list.atoms.count, 1);
-        XCTAssertEqual(list.atoms[0], atom);
+        #expect(list.atoms.count == 1);
+        #expect(list.atoms[0] == atom);
         // Note: Removing out-of-bounds range triggers precondition which is not testable in-process
     }
 
@@ -249,22 +250,22 @@ final class MathListTests: XCTestCase {
 
     func checkAtomCopy(_ copy:MathAtom?, original:MathAtom?, forTest test:String) throws {
         guard let copy = copy, let original = original else { return }
-        XCTAssertEqual(copy.type, original.type, test)
-        XCTAssertEqual(copy.nucleus, original.nucleus, test)
+        #expect(copy.type == original.type, "\(test)")
+        #expect(copy.nucleus == original.nucleus, "\(test)")
         // Should be different objects with the same content
-        XCTAssertNotEqual(copy, original, test)
+        #expect(copy != original, "\(test)")
     }
 
     func checkListCopy(_ copy:MathList?, original:MathList?, forTest test:String) throws {
         guard let copy = copy, let original = original else { return }
-        XCTAssertEqual(copy.atoms.count, original.atoms.count, test)
+        #expect(copy.atoms.count == original.atoms.count, "\(test)")
         for (i, copyAtom) in copy.atoms.enumerated() {
             let origAtom = original.atoms[i];
             try self.checkAtomCopy(copyAtom, original:origAtom, forTest:test)
         }
     }
 
-    func testCopy() throws {
+    @Test func copy() throws {
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.times()
@@ -274,42 +275,42 @@ final class MathListTests: XCTestCase {
         list.add(atom3)
 
         let list2 = MathList(list)
-        try checkListCopy(list2, original:list, forTest:self.description)
+        try checkListCopy(list2, original:list, forTest:"MathListTests")
     }
 
-    func testAtomInit() throws {
+    @Test func atomInit() throws {
         var atom = MathAtom(type: .open, value: "(")
-        XCTAssertEqual(atom.nucleus, "(")
-        XCTAssertEqual(atom.type, .open)
+        #expect(atom.nucleus == "(")
+        #expect(atom.type == .open)
 
         atom = MathAtom(type: .radical, value:"(")
-        XCTAssertEqual(atom.nucleus, "");
-        XCTAssertEqual(atom.type, .radical);
+        #expect(atom.nucleus == "");
+        #expect(atom.type == .radical);
     }
 
-    func testAtomScripts() throws {
+    @Test func atomScripts() throws {
         var atom = MathAtom(type: .open, value:"(")
-        XCTAssertTrue(atom.isScriptAllowed())
+        #expect(atom.isScriptAllowed())
         atom.subScript = MathList()
-        XCTAssertNotNil(atom.subScript);
+        #expect(atom.subScript != nil);
         atom.superScript = MathList()
-        XCTAssertNotNil(atom.superScript);
+        #expect(atom.superScript != nil);
 
         atom = MathAtom(type: .boundary, value:"(")
-        XCTAssertFalse(atom.isScriptAllowed());
+        #expect(!atom.isScriptAllowed());
         // Can set to nil
         atom.subScript = nil;
-        XCTAssertNil(atom.subScript);
+        #expect(atom.subScript == nil);
         atom.superScript = nil;
-        XCTAssertNil(atom.superScript);
+        #expect(atom.superScript == nil);
         // Can't set to value
         let list = MathList()
-        
+
         // Note: Setting sub/super-script on boundary atoms triggers preconditionFailure
         // which is not testable in-process
     }
 
-    func testAtomCopy() throws {
+    @Test func atomCopy() throws {
         let list = MathList()
         let atom1 = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.times()
@@ -327,12 +328,12 @@ final class MathListTests: XCTestCase {
         atom.superScript = list2;
         let copy : MathAtom = atom.copy()
 
-        try checkAtomCopy(copy, original:atom, forTest:self.description)
-        try checkListCopy(copy.superScript, original:atom.superScript, forTest:self.description)
-        try checkListCopy(copy.subScript, original:atom.subScript, forTest:self.description)
+        try checkAtomCopy(copy, original:atom, forTest:"MathListTests")
+        try checkListCopy(copy.superScript, original:atom.superScript, forTest:"MathListTests")
+        try checkListCopy(copy.subScript, original:atom.subScript, forTest:"MathListTests")
     }
 
-    func testCopyFraction() throws {
+    @Test func copyFraction() throws {
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.times()
@@ -346,22 +347,22 @@ final class MathListTests: XCTestCase {
         list2.add(atom2)
 
         let frac = Fraction(hasRule: false)
-        XCTAssertEqual(frac.type, .fraction);
+        #expect(frac.type == .fraction);
         frac.numerator = list;
         frac.denominator = list2;
         frac.leftDelimiter = "a";
         frac.rightDelimiter = "b";
 
         let copy = Fraction(frac)
-        try checkAtomCopy(copy, original:frac, forTest:self.description)
-        try checkListCopy(copy.numerator, original:frac.numerator, forTest:self.description)
-        try checkListCopy(copy.denominator, original:frac.denominator, forTest:self.description)
-        XCTAssertFalse(copy.hasRule)
-        XCTAssertEqual(copy.leftDelimiter, "a");
-        XCTAssertEqual(copy.rightDelimiter, "b");
+        try checkAtomCopy(copy, original:frac, forTest:"MathListTests")
+        try checkListCopy(copy.numerator, original:frac.numerator, forTest:"MathListTests")
+        try checkListCopy(copy.denominator, original:frac.denominator, forTest:"MathListTests")
+        #expect(!copy.hasRule)
+        #expect(copy.leftDelimiter == "a");
+        #expect(copy.rightDelimiter == "b");
     }
 
-    func testCopyRadical() throws {
+    @Test func copyRadical() throws {
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.times()
@@ -375,27 +376,27 @@ final class MathListTests: XCTestCase {
         list2.add(atom2)
 
         let rad = Radical()
-        XCTAssertEqual(rad.type, .radical)
+        #expect(rad.type == .radical)
         rad.radicand = list;
         rad.degree = list2;
 
         let copy = Radical(rad)
-        try checkAtomCopy(copy, original:rad, forTest:self.description)
-        try checkListCopy(copy.radicand, original:rad.radicand ,forTest:self.description)
-        try checkListCopy(copy.degree, original:rad.degree, forTest:self.description)
+        try checkAtomCopy(copy, original:rad, forTest:"MathListTests")
+        try checkListCopy(copy.radicand, original:rad.radicand ,forTest:"MathListTests")
+        try checkListCopy(copy.degree, original:rad.degree, forTest:"MathListTests")
     }
 
-    func testCopyLargeOperator() throws {
+    @Test func copyLargeOperator() throws {
         let lg = LargeOperator(value: "lim", limits:true)
-        XCTAssertEqual(lg.type, .largeOperator);
-        XCTAssertTrue(lg.limits);
+        #expect(lg.type == .largeOperator);
+        #expect(lg.limits);
 
         let copy = LargeOperator(lg)
-        try checkAtomCopy(copy, original:lg, forTest:self.description)
-        XCTAssertEqual(copy.limits, lg.limits);
+        try checkAtomCopy(copy, original:lg, forTest:"MathListTests")
+        #expect(copy.limits == lg.limits);
     }
-    
-    func testCopyInner() throws {
+
+    @Test func copyInner() throws {
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.times()
@@ -403,38 +404,38 @@ final class MathListTests: XCTestCase {
         list.add(atom)
         list.add(atom2);
         list.add(atom3)
-        
+
         let inner = Inner()
         inner.innerList = list;
         inner.leftBoundary = MathAtom(type: .boundary, value: "(")
         inner.rightBoundary = MathAtom(type: .boundary, value:")")
-        XCTAssertEqual(inner.type, .inner);
-        
+        #expect(inner.type == .inner);
+
         let copy = Inner(inner)
-        try checkAtomCopy(copy, original:inner, forTest:self.description)
-        try checkListCopy(copy.innerList, original:inner.innerList, forTest:self.description)
-        try checkAtomCopy(copy.leftBoundary!, original:inner.leftBoundary, forTest:self.description)
-        try checkAtomCopy(copy.rightBoundary, original:inner.rightBoundary, forTest:self.description)
+        try checkAtomCopy(copy, original:inner, forTest:"MathListTests")
+        try checkListCopy(copy.innerList, original:inner.innerList, forTest:"MathListTests")
+        try checkAtomCopy(copy.leftBoundary!, original:inner.leftBoundary, forTest:"MathListTests")
+        try checkAtomCopy(copy.rightBoundary, original:inner.rightBoundary, forTest:"MathListTests")
     }
 
-    func testSetInnerBoundary() throws {
+    @Test func setInnerBoundary() throws {
         let inner = Inner()
 
         // Can set non-nil
         inner.leftBoundary = MathAtom(type: .boundary, value:"(")
         inner.rightBoundary = MathAtom(type: .boundary, value:")")
-        XCTAssertNotNil(inner.leftBoundary);
-        XCTAssertNotNil(inner.rightBoundary);
+        #expect(inner.leftBoundary != nil);
+        #expect(inner.rightBoundary != nil);
         // Can set nil
         inner.leftBoundary = nil;
         inner.rightBoundary = nil;
-        XCTAssertNil(inner.leftBoundary);
-        XCTAssertNil(inner.rightBoundary);
+        #expect(inner.leftBoundary == nil);
+        #expect(inner.rightBoundary == nil);
         // Note: Setting non-boundary atoms as boundaries triggers preconditionFailure
         // which is not testable in-process
     }
 
-    func testCopyOverline() throws {
+    @Test func copyOverline() throws {
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.times()
@@ -444,15 +445,15 @@ final class MathListTests: XCTestCase {
         list.add(atom3)
 
         let over = OverLine()
-            XCTAssertEqual(over.type, .overline);
+        #expect(over.type == .overline);
         over.innerList = list;
 
         let copy = OverLine(over)
-        try checkAtomCopy(copy, original:over, forTest:self.description)
-        try checkListCopy(copy.innerList, original:over.innerList, forTest:self.description)
+        try checkAtomCopy(copy, original:over, forTest:"MathListTests")
+        try checkListCopy(copy.innerList, original:over.innerList, forTest:"MathListTests")
     }
 
-    func testCopyUnderline() throws {
+    @Test func copyUnderline() throws {
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.times()
@@ -462,15 +463,15 @@ final class MathListTests: XCTestCase {
         list.add(atom3)
 
         let under = UnderLine()
-        XCTAssertEqual(under.type, .underline);
+        #expect(under.type == .underline);
         under.innerList = list;
 
         let copy = UnderLine(under)
-        try checkAtomCopy(copy, original:under, forTest:self.description)
-        try checkListCopy(copy.innerList, original:under.innerList, forTest:self.description)
+        try checkAtomCopy(copy, original:under, forTest:"MathListTests")
+        try checkListCopy(copy.innerList, original:under.innerList, forTest:"MathListTests")
     }
 
-    func testCopyAcccent() throws {
+    @Test func copyAcccent() throws {
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
         let atom2 = MathAtomFactory.times()
@@ -480,35 +481,35 @@ final class MathListTests: XCTestCase {
         list.add(atom3)
 
         let accent = Accent(value: "^")
-        XCTAssertEqual(accent.type, .accent);
+        #expect(accent.type == .accent);
         accent.innerList = list;
 
         let copy = Accent(accent)
-        try checkAtomCopy(copy, original:accent, forTest:self.description)
-        try checkListCopy(copy.innerList ,original:accent.innerList, forTest:self.description)
+        try checkAtomCopy(copy, original:accent, forTest:"MathListTests")
+        try checkListCopy(copy.innerList ,original:accent.innerList, forTest:"MathListTests")
     }
 
-    func testCopySpace() throws {
+    @Test func copySpace() throws {
         let space = MathSpace(space: 3)
-        XCTAssertEqual(space.type, .space);
-        
+        #expect(space.type == .space);
+
         let copy = MathSpace(space)
-        try checkAtomCopy(copy, original:space, forTest:self.description)
-        XCTAssertEqual(space.space, copy.space);
-    }
-    
-    func testCopyStyle() throws {
-        let style = MathStyle(style: .script)
-        XCTAssertEqual(style.type, .style);
-        
-        let copy = MathStyle(style)
-        try checkAtomCopy(copy, original:style, forTest:self.description)
-        XCTAssertEqual(style.style, copy.style);
+        try checkAtomCopy(copy, original:space, forTest:"MathListTests")
+        #expect(space.space == copy.space);
     }
 
-    func testCreateMathTable() throws {
+    @Test func copyStyle() throws {
+        let style = MathStyle(style: .script)
+        #expect(style.type == .style);
+
+        let copy = MathStyle(style)
+        try checkAtomCopy(copy, original:style, forTest:"MathListTests")
+        #expect(style.style == copy.style);
+    }
+
+    @Test func createMathTable() throws {
         let table = MathTable()
-        XCTAssertEqual(table.type, .table);
+        #expect(table.type == .table);
 
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
@@ -529,41 +530,41 @@ final class MathListTests: XCTestCase {
         table.set(alignment: .right, forColumn:1)
 
         // Verify that everything is created correctly
-        XCTAssertEqual(table.cells.count, 4);  // 4 rows
-        XCTAssertNotNil(table.cells[0]);
-        XCTAssertEqual(table.cells[0].count, 0); // 0 elements in row 0
-        XCTAssertEqual(table.cells[1].count, 1); // 1 element in row 1
-        XCTAssertNotNil(table.cells[2]);
-        XCTAssertEqual(table.cells[2].count, 0);
-        XCTAssertEqual(table.cells[3].count, 3);
+        #expect(table.cells.count == 4);  // 4 rows
+        #expect(table.cells[0] != nil);
+        #expect(table.cells[0].count == 0); // 0 elements in row 0
+        #expect(table.cells[1].count == 1); // 1 element in row 1
+        #expect(table.cells[2] != nil);
+        #expect(table.cells[2].count == 0);
+        #expect(table.cells[3].count == 3);
 
         // Verify the elements in the rows
-        XCTAssertEqual(table.cells[1][0].atoms.count, 2);
-        XCTAssertEqual(table.cells[1][0], list2);
-        XCTAssertNotNil(table.cells[3][0]);
-        XCTAssertEqual(table.cells[3][0].atoms.count, 0);
+        #expect(table.cells[1][0].atoms.count == 2);
+        #expect(table.cells[1][0] == list2);
+        #expect(table.cells[3][0] != nil);
+        #expect(table.cells[3][0].atoms.count == 0);
 
-        XCTAssertNotNil(table.cells[3][0]);
-        XCTAssertEqual(table.cells[3][0].atoms.count, 0);
+        #expect(table.cells[3][0] != nil);
+        #expect(table.cells[3][0].atoms.count == 0);
 
-        XCTAssertNotNil(table.cells[3][1]);
-        XCTAssertEqual(table.cells[3][1].atoms.count, 0);
+        #expect(table.cells[3][1] != nil);
+        #expect(table.cells[3][1].atoms.count == 0);
 
-        XCTAssertEqual(table.cells[3][2], list);
+        #expect(table.cells[3][2] == list);
 
-        XCTAssertEqual(table.numRows, 4);
-        XCTAssertEqual(table.numColumns, 3);
+        #expect(table.numRows == 4);
+        #expect(table.numColumns == 3);
 
         // Verify the alignments
-        XCTAssertEqual(table.alignments.count, 3);
-            XCTAssertEqual(table.alignments[0], .center);
-            XCTAssertEqual(table.alignments[1], .right);
-            XCTAssertEqual(table.alignments[2], .left);
+        #expect(table.alignments.count == 3);
+        #expect(table.alignments[0] == .center);
+        #expect(table.alignments[1] == .right);
+        #expect(table.alignments[2] == .left);
     }
 
-    func testCopyMathTable() throws {
+    @Test func copyMathTable() throws {
         let table = MathTable()
-        XCTAssertEqual(table.type, .table);
+        #expect(table.type == .table);
 
         let list = MathList()
         let atom = MathAtomFactory.placeholder()
@@ -586,18 +587,18 @@ final class MathListTests: XCTestCase {
         table.interColumnSpacing = 10;
 
         let copy = MathTable(table)
-        try checkAtomCopy(copy, original:table, forTest:self.description)
-        XCTAssertEqual(copy.interColumnSpacing, table.interColumnSpacing);
-        XCTAssertEqual(copy.interRowAdditionalSpacing, table.interRowAdditionalSpacing);
-        XCTAssertEqual(copy.alignments, table.alignments)
+        try checkAtomCopy(copy, original:table, forTest:"MathListTests")
+        #expect(copy.interColumnSpacing == table.interColumnSpacing);
+        #expect(copy.interRowAdditionalSpacing == table.interRowAdditionalSpacing);
+        #expect(copy.alignments == table.alignments)
 
-        XCTAssertNotEqual(copy.cells, table.cells);
-        XCTAssertNotEqual(copy.cells[0], table.cells[0] );
-        XCTAssertEqual(copy.cells[0].count, table.cells[0].count);
-        XCTAssertEqual(copy.cells[0][0].atoms.count, 0);
-        XCTAssertNotEqual(copy.cells[0][0], table.cells[0][0]);
-        try checkListCopy(copy.cells[0][1], original:list, forTest:self.description)
-        try checkListCopy(copy.cells[0][2], original:list2, forTest:self.description)
+        #expect(copy.cells != table.cells);
+        #expect(copy.cells[0] != table.cells[0] );
+        #expect(copy.cells[0].count == table.cells[0].count);
+        #expect(copy.cells[0][0].atoms.count == 0);
+        #expect(copy.cells[0][0] != table.cells[0][0]);
+        try checkListCopy(copy.cells[0][1], original:list, forTest:"MathListTests")
+        try checkListCopy(copy.cells[0][2], original:list2, forTest:"MathListTests")
     }
 
 }

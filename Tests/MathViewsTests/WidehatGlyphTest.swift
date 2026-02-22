@@ -1,16 +1,18 @@
-import XCTest
+import Testing
+import Foundation
+import CoreGraphics
+import CoreText
 @testable import MathViews
 
-final class WidehatGlyphTest: XCTestCase {
+struct WidehatGlyphTest {
 
-    var font: FontInstance!
+    let font: FontInstance
 
-    override func setUp() {
-        super.setUp()
-        font = FontManager().termesFont(withSize: 20)
+    init() {
+        font = FontManager().termesFont(withSize: 20)!
     }
 
-    func testWidehatGlyphAvailability() throws {
+    @Test func widehatGlyphAvailability() throws {
         // Test what glyphs are available for widehat (circumflex accent)
         print("\n=== Widehat Glyph Analysis ===")
 
@@ -57,7 +59,7 @@ final class WidehatGlyphTest: XCTestCase {
         }
     }
 
-    func testWidetildeGlyphAvailability() throws {
+    @Test func widetildeGlyphAvailability() throws {
         // Test what glyphs are available for widetilde
         print("\n=== Widetilde Glyph Analysis ===")
 
@@ -104,7 +106,7 @@ final class WidehatGlyphTest: XCTestCase {
         }
     }
 
-    func testCurrentWidehatBehavior() throws {
+    @Test func currentWidehatBehavior() throws {
         // Test current behavior of \widehat vs \hat
         print("\n=== Current Widehat Behavior ===")
 

@@ -1,100 +1,100 @@
-import XCTest
+import CoreGraphics
+import Testing
 @testable import MathViews
 
 /// Tests for correct rendering of accented i and j characters.
 /// When an accent is placed over 'i' or 'j', the dot should be removed
 /// (using dotless variants imath/jmath) to avoid double dots.
-final class DotlessIJAccentTests: XCTestCase {
+struct DotlessIJAccentTests {
 
-    var font: FontInstance!
+    let font: FontInstance
 
-    override func setUp() {
-        super.setUp()
-        font = FontManager().termesFont(withSize: 20)
+    init() {
+        font = FontManager().termesFont(withSize: 20)!
     }
 
     // MARK: - Accented i Tests
 
-    func testCircumflexOverI() throws {
+    @Test func circumflexOverI() throws {
         // Test that î (i with circumflex) uses the base dotless i character
         // that can be properly styled (roman in text mode, italic in math mode)
         let unicodeLatex = "î"
 
         let unicodeMathList = MathListBuilder.build(fromString: unicodeLatex)
 
-        XCTAssertNotNil(unicodeMathList, "Unicode î should parse")
-        XCTAssertEqual(unicodeMathList?.atoms.count, 1, "Should have exactly 1 atom")
+        #expect(unicodeMathList != nil, "Unicode î should parse")
+        #expect(unicodeMathList?.atoms.count == 1, "Should have exactly 1 atom")
 
         guard let unicodeAccent = unicodeMathList?.atoms.first as? Accent else {
-            XCTFail("Should be Accent atom")
+            Issue.record("Should be Accent atom")
             return
         }
 
         guard let unicodeInner = unicodeAccent.innerList?.atoms.first else {
-            XCTFail("Accent should have inner list")
+            Issue.record("Accent should have inner list")
             return
         }
 
         // The nucleus should be the base dotless i (U+0131) which can be styled
         let dotlessI = "\u{0131}"  // Latin Small Letter Dotless I
-        XCTAssertEqual(unicodeInner.nucleus, dotlessI,
-                      "Unicode î should use base dotless i (U+0131), got '\(unicodeInner.nucleus)'")
+        #expect(unicodeInner.nucleus == dotlessI,
+               "Unicode î should use base dotless i (U+0131), got '\(unicodeInner.nucleus)'")
     }
 
-    func testExplicitImathStillWorks() throws {
+    @Test func explicitImathStillWorks() throws {
         // Test that explicit \hat{\imath} still works and uses the mathematical italic dotless i
         let explicitLatex = "\\hat{\\imath}"
         let explicitMathList = MathListBuilder.build(fromString: explicitLatex)
 
-        XCTAssertNotNil(explicitMathList, "\\hat{\\imath} should parse")
+        #expect(explicitMathList != nil, "\\hat{\\imath} should parse")
 
         guard let explicitAccent = explicitMathList?.atoms.first as? Accent,
               let explicitInner = explicitAccent.innerList?.atoms.first else {
-            XCTFail("Should parse as accent with inner list")
+            Issue.record("Should parse as accent with inner list")
             return
         }
 
         // Explicit \imath uses the mathematical italic dotless i (U+1D6A4)
         let mathItalicDotlessI = "\u{0001D6A4}"
-        XCTAssertEqual(explicitInner.nucleus, mathItalicDotlessI,
-                      "\\imath should use mathematical italic dotless i (U+1D6A4)")
+        #expect(explicitInner.nucleus == mathItalicDotlessI,
+               "\\imath should use mathematical italic dotless i (U+1D6A4)")
     }
 
-    func testDieresisOverI() throws {
+    @Test func dieresisOverI() throws {
         // Test that ï (i with dieresis/umlaut) uses base dotless i
         let unicodeLatex = "ï"
         let unicodeMathList = MathListBuilder.build(fromString: unicodeLatex)
 
-        XCTAssertNotNil(unicodeMathList, "Unicode ï should parse")
+        #expect(unicodeMathList != nil, "Unicode ï should parse")
 
         guard let unicodeAccent = unicodeMathList?.atoms.first as? Accent,
               let unicodeInner = unicodeAccent.innerList?.atoms.first else {
-            XCTFail("Should parse as accent with inner list")
+            Issue.record("Should parse as accent with inner list")
             return
         }
 
         let dotlessI = "\u{0131}"  // Latin Small Letter Dotless I
-        XCTAssertEqual(unicodeInner.nucleus, dotlessI,
-                      "Unicode ï should use base dotless i (U+0131), got '\(unicodeInner.nucleus)'")
+        #expect(unicodeInner.nucleus == dotlessI,
+               "Unicode ï should use base dotless i (U+0131), got '\(unicodeInner.nucleus)'")
     }
 
-    func testAcuteOverI() throws {
+    @Test func acuteOverI() throws {
         // Test that í (i with acute) uses base dotless i
         let unicodeLatex = "í"
         let unicodeMathList = MathListBuilder.build(fromString: unicodeLatex)
 
         guard let unicodeAccent = unicodeMathList?.atoms.first as? Accent,
               let unicodeInner = unicodeAccent.innerList?.atoms.first else {
-            XCTFail("Should parse as accent with inner list")
+            Issue.record("Should parse as accent with inner list")
             return
         }
 
         let dotlessI = "\u{0131}"  // Latin Small Letter Dotless I
-        XCTAssertEqual(unicodeInner.nucleus, dotlessI,
-                      "Unicode í should use base dotless i (U+0131), got '\(unicodeInner.nucleus)'")
+        #expect(unicodeInner.nucleus == dotlessI,
+               "Unicode í should use base dotless i (U+0131), got '\(unicodeInner.nucleus)'")
     }
 
-    func testGraveOverI() throws {
+    @Test func graveOverI() throws {
         // Test that ì (i with grave) uses dotless i
         let unicodeLatex = "ì"
 
@@ -102,47 +102,47 @@ final class DotlessIJAccentTests: XCTestCase {
 
         guard let unicodeAccent = unicodeMathList?.atoms.first as? Accent,
               let unicodeInner = unicodeAccent.innerList?.atoms.first else {
-            XCTFail("Should parse as accent with inner list")
+            Issue.record("Should parse as accent with inner list")
             return
         }
 
         let dotlessI = "\u{0131}"  // Latin Small Letter Dotless I
-        XCTAssertEqual(unicodeInner.nucleus, dotlessI,
-                      "Unicode ì should use dotless i (\\imath), got '\(unicodeInner.nucleus)'")
+        #expect(unicodeInner.nucleus == dotlessI,
+               "Unicode ì should use dotless i (\\imath), got '\(unicodeInner.nucleus)'")
     }
 
     // MARK: - Accented j Tests
 
-    func testCircumflexOverJ() throws {
+    @Test func circumflexOverJ() throws {
         // Test that ĵ (j with circumflex) uses dotless j
         let unicodeLatex = "ĵ"
         let unicodeMathList = MathListBuilder.build(fromString: unicodeLatex)
 
-        XCTAssertNotNil(unicodeMathList, "Unicode ĵ should parse")
-        XCTAssertEqual(unicodeMathList?.atoms.count, 1, "Should have exactly 1 atom")
+        #expect(unicodeMathList != nil, "Unicode ĵ should parse")
+        #expect(unicodeMathList?.atoms.count == 1, "Should have exactly 1 atom")
 
         guard let unicodeAccent = unicodeMathList?.atoms.first as? Accent else {
-            XCTFail("Should be Accent atom")
+            Issue.record("Should be Accent atom")
             return
         }
 
         guard let unicodeInner = unicodeAccent.innerList?.atoms.first else {
-            XCTFail("Accent should have inner list")
+            Issue.record("Accent should have inner list")
             return
         }
 
         // The nucleus should be the base dotless j (U+0237) which can be styled
         let dotlessJ = "\u{0237}"  // Latin Small Letter Dotless J
-        XCTAssertEqual(unicodeInner.nucleus, dotlessJ,
-                      "Unicode ĵ should use base dotless j (U+0237), got '\(unicodeInner.nucleus)'")
+        #expect(unicodeInner.nucleus == dotlessJ,
+               "Unicode ĵ should use base dotless j (U+0237), got '\(unicodeInner.nucleus)'")
     }
 
-    func testTextModeAccentedJ() throws {
+    @Test func textModeAccentedJ() throws {
         // Test that ĵ in text mode uses dotless j with roman font style
         let latex = "\\text{ĵ}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        XCTAssertNotNil(mathList, "\\text{ĵ} should parse")
+        #expect(mathList != nil, "\\text{ĵ} should parse")
 
         // Helper to recursively find accents
         func findAccents(in list: MathList?) -> [Accent] {
@@ -159,30 +159,29 @@ final class DotlessIJAccentTests: XCTestCase {
         }
 
         let accents = findAccents(in: mathList)
-        XCTAssertEqual(accents.count, 1, "Should find 1 accent")
+        #expect(accents.count == 1, "Should find 1 accent")
 
         if let accent = accents.first, let inner = accent.innerList?.atoms.first {
             let dotlessJ = "\u{0237}"
-            XCTAssertEqual(inner.nucleus, dotlessJ,
-                          "Should use base dotless j")
-            XCTAssertEqual(inner.fontStyle, .roman,
-                          "In \\text{}, should have roman style, got \(inner.fontStyle)")
+            #expect(inner.nucleus == dotlessJ,
+                   "Should use base dotless j")
+            #expect(inner.fontStyle == .roman,
+                   "In \\text{}, should have roman style, got \(inner.fontStyle)")
         }
     }
 
-    func testAccentedJRendersCorrectly() throws {
+    @Test func accentedJRendersCorrectly() throws {
         // Test that ĵ renders without crashing
         let latex = "ĵ"
         let mathList = MathListBuilder.build(fromString: latex)
-        let font = FontManager().termesFont(withSize: 20)
         let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
 
-        XCTAssertNotNil(display, "ĵ should render successfully")
+        #expect(display != nil, "ĵ should render successfully")
     }
 
     // MARK: - Uppercase I Tests (should NOT use dotless variant)
 
-    func testCircumflexOverUppercaseI() throws {
+    @Test func circumflexOverUppercaseI() throws {
         // Uppercase I does not have a dot, so it should remain as I
         let unicodeLatex = "Î"
 
@@ -190,58 +189,58 @@ final class DotlessIJAccentTests: XCTestCase {
 
         guard let unicodeAccent = unicodeMathList?.atoms.first as? Accent,
               let unicodeInner = unicodeAccent.innerList?.atoms.first else {
-            XCTFail("Should parse as accent with inner list")
+            Issue.record("Should parse as accent with inner list")
             return
         }
 
-        XCTAssertEqual(unicodeInner.nucleus, "I",
-                      "Uppercase Î should use regular I, got '\(unicodeInner.nucleus)'")
+        #expect(unicodeInner.nucleus == "I",
+               "Uppercase Î should use regular I, got '\(unicodeInner.nucleus)'")
     }
 
     // MARK: - Visual Rendering Tests
 
-    func testAccentedIRendersWithoutDoubleDot() throws {
+    @Test func accentedIRendersWithoutDoubleDot() throws {
         // Verify that the rendered output doesn't have a double dot
         let latex = "î"
         let mathList = MathListBuilder.build(fromString: latex)
         let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
 
-        XCTAssertNotNil(display, "î should render successfully")
+        #expect(display != nil, "î should render successfully")
 
         // The display should have exactly one accent display
         guard let accentDisplay = display?.subDisplays.first as? AccentDisplay else {
-            XCTFail("Should have an AccentDisplay")
+            Issue.record("Should have an AccentDisplay")
             return
         }
 
         // Verify the accentee exists
-        XCTAssertNotNil(accentDisplay.accentee, "Accent should have an accentee (the base character)")
-        XCTAssertNotNil(accentDisplay.accent, "Accent should have an accent glyph")
+        #expect(accentDisplay.accentee != nil, "Accent should have an accentee (the base character)")
+        #expect(accentDisplay.accent != nil, "Accent should have an accent glyph")
     }
 
-    func testMultipleAccentedICharacters() throws {
+    @Test func multipleAccentedICharacters() throws {
         // Test a string with multiple accented i characters
         let latex = "îïíì"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        XCTAssertNotNil(mathList, "Multiple accented i chars should parse")
-        XCTAssertEqual(mathList?.atoms.count, 4, "Should have 4 atoms")
+        #expect(mathList != nil, "Multiple accented i chars should parse")
+        #expect(mathList?.atoms.count == 4, "Should have 4 atoms")
 
         let dotlessI = "\u{0131}"  // Latin Small Letter Dotless I
         for (index, atom) in (mathList?.atoms ?? []).enumerated() {
             guard let accent = atom as? Accent,
                   let inner = accent.innerList?.atoms.first else {
-                XCTFail("Atom \(index) should be an accent with inner list")
+                Issue.record("Atom \(index) should be an accent with inner list")
                 continue
             }
-            XCTAssertEqual(inner.nucleus, dotlessI,
-                          "Atom \(index) should use dotless i, got '\(inner.nucleus)'")
+            #expect(inner.nucleus == dotlessI,
+                   "Atom \(index) should use dotless i, got '\(inner.nucleus)'")
         }
     }
 
     // MARK: - Regression Tests
 
-    func testExplicitHatIStillUsesRegularI() throws {
+    @Test func explicitHatIStillUsesRegularI() throws {
         // When user explicitly writes \hat{i}, it should still use regular 'i'
         // Only Unicode accented characters should convert to dotless
         let latex = "\\hat{i}"
@@ -249,40 +248,52 @@ final class DotlessIJAccentTests: XCTestCase {
 
         guard let accent = mathList?.atoms.first as? Accent,
               let inner = accent.innerList?.atoms.first else {
-            XCTFail("Should parse as accent with inner list")
+            Issue.record("Should parse as accent with inner list")
             return
         }
 
         // Explicit \hat{i} should keep the regular 'i'
-        XCTAssertEqual(inner.nucleus, "i",
-                      "Explicit \\hat{i} should use regular 'i', got '\(inner.nucleus)'")
+        #expect(inner.nucleus == "i",
+               "Explicit \\hat{i} should use regular 'i', got '\(inner.nucleus)'")
     }
 
-    func testOtherAccentedCharactersStillWork() throws {
-        // Verify that other accented characters (not i/j) still work correctly
-        let testCases: [(String, String)] = [
-            ("é", "e"),
-            ("ñ", "n"),
-            ("ü", "u"),
-            ("â", "a"),
-            ("ô", "o"),
+    struct AccentedCharCase: Sendable, CustomTestStringConvertible {
+        let unicode: String
+        let expectedBase: String
+        var testDescription: String { "\(unicode) -> \(expectedBase)" }
+
+        static let otherAccented: [AccentedCharCase] = [
+            AccentedCharCase(unicode: "é", expectedBase: "e"),
+            AccentedCharCase(unicode: "ñ", expectedBase: "n"),
+            AccentedCharCase(unicode: "ü", expectedBase: "u"),
+            AccentedCharCase(unicode: "â", expectedBase: "a"),
+            AccentedCharCase(unicode: "ô", expectedBase: "o"),
         ]
 
-        for (unicode, expectedBase) in testCases {
-            let mathList = MathListBuilder.build(fromString: unicode)
-
-            guard let accent = mathList?.atoms.first as? Accent,
-                  let inner = accent.innerList?.atoms.first else {
-                XCTFail("\(unicode) should parse as accent with inner list")
-                continue
-            }
-
-            XCTAssertEqual(inner.nucleus, expectedBase,
-                          "\(unicode) should have base '\(expectedBase)', got '\(inner.nucleus)'")
-        }
+        static let uppercaseAccented: [AccentedCharCase] = [
+            AccentedCharCase(unicode: "Î", expectedBase: "I"),  // circumflex
+            AccentedCharCase(unicode: "Ï", expectedBase: "I"),  // dieresis
+            AccentedCharCase(unicode: "Í", expectedBase: "I"),  // acute
+            AccentedCharCase(unicode: "Ì", expectedBase: "I"),  // grave
+        ]
     }
 
-    func testLatexRoundTripConversion() throws {
+    @Test(arguments: AccentedCharCase.otherAccented)
+    func otherAccentedCharactersStillWork(_ testCase: AccentedCharCase) throws {
+        // Verify that other accented characters (not i/j) still work correctly
+        let mathList = MathListBuilder.build(fromString: testCase.unicode)
+
+        guard let accent = mathList?.atoms.first as? Accent,
+              let inner = accent.innerList?.atoms.first else {
+            Issue.record("\(testCase.unicode) should parse as accent with inner list")
+            return
+        }
+
+        #expect(inner.nucleus == testCase.expectedBase,
+               "\(testCase.unicode) should have base '\(testCase.expectedBase)', got '\(inner.nucleus)'")
+    }
+
+    @Test func latexRoundTripConversion() throws {
         // Test that Unicode î converts to LaTeX properly
         let unicodeLatex = "î"
         let mathList = MathListBuilder.build(fromString: unicodeLatex)
@@ -291,21 +302,21 @@ final class DotlessIJAccentTests: XCTestCase {
         let latexOutput = MathListBuilder.mathListToString(mathList)
 
         // The output should contain \hat with the dotless i character (U+0131)
-        XCTAssertTrue(latexOutput.contains("hat"),
-                     "LaTeX output should contain 'hat', got '\(latexOutput)'")
+        #expect(latexOutput.contains("hat"),
+               "LaTeX output should contain 'hat', got '\(latexOutput)'")
         // The base character should be the dotless i (either as raw char or command)
         let dotlessI = "\u{0131}"
-        XCTAssertTrue(latexOutput.contains(dotlessI) || latexOutput.contains("dotlessi"),
-                     "LaTeX output should contain dotless i, got '\(latexOutput)'")
+        #expect(latexOutput.contains(dotlessI) || latexOutput.contains("dotlessi"),
+               "LaTeX output should contain dotless i, got '\(latexOutput)'")
     }
 
-    func testTextModeAccentedI() throws {
+    @Test func textModeAccentedI() throws {
         // Test that accented i in text mode renders successfully and uses dotless i
         // with the correct font style (roman, not italic)
         let latex = "\\text{naïve}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        XCTAssertNotNil(mathList, "\\text{naïve} should parse")
+        #expect(mathList != nil, "\\text{naïve} should parse")
 
         // Helper function to recursively find accent atoms
         func findAccents(in list: MathList?) -> [Accent] {
@@ -324,50 +335,42 @@ final class DotlessIJAccentTests: XCTestCase {
         let accents = findAccents(in: mathList)
 
         // Should find exactly one accent (the ï)
-        XCTAssertEqual(accents.count, 1, "Should find exactly 1 accent atom in \\text{naïve}")
+        #expect(accents.count == 1, "Should find exactly 1 accent atom in \\text{naïve}")
 
         if let accent = accents.first, let inner = accent.innerList?.atoms.first {
             // The accent should use dotless i
             let dotlessI = "\u{0131}"  // Latin Small Letter Dotless I
-            XCTAssertEqual(inner.nucleus, dotlessI,
-                          "Accented i in text mode should use dotless i, got '\(inner.nucleus)'")
+            #expect(inner.nucleus == dotlessI,
+                   "Accented i in text mode should use dotless i, got '\(inner.nucleus)'")
 
             // CRITICAL: The inner atom should have roman font style in text mode,
             // not defaultStyle (which renders as italic in math mode)
-            XCTAssertEqual(inner.fontStyle, .roman,
-                          "Dotless i in \\text{} should have roman font style, got \(inner.fontStyle)")
+            #expect(inner.fontStyle == .roman,
+                   "Dotless i in \\text{} should have roman font style, got \(inner.fontStyle)")
         }
     }
 
-    func testUppercaseAccentedCharsNotAffected() throws {
+    @Test(arguments: AccentedCharCase.uppercaseAccented)
+    func uppercaseAccentedCharsNotAffected(_ testCase: AccentedCharCase) throws {
         // All uppercase accented characters should NOT use dotless variants
-        let uppercaseTestCases: [(String, String)] = [
-            ("Î", "I"),  // circumflex
-            ("Ï", "I"),  // dieresis
-            ("Í", "I"),  // acute
-            ("Ì", "I"),  // grave
-        ]
+        let mathList = MathListBuilder.build(fromString: testCase.unicode)
 
-        for (unicode, expectedBase) in uppercaseTestCases {
-            let mathList = MathListBuilder.build(fromString: unicode)
-
-            guard let accent = mathList?.atoms.first as? Accent,
-                  let inner = accent.innerList?.atoms.first else {
-                XCTFail("\(unicode) should parse as accent with inner list")
-                continue
-            }
-
-            XCTAssertEqual(inner.nucleus, expectedBase,
-                          "\(unicode) should have base '\(expectedBase)', got '\(inner.nucleus)'")
+        guard let accent = mathList?.atoms.first as? Accent,
+              let inner = accent.innerList?.atoms.first else {
+            Issue.record("\(testCase.unicode) should parse as accent with inner list")
+            return
         }
+
+        #expect(inner.nucleus == testCase.expectedBase,
+               "\(testCase.unicode) should have base '\(testCase.expectedBase)', got '\(inner.nucleus)'")
     }
 
-    func testMixedExpressionWithAccentedI() throws {
+    @Test func mixedExpressionWithAccentedI() throws {
         // Test a more complex expression mixing regular and accented characters
         let latex = "x + î = y"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        XCTAssertNotNil(mathList, "Mixed expression should parse")
+        #expect(mathList != nil, "Mixed expression should parse")
 
         // Find the accent (should be the 3rd atom: x, +, î, =, y)
         var foundAccent = false
@@ -376,23 +379,23 @@ final class DotlessIJAccentTests: XCTestCase {
             if let accent = atom as? Accent {
                 foundAccent = true
                 if let inner = accent.innerList?.atoms.first {
-                    XCTAssertEqual(inner.nucleus, dotlessI,
-                                  "Accented i in expression should use dotless i")
+                    #expect(inner.nucleus == dotlessI,
+                           "Accented i in expression should use dotless i")
                 }
             }
         }
-        XCTAssertTrue(foundAccent, "Should find an accent in mixed expression")
+        #expect(foundAccent, "Should find an accent in mixed expression")
     }
 
     // MARK: - Font Style Tests for All Accented Characters
 
-    func testTextModeOtherAccentedCharactersFontStyle() throws {
+    @Test func textModeOtherAccentedCharactersFontStyle() throws {
         // Test that other accented characters (not i/j) preserve font style in text mode
         // These use regular ASCII base characters which should be styled correctly
         let latex = "\\text{naïve café résumé}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        XCTAssertNotNil(mathList, "Text with accented chars should parse")
+        #expect(mathList != nil, "Text with accented chars should parse")
 
         // Helper to recursively find all accents
         func findAccents(in list: MathList?) -> [Accent] {
@@ -411,19 +414,19 @@ final class DotlessIJAccentTests: XCTestCase {
         let accents = findAccents(in: mathList)
 
         // Should find accents for ï, é (twice), é
-        XCTAssertGreaterThanOrEqual(accents.count, 3,
-                                    "Should find at least 3 accents in '\\text{naïve café résumé}'")
+        #expect(accents.count >= 3,
+                "Should find at least 3 accents in '\\text{naïve café résumé}'")
 
         // Check that all accents have roman font style in text mode
         for accent in accents {
             if let inner = accent.innerList?.atoms.first {
-                XCTAssertEqual(inner.fontStyle, .roman,
-                              "Accent inner atom should have roman style in \\text{}, got \(inner.fontStyle) for '\(inner.nucleus)'")
+                #expect(inner.fontStyle == .roman,
+                       "Accent inner atom should have roman style in \\text{}, got \(inner.fontStyle) for '\(inner.nucleus)'")
             }
         }
     }
 
-    func testMathModeAccentedCharactersFontStyle() throws {
+    @Test func mathModeAccentedCharactersFontStyle() throws {
         // In math mode (default), accented characters should have default style
         // which renders as italic for letters
         let latex = "é"  // Just é in math mode
@@ -431,158 +434,142 @@ final class DotlessIJAccentTests: XCTestCase {
 
         guard let accent = mathList?.atoms.first as? Accent,
               let inner = accent.innerList?.atoms.first else {
-            XCTFail("Should parse as accent with inner list")
+            Issue.record("Should parse as accent with inner list")
             return
         }
 
         // In math mode without explicit font command, atoms have defaultStyle
         // The actual rendering will italicize it
-        XCTAssertEqual(inner.fontStyle, .defaultStyle,
-                      "In math mode, accent inner should have defaultStyle")
-        XCTAssertEqual(inner.nucleus, "e",
-                      "Base character should be 'e'")
+        #expect(inner.fontStyle == .defaultStyle,
+               "In math mode, accent inner should have defaultStyle")
+        #expect(inner.nucleus == "e",
+               "Base character should be 'e'")
     }
 
-    func testBoldAccentedCharacters() throws {
+    @Test func boldAccentedCharacters() throws {
         // Test accented characters in bold mode
         let latex = "\\mathbf{é}"
         let mathList = MathListBuilder.build(fromString: latex)
 
         guard let accent = mathList?.atoms.first as? Accent,
               let inner = accent.innerList?.atoms.first else {
-            XCTFail("Should parse as accent with inner list")
+            Issue.record("Should parse as accent with inner list")
             return
         }
 
-        XCTAssertEqual(inner.fontStyle, .bold,
-                      "In \\mathbf{}, accent inner should have bold style, got \(inner.fontStyle)")
+        #expect(inner.fontStyle == .bold,
+               "In \\mathbf{}, accent inner should have bold style, got \(inner.fontStyle)")
     }
 
-    func testItalicAccentedI() throws {
+    @Test func italicAccentedI() throws {
         // Test that î in mathit mode uses italic (via the styling system)
         let latex = "\\mathit{î}"
         let mathList = MathListBuilder.build(fromString: latex)
 
         guard let accent = mathList?.atoms.first as? Accent,
               let inner = accent.innerList?.atoms.first else {
-            XCTFail("Should parse as accent with inner list")
+            Issue.record("Should parse as accent with inner list")
             return
         }
 
         // Should use base dotless i with italic font style
         let dotlessI = "\u{0131}"
-        XCTAssertEqual(inner.nucleus, dotlessI,
-                      "Should use base dotless i")
-        XCTAssertEqual(inner.fontStyle, .italic,
-                      "In \\mathit{}, should have italic style, got \(inner.fontStyle)")
+        #expect(inner.nucleus == dotlessI,
+               "Should use base dotless i")
+        #expect(inner.fontStyle == .italic,
+               "In \\mathit{}, should have italic style, got \(inner.fontStyle)")
     }
 
-    func testRomanAccentedI() throws {
+    @Test func romanAccentedI() throws {
         // Test that î in mathrm mode uses roman dotless i
         let latex = "\\mathrm{î}"
         let mathList = MathListBuilder.build(fromString: latex)
 
         guard let accent = mathList?.atoms.first as? Accent,
               let inner = accent.innerList?.atoms.first else {
-            XCTFail("Should parse as accent with inner list")
+            Issue.record("Should parse as accent with inner list")
             return
         }
 
         // Should use base dotless i with roman font style
         let dotlessI = "\u{0131}"
-        XCTAssertEqual(inner.nucleus, dotlessI,
-                      "Should use base dotless i")
-        XCTAssertEqual(inner.fontStyle, .roman,
-                      "In \\mathrm{}, should have roman style, got \(inner.fontStyle)")
+        #expect(inner.nucleus == dotlessI,
+               "Should use base dotless i")
+        #expect(inner.fontStyle == .roman,
+               "In \\mathrm{}, should have roman style, got \(inner.fontStyle)")
     }
 
     // MARK: - Special Character Tests
 
-    func testSpecialCharactersInMathMode() throws {
-        // Test special characters (ç, å, æ, œ, ß) in math mode
-        // These should render without crashing
-        let specialChars = ["ç", "å", "æ", "œ", "ß"]
+    @Test(arguments: ["ç", "å", "æ", "œ", "ß"])
+    func specialCharactersInMathMode(_ char: String) throws {
+        // Test special characters in math mode - should render without crashing
+        let mathList = MathListBuilder.build(fromString: char)
+        #expect(mathList != nil, "\(char) should parse in math mode")
+        #expect(mathList?.atoms.count == 1, "\(char) should produce 1 atom")
 
-        for char in specialChars {
-            let mathList = MathListBuilder.build(fromString: char)
-            XCTAssertNotNil(mathList, "\(char) should parse in math mode")
-            XCTAssertEqual(mathList?.atoms.count, 1, "\(char) should produce 1 atom")
-
-            // Test rendering - this should not crash
-            let font = FontManager().termesFont(withSize: 20)
-            let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
-            XCTAssertNotNil(display, "\(char) should render without crashing")
-        }
+        // Test rendering - this should not crash
+        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        #expect(display != nil, "\(char) should render without crashing")
     }
 
-    func testSpecialCharactersInTextMode() throws {
+    @Test func specialCharactersInTextMode() throws {
         // Test special characters in text mode
         let latex = "\\text{ça va? æther œuvre süß}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        XCTAssertNotNil(mathList, "Text with special chars should parse")
+        #expect(mathList != nil, "Text with special chars should parse")
 
         // Test rendering - should not crash
-        let font = FontManager().termesFont(withSize: 20)
         let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
-        XCTAssertNotNil(display, "Special chars in text mode should render")
+        #expect(display != nil, "Special chars in text mode should render")
     }
 
-    func testAllSupportedAccentedCharactersRender() throws {
+    @Test(arguments: [
+        // Acute
+        "á", "é", "í", "ó", "ú", "ý",
+        "Á", "É", "Í", "Ó", "Ú", "Ý",
+        // Grave
+        "à", "è", "ì", "ò", "ù",
+        "À", "È", "Ì", "Ò", "Ù",
+        // Circumflex
+        "â", "ê", "î", "ô", "û",
+        "Â", "Ê", "Î", "Ô", "Û",
+        // Umlaut/dieresis
+        "ä", "ë", "ï", "ö", "ü", "ÿ",
+        "Ä", "Ë", "Ï", "Ö", "Ü",
+        // Tilde
+        "ã", "ñ", "õ",
+        "Ã", "Ñ", "Õ",
+        // Special
+        "ç", "ø", "å", "æ", "œ", "ß",
+        "Ç", "Ø", "Å", "Æ", "Œ",
+    ])
+    func allSupportedAccentedCharactersRender(_ char: String) throws {
         // Comprehensive test: all supported accented characters should render
-        let allAccented = [
-            // Acute
-            "á", "é", "í", "ó", "ú", "ý",
-            "Á", "É", "Í", "Ó", "Ú", "Ý",
-            // Grave
-            "à", "è", "ì", "ò", "ù",
-            "À", "È", "Ì", "Ò", "Ù",
-            // Circumflex
-            "â", "ê", "î", "ô", "û",
-            "Â", "Ê", "Î", "Ô", "Û",
-            // Umlaut/dieresis
-            "ä", "ë", "ï", "ö", "ü", "ÿ",
-            "Ä", "Ë", "Ï", "Ö", "Ü",
-            // Tilde
-            "ã", "ñ", "õ",
-            "Ã", "Ñ", "Õ",
-            // Special
-            "ç", "ø", "å", "æ", "œ", "ß",
-            "Ç", "Ø", "Å", "Æ", "Œ"
-        ]
+        let mathList = MathListBuilder.build(fromString: char)
+        #expect(mathList != nil, "\(char) should parse")
 
-        let font = FontManager().termesFont(withSize: 20)
-
-        for char in allAccented {
-            let mathList = MathListBuilder.build(fromString: char)
-            XCTAssertNotNil(mathList, "\(char) should parse")
-
-            // Render in math mode - should not crash
-            let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
-            XCTAssertNotNil(display, "\(char) should render in math mode without crashing")
-        }
+        // Render in math mode - should not crash
+        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        #expect(display != nil, "\(char) should render in math mode without crashing")
     }
 
-    func testAllAccentedCharactersInTextMode() throws {
+    @Test(arguments: [
+        "á", "é", "í", "ó", "ú", "ý",
+        "à", "è", "ì", "ò", "ù",
+        "â", "ê", "î", "ô", "û",
+        "ä", "ë", "ï", "ö", "ü", "ÿ",
+        "ã", "ñ", "õ",
+    ])
+    func allAccentedCharactersInTextMode(_ char: String) throws {
         // Test all accented characters in text mode with roman font
-        let allAccented = [
-            "á", "é", "í", "ó", "ú", "ý",
-            "à", "è", "ì", "ò", "ù",
-            "â", "ê", "î", "ô", "û",
-            "ä", "ë", "ï", "ö", "ü", "ÿ",
-            "ã", "ñ", "õ",
-        ]
+        let latex = "\\text{\(char)}"
+        let mathList = MathListBuilder.build(fromString: latex)
+        #expect(mathList != nil, "\\text{\(char)} should parse")
 
-        let font = FontManager().termesFont(withSize: 20)
-
-        for char in allAccented {
-            let latex = "\\text{\(char)}"
-            let mathList = MathListBuilder.build(fromString: latex)
-            XCTAssertNotNil(mathList, "\\text{\(char)} should parse")
-
-            // Render - should not crash
-            let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
-            XCTAssertNotNil(display, "\\text{\(char)} should render without crashing")
-        }
+        // Render - should not crash
+        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        #expect(display != nil, "\\text{\(char)} should render without crashing")
     }
 }

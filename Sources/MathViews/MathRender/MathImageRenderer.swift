@@ -48,7 +48,7 @@ extension MathImageRenderer {
         CGSize(width: displayList.width + contentInsets.left + contentInsets.right,
                height: displayList.ascent + displayList.descent + contentInsets.top + contentInsets.bottom)
     }
-    public func asImage() -> (NSError?, PlatformImage?) {
+    public func asImage() -> (ParseError?, PlatformImage?) {
         func layoutImage(size: CGSize, displayList: MathListDisplay) {
             var textX = CGFloat(0)
             switch self.textAlignment {
@@ -57,7 +57,7 @@ extension MathImageRenderer {
                 case .right:  textX = size.width - displayList.width - contentInsets.right
             }
             let availableHeight = size.height - contentInsets.bottom - contentInsets.top
-            
+
             // center things vertically
             var height = displayList.ascent + displayList.descent
             if height < fontSize/2 {
@@ -67,10 +67,14 @@ extension MathImageRenderer {
             displayList.position = CGPoint(x: textX, y: textY)
         }
 
-        var error: NSError?
-        guard let mathList = MathListBuilder.build(fromString: latex, error: &error), error == nil,
-              let displayList = Typesetter.createLineForMathList(mathList, font: font, style: currentStyle) else {
+        let mathList: MathList
+        do {
+            mathList = try MathListBuilder.buildChecked(fromString: latex)
+        } catch {
             return (error, nil)
+        }
+        guard let displayList = Typesetter.createLineForMathList(mathList, font: font, style: currentStyle) else {
+            return (nil, nil)
         }
          
         intrinsicContentSize = intrinsicContentSize(displayList)

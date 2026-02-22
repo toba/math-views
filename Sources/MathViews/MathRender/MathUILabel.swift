@@ -74,16 +74,15 @@ public class MathUILabel : MathView {
         set {
             _latex = newValue
             _error = nil
-            var error : NSError? = nil
-            _mathList = MathListBuilder.build(fromString: newValue, error: &error)
-            if error != nil {
+            do {
+                _mathList = try MathListBuilder.buildChecked(fromString: newValue)
+                self.errorLabel?.isHidden = true
+            } catch let parseError as ParseError {
                 _mathList = nil
-                _error = error
-                self.errorLabel?.text = error!.localizedDescription
+                _error = parseError
+                self.errorLabel?.text = parseError.localizedDescription
                 self.errorLabel?.frame = self.bounds
                 self.errorLabel?.isHidden = !self.displayErrorInline
-            } else {
-                self.errorLabel?.isHidden = true
             }
             self.invalidateIntrinsicContentSize()
             self.setNeedsLayout()
@@ -91,10 +90,10 @@ public class MathUILabel : MathView {
         get { _latex }
     }
     private var _latex = ""
-    
+
     /** This contains any error that occurred when parsing the latex. */
-    public var error:NSError? { _error }
-    private var _error:NSError?
+    public var error:ParseError? { _error }
+    private var _error:ParseError?
     
     /** If true, if there is an error it displays the error message inline. Default true. */
     public var displayErrorInline = true

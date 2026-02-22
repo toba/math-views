@@ -975,7 +975,7 @@ public class MathAtomFactory {
      - `cases`: 1 or 2 columns, left-aligned
      - `eqnarray`: Exactly 3 columns with r-c-l alignment
      */
-    public static func table(withEnvironment env: String?, alignment: ColumnAlignment? = nil, rows: [[MathList]], error:inout NSError?) -> MathAtom? {
+    public static func table(withEnvironment env: String?, alignment: ColumnAlignment? = nil, rows: [[MathList]]) throws(ParseError) -> MathAtom {
         let table = MathTable(environment: env)
 
         for i in 0..<rows.count {
@@ -984,7 +984,7 @@ public class MathAtomFactory {
                 table.set(cell: row[j], forRow: i, column: j)
             }
         }
-        
+
         if env == nil {
             table.interColumnSpacing = 0
             table.interRowAdditionalSpacing = 1
@@ -1027,20 +1027,12 @@ public class MathAtomFactory {
                     return table
                 }
             } else if env == "eqalign" || env == "split" || env == "aligned" {
-                // split is limited to max 2 columns per LaTeX/KaTeX spec
-                // aligned/eqalign can have any number of columns (1, 2, 3, 4+)
                 if env == "split" && table.numColumns > 2 {
-                    let message = "split environment can have at most 2 columns"
-                    if error == nil {
-                        error = NSError(domain: parseError, code: ParseErrors.invalidNumColumns.rawValue, userInfo: [NSLocalizedDescriptionKey:message])
-                    }
-                    return nil
+                    throw .invalidNumColumns("split environment can have at most 2 columns")
                 }
 
                 let spacer = MathAtom(type: .ordinary, value: "")
 
-                // Add spacer at beginning of odd-indexed columns (1, 3, 5, ...)
-                // This matches KaTeX behavior for binary operator spacing
                 for i in 0..<table.cells.count {
                     var colIndex = 1
                     while colIndex < table.cells[i].count {
@@ -1052,7 +1044,6 @@ public class MathAtomFactory {
                 table.interRowAdditionalSpacing = 1
                 table.interColumnSpacing = 0
 
-                // Apply alternating r-l-r-l alignment pattern
                 for col in 0..<table.numColumns {
                     table.set(alignment: col % 2 == 0 ? .right : .left, forColumn: col)
                 }
@@ -1060,43 +1051,31 @@ public class MathAtomFactory {
                 return table
             } else if env == "displaylines" || env == "gather" {
                 if table.numColumns != 1 {
-                    let message = "\(env) environment can only have 1 column"
-                    if error == nil {
-                        error = NSError(domain: parseError, code: ParseErrors.invalidNumColumns.rawValue, userInfo: [NSLocalizedDescriptionKey:message])
-                    }
-                    return nil
+                    throw .invalidNumColumns("\(env) environment can only have 1 column")
                 }
-                
+
                 table.interRowAdditionalSpacing = 1
                 table.interColumnSpacing = 0
-                
+
                 table.set(alignment: .center, forColumn: 0)
-                
+
                 return table
             } else if env == "eqnarray" {
                 if table.numColumns != 3 {
-                    let message = "\(env) environment can only have 3 columns"
-                    if error == nil {
-                        error = NSError(domain: parseError, code: ParseErrors.invalidNumColumns.rawValue, userInfo: [NSLocalizedDescriptionKey:message])
-                    }
-                    return nil
+                    throw .invalidNumColumns("\(env) environment can only have 3 columns")
                 }
-                
+
                 table.interRowAdditionalSpacing = 1
                 table.interColumnSpacing = 18
-                
+
                 table.set(alignment: .right, forColumn: 0)
                 table.set(alignment: .center, forColumn: 1)
                 table.set(alignment: .left, forColumn: 2)
-                
+
                 return table
             } else if env == "cases" {
                 if table.numColumns != 1 && table.numColumns != 2 {
-                    let message = "cases environment can have 1 or 2 columns"
-                    if error == nil {
-                        error = NSError(domain: parseError, code: ParseErrors.invalidNumColumns.rawValue, userInfo: [NSLocalizedDescriptionKey:message])
-                    }
-                    return nil
+                    throw .invalidNumColumns("cases environment can have 1 or 2 columns")
                 }
 
                 table.interRowAdditionalSpacing = 0
@@ -1106,28 +1085,35 @@ public class MathAtomFactory {
                 if table.numColumns == 2 {
                     table.set(alignment: .left, forColumn: 1)
                 }
-                
+
                 let style = MathStyle(style: .text)
                 for i in 0..<table.cells.count {
                     for j in 0..<table.cells[i].count {
                         table.cells[i][j].insert(style, at: 0)
                     }
                 }
-                
+
                 let inner = Inner()
                 inner.leftBoundary = Self.boundary(forDelimiter: "{")
                 inner.rightBoundary = Self.boundary(forDelimiter: ".")
                 let space = Self.atom(forLatexSymbol: ",")!
-                
+
                 inner.innerList = MathList(atoms: [space, table])
-                
+
                 return inner
             } else {
-                let message = "Unknown environment \(env)"
-                error = NSError(domain: parseError, code: ParseErrors.invalidEnv.rawValue, userInfo: [NSLocalizedDescriptionKey:message])
-                return nil
+                throw .invalidEnv("Unknown environment \(env)")
             }
         }
-        return nil
+        throw .internalError("Unexpected nil environment")
+    }
+
+    @available(*, deprecated, message: "Use the throwing variant: table(withEnvironment:alignment:rows:) throws(ParseError)")
+    public static func table(withEnvironment env: String?, alignment: ColumnAlignment? = nil, rows: [[MathList]], error:inout NSError?) -> MathAtom? {
+        do {
+            return try table(withEnvironment: env, alignment: alignment, rows: rows)
+        } catch {
+            return nil
+        }
     }
 }

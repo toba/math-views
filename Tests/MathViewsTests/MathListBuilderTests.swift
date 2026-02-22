@@ -1,6 +1,33 @@
 import XCTest
 @testable import MathViews
 
+/// Discriminator for matching ParseError cases without comparing associated values
+enum ParseErrorCase {
+    case mismatchBraces, invalidCommand, characterNotFound, missingDelimiter
+    case invalidDelimiter, missingRight, missingLeft, invalidEnv, missingEnv
+    case missingBegin, missingEnd, invalidNumColumns, internalError, invalidLimits
+
+    func matches(_ error: ParseError) -> Bool {
+        switch (self, error) {
+        case (.mismatchBraces, .mismatchBraces): return true
+        case (.invalidCommand, .invalidCommand): return true
+        case (.characterNotFound, .characterNotFound): return true
+        case (.missingDelimiter, .missingDelimiter): return true
+        case (.invalidDelimiter, .invalidDelimiter): return true
+        case (.missingRight, .missingRight): return true
+        case (.missingLeft, .missingLeft): return true
+        case (.invalidEnv, .invalidEnv): return true
+        case (.missingEnv, .missingEnv): return true
+        case (.missingBegin, .missingBegin): return true
+        case (.missingEnd, .missingEnd): return true
+        case (.invalidNumColumns, .invalidNumColumns): return true
+        case (.internalError, .internalError): return true
+        case (.invalidLimits, .invalidLimits): return true
+        default: return false
+        }
+    }
+}
+
 //
 //  MathRenderSwiftTests.swift
 //  MathRenderSwiftTests
@@ -153,7 +180,7 @@ final class MathListBuilderTests: XCTestCase {
         ]
     }
     
-    func getTestDataParseErrors() -> [(String, ParseErrors)] {
+    func getTestDataParseErrors() -> [(String, ParseErrorCase)] {
         return [
                   ("}a", .mismatchBraces),
                   ("\\notacommand", .invalidCommand),
@@ -1308,14 +1335,17 @@ final class MathListBuilderTests: XCTestCase {
         let data = getTestDataParseErrors()
         for testCase in data {
             let str = testCase.0
-            var error : NSError? = nil
-            let list = MathListBuilder.build(fromString: str, error:&error)
+            let list = MathListBuilder.build(fromString: str)
             let desc = "Error for string:\(str)"
             XCTAssertNil(list, desc)
-            XCTAssertNotNil(error, desc)
-            XCTAssertEqual(error!.domain, parseError, desc)
-            let num = testCase.1
-            XCTAssertEqual(error!.code, num.rawValue, desc)
+            // Verify the error case matches using the throwing API
+            do {
+                _ = try MathListBuilder.buildChecked(fromString: str)
+                XCTFail("Expected error for \(str)")
+            } catch {
+                let expectedCase = testCase.1
+                XCTAssertTrue(expectedCase.matches(error), "\(desc): expected \(expectedCase) but got \(error)")
+            }
         }
     }
 
@@ -1960,22 +1990,18 @@ final class MathListBuilderTests: XCTestCase {
 
     func testInvalidLatexWithError() throws {
         let str = "$\\notacommand$"
-        var error: NSError? = nil
-        let list = MathListBuilder.build(fromString: str, error: &error)
-
-        XCTAssertNil(list, "Should fail to parse invalid command")
-        XCTAssertNotNil(error, "Should have error")
-        XCTAssertEqual(error?.code, ParseErrors.invalidCommand.rawValue, "Should be invalid command error")
+        XCTAssertThrowsError(try MathListBuilder.buildChecked(fromString: str)) { error in
+            guard let parseError = error as? ParseError else { return XCTFail("Wrong error type") }
+            XCTAssertTrue(ParseErrorCase.invalidCommand.matches(parseError), "Should be invalid command error")
+        }
     }
 
     func testMismatchedBracesWithError() throws {
         let str = "${x+2$"
-        var error: NSError? = nil
-        let list = MathListBuilder.build(fromString: str, error: &error)
-
-        XCTAssertNil(list, "Should fail to parse mismatched braces")
-        XCTAssertNotNil(error, "Should have error")
-        XCTAssertEqual(error?.code, ParseErrors.mismatchBraces.rawValue, "Should be mismatched braces error")
+        XCTAssertThrowsError(try MathListBuilder.buildChecked(fromString: str)) { error in
+            guard let parseError = error as? ParseError else { return XCTFail("Wrong error type") }
+            XCTAssertTrue(ParseErrorCase.mismatchBraces.matches(parseError), "Should be mismatched braces error")
+        }
     }
 
     func testComplexInlineExpressionWithError() throws {
@@ -3122,25 +3148,19 @@ final class MathListBuilderTests: XCTestCase {
     }
 
     func testBigDelimiterMissingDelimiter() throws {
-        // Test that missing delimiter produces an error
-        var error: NSError? = nil
         let str = "\\big"  // No delimiter following
-        let list = MathListBuilder.build(fromString: str, error: &error)
-
-        XCTAssertNil(list, "Should fail to parse \\big without delimiter")
-        XCTAssertNotNil(error, "Should produce an error")
-        XCTAssertEqual(error?.code, ParseErrors.missingDelimiter.rawValue, "Error should be missingDelimiter")
+        XCTAssertThrowsError(try MathListBuilder.buildChecked(fromString: str)) { error in
+            guard let parseError = error as? ParseError else { return XCTFail("Wrong error type") }
+            XCTAssertTrue(ParseErrorCase.missingDelimiter.matches(parseError), "Error should be missingDelimiter")
+        }
     }
 
     func testBigDelimiterInvalidDelimiter() throws {
-        // Test that invalid delimiter produces an error
-        var error: NSError? = nil
         let str = "\\big x"  // 'x' is not a valid delimiter
-        let list = MathListBuilder.build(fromString: str, error: &error)
-
-        XCTAssertNil(list, "Should fail to parse \\big with invalid delimiter")
-        XCTAssertNotNil(error, "Should produce an error")
-        XCTAssertEqual(error?.code, ParseErrors.invalidDelimiter.rawValue, "Error should be invalidDelimiter")
+        XCTAssertThrowsError(try MathListBuilder.buildChecked(fromString: str)) { error in
+            guard let parseError = error as? ParseError else { return XCTFail("Wrong error type") }
+            XCTAssertTrue(ParseErrorCase.invalidDelimiter.matches(parseError), "Error should be invalidDelimiter")
+        }
     }
 
     func testBigDelimiterInExpression() throws {

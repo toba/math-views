@@ -19,42 +19,53 @@ struct EnvProperties {
 
 /**
  The error encountered when parsing a LaTeX string.
- 
- The `code` in the `NSError` is one of the following indicating why the LaTeX string
- could not be parsed.
  */
-enum ParseErrors:Int {
+public enum ParseError: Error, Equatable {
     /// The braces { } do not match.
-    case mismatchBraces = 1
+    case mismatchBraces(String)
     /// A command in the string is not recognized.
-    case invalidCommand
+    case invalidCommand(String)
     /// An expected character such as ] was not found.
-    case characterNotFound
+    case characterNotFound(String)
     /// The \left or \right command was not followed by a delimiter.
-    case missingDelimiter
+    case missingDelimiter(String)
     /// The delimiter following \left or \right was not a valid delimiter.
-    case invalidDelimiter
+    case invalidDelimiter(String)
     /// There is no \right corresponding to the \left command.
-    case missingRight
+    case missingRight(String)
     /// There is no \left corresponding to the \right command.
-    case missingLeft
+    case missingLeft(String)
     /// The environment given to the \begin command is not recognized
-    case invalidEnv
+    case invalidEnv(String)
     /// A command is used which is only valid inside a \begin,\end environment
-    case missingEnv
+    case missingEnv(String)
     /// There is no \begin corresponding to the \end command.
-    case missingBegin
+    case missingBegin(String)
     /// There is no \end corresponding to the \begin command.
-    case missingEnd
+    case missingEnd(String)
     /// The number of columns do not match the environment
-    case invalidNumColumns
+    case invalidNumColumns(String)
     /// Internal error, due to a programming mistake.
-    case internalError
+    case internalError(String)
     /// Limit control applied incorrectly
-    case invalidLimits
-}
+    case invalidLimits(String)
 
-let parseError = "ParseError"
+    public var localizedDescription: String {
+        switch self {
+        case .mismatchBraces(let m), .invalidCommand(let m), .characterNotFound(let m),
+             .missingDelimiter(let m), .invalidDelimiter(let m), .missingRight(let m),
+             .missingLeft(let m), .invalidEnv(let m), .missingEnv(let m),
+             .missingBegin(let m), .missingEnd(let m), .invalidNumColumns(let m),
+             .internalError(let m), .invalidLimits(let m):
+            return m
+        }
+    }
+
+    /// Bridge to NSError for backward compatibility.
+    func asNSError() -> NSError {
+        NSError(domain: "ParseError", code: 0, userInfo: [NSLocalizedDescriptionKey: localizedDescription])
+    }
+}
 
 /** `MathListBuilder` is a class for parsing LaTeX into an `MathList` that
  can be rendered and processed mathematically.
@@ -87,7 +98,7 @@ public struct MathListBuilder {
     var mathMode: MathMode = .display
 
     /** Contains any error that occurred during parsing. */
-    var error:NSError?
+    var error:ParseError?
     
     // MARK: - Character-handling routines
     
@@ -293,7 +304,7 @@ public struct MathListBuilder {
 
         let list = self.buildInternal(false)
         if self.hasCharacters && error == nil {
-            self.setError(.mismatchBraces, message: "Mismatched braces: \(self.string)")
+            self.setError(.mismatchBraces("Mismatched braces: \(self.string)"))
             return nil
         }
         if error != nil {
@@ -321,16 +332,25 @@ public struct MathListBuilder {
         var builder = MathListBuilder(string: string)
         return builder.build()
     }
-    
+
+    /// Construct a math list from a given string, throwing on parse errors.
+    public static func buildChecked(fromString string: String) throws(ParseError) -> MathList {
+        var builder = MathListBuilder(string: string)
+        let output = builder.build()
+        if let error = builder.error { throw error }
+        return output ?? MathList()
+    }
+
     /** Construct a math list from a given string. If there is an error while
      constructing the string, this returns nil. The error is returned in the
      `error` parameter.
      */
+    @available(*, deprecated, message: "Use the throwing variant: build(fromString:) throws(ParseError)")
     public static func build(fromString string: String, error:inout NSError?) -> MathList? {
         var builder = MathListBuilder(string: string)
         let output = builder.build()
-        if builder.error != nil {
-            error = builder.error
+        if let parseError = builder.error {
+            error = parseError.asNSError()
             return nil
         }
         return output
@@ -352,24 +372,22 @@ public struct MathListBuilder {
         return (mathList, style)
     }
 
-    /** Construct a math list from a given string and return the detected style.
-     This method detects LaTeX delimiters like \[...\], $$...$$, $...$, \(...\)
-     and returns the appropriate rendering style (.display or .text).
+    /// Construct a math list and detect style, throwing on parse errors.
+    public static func buildWithStyleChecked(fromString string: String) throws(ParseError) -> (mathList: MathList, style: LineStyle) {
+        var builder = MathListBuilder(string: string)
+        let output = builder.build()
+        let style = builder.mathMode.toLineStyle()
+        if let error = builder.error { throw error }
+        return (output ?? MathList(), style)
+    }
 
-     If there is an error while constructing the string, this returns nil for the MathList.
-     The error is returned in the `error` parameter.
-
-     - Parameters:
-        - string: The LaTeX string to parse
-        - error: An inout parameter that will contain any parse error
-     - Returns: A tuple containing the parsed MathList and the detected LineStyle
-     */
+    @available(*, deprecated, message: "Use the throwing variant: buildWithStyle(fromString:) throws(ParseError)")
     public static func buildWithStyle(fromString string: String, error: inout NSError?) -> (mathList: MathList?, style: LineStyle) {
         var builder = MathListBuilder(string: string)
         let output = builder.build()
         let style = builder.mathMode.toLineStyle()
-        if builder.error != nil {
-            error = builder.error
+        if let parseError = builder.error {
+            error = parseError.asNSError()
             return (nil, style)
         }
         return (output, style)
@@ -449,7 +467,7 @@ public struct MathListBuilder {
                 }
                 // We encountered a closing brace when there is no stop set, that means there was no
                 // corresponding opening brace.
-                self.setError(.mismatchBraces, message:"Mismatched braces.")
+                self.setError(.mismatchBraces("Mismatched braces."))
                 return nil
             } else if char == "\\" {
                 let command = readCommand()
@@ -488,7 +506,7 @@ public struct MathListBuilder {
                     // we flag an error and return
                     // (note setError will not set the error if there is already one, so we flag internal error
                     // in the odd case that an _error is not set.
-                    self.setError(.internalError, message:"Internal error")
+                    self.setError(.internalError("Internal error"))
                     return nil
                 }
             } else if char == "&" {
@@ -547,11 +565,11 @@ public struct MathListBuilder {
         if stop != nil {
             if stop == "}" {
                 // We did not find a corresponding closing brace.
-                self.setError(.mismatchBraces, message:"Missing closing brace")
+                self.setError(.mismatchBraces("Missing closing brace"))
             } else {
                 // we never found our stop character
                 let errorMessage = "Expected character not found: \(stop!)"
-                self.setError(.characterNotFound, message:errorMessage)
+                self.setError(.characterNotFound(errorMessage))
             }
         }
         return list
@@ -880,7 +898,7 @@ public struct MathListBuilder {
 
             if operatorName.isEmpty {
                 let errorMessage = "Missing operator name for \\operatorname"
-                self.setError(.invalidCommand, message: errorMessage)
+                self.setError(.invalidCommand(errorMessage))
                 return nil
             }
 
@@ -914,7 +932,7 @@ public struct MathListBuilder {
             if currentInnerAtom!.rightBoundary == nil {
                 // A right node would have set the right boundary so we must be missing the right node.
                 let errorMessage = "Missing \\right"
-                self.setError(.missingRight, message:errorMessage)
+                self.setError(.missingRight(errorMessage))
                 return nil
             }
             // reinstate the old inner atom.
@@ -952,14 +970,14 @@ public struct MathListBuilder {
             var rows = [[MathList]]()
             rows.append([content!])
 
-            var error: NSError? = self.error
-            let table = MathAtomFactory.table(withEnvironment: nil, rows: rows, error: &error)
-            if table == nil && self.error == nil {
-                self.error = error
+            do {
+                return try MathAtomFactory.table(withEnvironment: nil, rows: rows)
+            } catch {
+                if self.error == nil {
+                    self.error = error
+                }
                 return nil
             }
-
-            return table
         } else if command == "begin" {
             let env = self.readEnvironment()
             if env == nil {
@@ -1030,7 +1048,7 @@ public struct MathListBuilder {
                 return MathAtom(type: .relation, value: negatedUnicode)
             } else {
                 let errorMessage = "Unsupported \\not\\\(nextCommand) combination"
-                self.setError(.invalidCommand, message: errorMessage)
+                self.setError(.invalidCommand(errorMessage))
                 return nil
             }
         } else if let sizeMultiplier = Self.delimiterSizeCommands[command] {
@@ -1038,13 +1056,13 @@ public struct MathListBuilder {
             let delim = self.readDelimiter()
             if delim == nil {
                 let errorMessage = "Missing delimiter for \\\(command)"
-                self.setError(.missingDelimiter, message: errorMessage)
+                self.setError(.missingDelimiter(errorMessage))
                 return nil
             }
             let boundary = MathAtomFactory.boundary(forDelimiter: delim!)
             if boundary == nil {
                 let errorMessage = "Invalid delimiter for \\\(command): \(delim!)"
-                self.setError(.invalidDelimiter, message: errorMessage)
+                self.setError(.invalidDelimiter(errorMessage))
                 return nil
             }
 
@@ -1075,7 +1093,7 @@ public struct MathListBuilder {
             return inner
         } else {
             let errorMessage = "Invalid command \\\(command)"
-            self.setError(.invalidCommand, message:errorMessage)
+            self.setError(.invalidCommand(errorMessage))
             return nil;
         }
     }
@@ -1083,10 +1101,10 @@ public struct MathListBuilder {
     mutating func readColor() -> String? {
         if !self.expectCharacter("{") {
             // We didn't find an opening brace, so no env found.
-            self.setError(.characterNotFound, message:"Missing {")
+            self.setError(.characterNotFound("Missing {"))
             return nil;
         }
-        
+
         // Ignore spaces and nonascii.
         self.skipSpaces()
         
@@ -1105,7 +1123,7 @@ public struct MathListBuilder {
         
         if !self.expectCharacter("}") {
             // We didn't find an closing brace, so invalid format.
-            self.setError(.characterNotFound, message:"Missing }")
+            self.setError(.characterNotFound("Missing }"))
             return nil;
         }
         return mutable;
@@ -1138,7 +1156,7 @@ public struct MathListBuilder {
         if command == "right" {
             if currentInnerAtom == nil {
                 let errorMessage = "Missing \\left";
-                self.setError(.missingLeft, message:errorMessage)
+                self.setError(.missingLeft(errorMessage))
                 return nil;
             }
             currentInnerAtom!.rightBoundary = self.getBoundaryAtom("right")
@@ -1180,7 +1198,7 @@ public struct MathListBuilder {
         } else if command == "end" {
             if currentEnv == nil {
                 let errorMessage = "Missing \\begin";
-                self.setError(.missingBegin, message:errorMessage)
+                self.setError(.missingBegin(errorMessage))
                 return nil
             }
             let env = self.readEnvironment()
@@ -1189,7 +1207,7 @@ public struct MathListBuilder {
             }
             if env! != currentEnv!.envName {
                 let errorMessage = "Begin environment name \(currentEnv!.envName ?? "(none)") does not match end name: \(env!)"
-                self.setError(.invalidEnv, message:errorMessage)
+                self.setError(.invalidEnv(errorMessage))
                 return nil
             }
             // Finish the current environment.
@@ -1204,7 +1222,7 @@ public struct MathListBuilder {
         if modifier == "limits" {
             if atom?.type != .largeOperator {
                 let errorMessage = "Limits can only be applied to an operator."
-                self.setError(.invalidLimits, message:errorMessage)
+                self.setError(.invalidLimits(errorMessage))
             } else {
                 let op = atom as! LargeOperator
                 op.limits = true
@@ -1213,7 +1231,7 @@ public struct MathListBuilder {
         } else if modifier == "nolimits" {
             if atom?.type != .largeOperator {
                 let errorMessage = "No limits can only be applied to an operator."
-                self.setError(.invalidLimits, message:errorMessage)
+                self.setError(.invalidLimits(errorMessage))
             } else {
                 let op = atom as! LargeOperator
                 op.limits = false
@@ -1223,10 +1241,10 @@ public struct MathListBuilder {
         return false
     }
 
-    mutating func setError(_ code:ParseErrors, message:String) {
+    mutating func setError(_ newError:ParseError) {
         // Only record the first error.
         if error == nil {
-            error = NSError(domain: parseError, code: code.rawValue, userInfo: [ NSLocalizedDescriptionKey : message ])
+            error = newError
         }
     }
     
@@ -1348,7 +1366,7 @@ public struct MathListBuilder {
                 }
             }
             if operatorName.isEmpty {
-                self.setError(.invalidCommand, message: "Missing operator name for \\operatorname")
+                self.setError(.invalidCommand("Missing operator name for \\operatorname"))
                 return nil
             }
             return LargeOperator(value: operatorName, limits: hasLimits)
@@ -1376,7 +1394,7 @@ public struct MathListBuilder {
             }
             self.currentInnerAtom!.innerList = self.buildInternal(false)
             if self.currentInnerAtom?.rightBoundary == nil {
-                self.setError(.missingRight, message: "Missing \\right")
+                self.setError(.missingRight("Missing \\right"))
                 return nil
             }
             let newInner = self.currentInnerAtom
@@ -1421,7 +1439,7 @@ public struct MathListBuilder {
             mathColorbox.innerList = self.buildInternal(true)
             return mathColorbox
         } else {
-            self.setError(.invalidCommand, message: "Invalid command \\\(command)")
+            self.setError(.invalidCommand("Invalid command \\\(command)"))
             return nil
         }
     }
@@ -1429,7 +1447,7 @@ public struct MathListBuilder {
     mutating func readEnvironment() -> String? {
         if !self.expectCharacter("{") {
             // We didn't find an opening brace, so no env found.
-            self.setError(.characterNotFound, message: "Missing {")
+            self.setError(.characterNotFound("Missing {"))
             return nil
         }
 
@@ -1438,7 +1456,7 @@ public struct MathListBuilder {
 
         if !self.expectCharacter("}") {
             // We didn"t find an closing brace, so invalid format.
-            self.setError(.characterNotFound, message: "Missing }")
+            self.setError(.characterNotFound("Missing }"))
             return nil;
         }
         return env
@@ -1457,7 +1475,7 @@ public struct MathListBuilder {
         self.skipSpaces()
 
         guard hasCharacters else {
-            self.setError(.characterNotFound, message: "Missing alignment specifier after [")
+            self.setError(.characterNotFound("Missing alignment specifier after ["))
             return nil
         }
 
@@ -1472,14 +1490,14 @@ public struct MathListBuilder {
         case "r":
             alignment = .right
         default:
-            self.setError(.invalidEnv, message: "Invalid alignment specifier: \(alignChar). Must be l, c, or r")
+            self.setError(.invalidEnv("Invalid alignment specifier: \(alignChar). Must be l, c, or r"))
             return nil
         }
 
         self.skipSpaces()
 
         if !self.expectCharacter("]") {
-            self.setError(.characterNotFound, message: "Missing ] after alignment specifier")
+            self.setError(.characterNotFound("Missing ] after alignment specifier"))
             return nil
         }
 
@@ -1527,31 +1545,33 @@ public struct MathListBuilder {
         }
         
         if !currentEnv!.ended && currentEnv!.envName != nil {
-            self.setError(.missingEnd, message: "Missing \\end")
+            self.setError(.missingEnd("Missing \\end"))
             return nil
         }
         
-        var error:NSError? = self.error
-        let table = MathAtomFactory.table(withEnvironment: currentEnv?.envName, alignment: currentEnv?.alignment, rows: rows, error: &error)
-        if table == nil && self.error == nil {
-            self.error = error
+        do {
+            let table = try MathAtomFactory.table(withEnvironment: currentEnv?.envName, alignment: currentEnv?.alignment, rows: rows)
+            self.currentEnv = oldEnv
+            return table
+        } catch {
+            if self.error == nil {
+                self.error = error
+            }
             return nil
         }
-        self.currentEnv = oldEnv
-        return table
     }
     
     mutating func getBoundaryAtom(_ delimiterType: String) -> MathAtom? {
         let delim = self.readDelimiter()
         if delim == nil {
             let errorMessage = "Missing delimiter for \\\(delimiterType)"
-            self.setError(.missingDelimiter, message:errorMessage)
+            self.setError(.missingDelimiter(errorMessage))
             return nil
         }
         let boundary = MathAtomFactory.boundary(forDelimiter: delim!)
         if boundary == nil {
             let errorMessage = "Invalid delimiter for \(delimiterType): \(delim!)"
-            self.setError(.invalidDelimiter, message:errorMessage)
+            self.setError(.invalidDelimiter(errorMessage))
             return nil
         }
         return boundary

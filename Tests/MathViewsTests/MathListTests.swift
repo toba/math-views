@@ -129,20 +129,15 @@ final class MathListTests: XCTestCase {
         XCTAssertEqual(list.atoms[1], atom2);
     }
     
-    private var options : XCTExpectedFailure.Options {
-        let op = XCTExpectedFailure.Options()
-        op.isStrict = true
-        return op
-    }
+
 
     func testAddErrors() throws {
+        // Test adding nil atom (should be silently ignored)
         let list = MathList()
-        var atom : MathAtom? = nil
+        let atom: MathAtom? = nil
         list.add(atom)
-        atom = MathAtom(type: .boundary, value: "")
-        XCTExpectFailure("Test adding an illegal atom", options:options) {
-            XCTAssertThrowsError(list.add(atom))
-        }
+        XCTAssertEqual(list.atoms.count, 0, "Adding nil should not add to list")
+        // Note: Adding a boundary atom triggers preconditionFailure which is not testable in-process
     }
 
     func testInsert() throws {
@@ -166,15 +161,12 @@ final class MathListTests: XCTestCase {
     }
 
     func testInsertErrors() throws {
+        // Test inserting nil atom (should be silently ignored)
         let list = MathList()
-        var atom : MathAtom? = nil
+        let atom: MathAtom? = nil
         list.insert(atom, at: 0)
-        atom = MathAtom(type: .boundary, value:"")
-        XCTExpectFailure("Test adding an illegal atom", options:options) {
-            XCTAssertThrowsError(list.insert(atom, at:0))
-        }
-        atom = MathAtomFactory.placeholder()
-        list.insert(atom, at:1)
+        XCTAssertEqual(list.atoms.count, 0, "Inserting nil should not add to list")
+        // Note: Inserting a boundary atom triggers preconditionFailure which is not testable in-process
     }
 
     func testAppend() throws {
@@ -231,10 +223,7 @@ final class MathListTests: XCTestCase {
         XCTAssertEqual(list.atoms.count, 1);
         XCTAssertEqual(list.atoms[0], atom2);
         
-        // Index out of range
-        XCTExpectFailure("Test removing an out-of-index cell", options: options) {
-            XCTAssertThrowsError(list.removeAtom(at:2))
-        }
+        // Note: Removing at out-of-bounds index triggers precondition which is not testable in-process
     }
 
     func testRemoveAtomsInRange() throws {
@@ -249,11 +238,7 @@ final class MathListTests: XCTestCase {
         list.removeAtoms(in: 1...2)
         XCTAssertEqual(list.atoms.count, 1);
         XCTAssertEqual(list.atoms[0], atom);
-        
-        // Index out of range
-        XCTExpectFailure("Test removing an out-of-bounds range", options: options) {
-            XCTAssertThrowsError(list.removeAtoms(in: 1...3))
-        }
+        // Note: Removing out-of-bounds range triggers precondition which is not testable in-process
     }
 
 //    func assertEqual(test, expression1, expression2, ...) \
@@ -320,10 +305,8 @@ final class MathListTests: XCTestCase {
         // Can't set to value
         let list = MathList()
         
-        XCTExpectFailure("No sub/super-script on boundary atoms", options: options) {
-            XCTAssertThrowsError(atom.subScript = list)
-            XCTAssertThrowsError(atom.superScript = list)
-        }
+        // Note: Setting sub/super-script on boundary atoms triggers preconditionFailure
+        // which is not testable in-process
     }
 
     func testAtomCopy() throws {
@@ -447,12 +430,8 @@ final class MathListTests: XCTestCase {
         inner.rightBoundary = nil;
         XCTAssertNil(inner.leftBoundary);
         XCTAssertNil(inner.rightBoundary);
-        // Can't set non boundary
-        let atom = MathAtomFactory.placeholder()
-        XCTExpectFailure("Setting illegal boundary atoms", options: options) {
-            XCTAssertThrowsError(inner.leftBoundary = atom);
-            XCTAssertThrowsError(inner.rightBoundary = atom);
-        }
+        // Note: Setting non-boundary atoms as boundaries triggers preconditionFailure
+        // which is not testable in-process
     }
 
     func testCopyOverline() throws {

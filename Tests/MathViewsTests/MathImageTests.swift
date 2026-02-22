@@ -99,7 +99,7 @@ final class MathImageTests: XCTestCase {
     }
 }
 public struct MathImageResult {
-    let error: NSError?
+    let error: ParseError?
     let image: PlatformImage?
     let layoutInfo: MathImage.LayoutInfo?
 }

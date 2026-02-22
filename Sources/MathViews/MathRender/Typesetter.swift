@@ -1,5 +1,10 @@
 import Foundation
 import CoreText
+#if os(iOS) || os(visionOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 // MARK: - Inter Element Spacing
 

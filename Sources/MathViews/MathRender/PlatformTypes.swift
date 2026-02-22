@@ -1,4 +1,5 @@
-import Foundation
+public import Foundation
+public import CoreGraphics
 
 //
 //  Created by Mike Griebling on 2022-12-31.
@@ -10,7 +11,7 @@ import Foundation
 
 #if os(iOS) || os(visionOS)
 
-import UIKit
+public import UIKit
 
 public typealias MathView = UIView
 public typealias MathColor = UIColor
@@ -25,7 +26,7 @@ func graphicsGetCurrentContext() -> CGContext? { UIGraphicsGetCurrentContext() }
 
 #else
 
-import AppKit
+public import AppKit
 
 public typealias MathView = NSView
 public typealias MathColor = NSColor

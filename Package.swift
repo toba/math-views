@@ -1,12 +1,18 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 6.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
+let upcomingFeatures: [SwiftSetting] = [
+    .enableUpcomingFeature("ExistentialAny"),
+    .enableUpcomingFeature("MemberImportVisibility"),
+    .swiftLanguageMode(.v5),
+]
+
 let package = Package(
     name: "MathViews",
     defaultLocalization: "en",
-    platforms: [.iOS("11.0"), .macOS("12.0")],
+    platforms: [.iOS(.v18), .macOS(.v15)],
     products: [
         .library(
             name: "MathViews",
@@ -18,9 +24,11 @@ let package = Package(
             dependencies: [],
             resources: [
                 .copy("mathFonts.bundle")
-            ]),
+            ],
+            swiftSettings: upcomingFeatures),
         .testTarget(
             name: "MathViewsTests",
-            dependencies: ["MathViews"]),
+            dependencies: ["MathViews"],
+            swiftSettings: upcomingFeatures),
     ]
 )

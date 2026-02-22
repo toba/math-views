@@ -1,0 +1,17 @@
+todo:
+    path: .issues
+    default_status: ready
+    default_type: task
+    sync:
+        github:
+            repo: toba/math-views
+citations:
+    - repo: toba/math-views
+      branch: main
+      notes: SwiftMath provides a full Swift implementation of iosMath for displaying beautifully rendered math equations in iOS and MacOS applications. It typesets formulae written using LaTeX math mode in a UILabel equivalent class.
+      last_checked_sha: 48ff188ba118c37d024551238041113560ab09b9
+      last_checked_date: "2026-02-22T16:37:56Z"
+      paths:
+        high: [Sources/**/*.swift]
+        medium: [Package.swift]
+        low: [.github/**, README.md, LICENSE]

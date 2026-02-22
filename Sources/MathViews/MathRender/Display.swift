@@ -3,22 +3,6 @@ import QuartzCore
 import CoreText
 import SwiftUI
 
-func isIos6Supported() -> Bool {
-    if !Display.initialized {
-#if os(iOS) || os(visionOS)
-        let reqSysVer = "6.0"
-        let currSysVer = UIDevice.current.systemVersion
-        if currSysVer.compare(reqSysVer, options: .numeric) != .orderedAscending {
-            Display.supported = true
-        }
-#else
-        Display.supported = true
-#endif
-        Display.initialized = true
-    }
-    return Display.supported
-}
-
 // The Downshift protocol allows an Display to be shifted down by a given amount.
 protocol DownShift {
     var shiftDown:CGFloat { set get }
@@ -28,10 +12,6 @@ protocol DownShift {
 
 /// The base class for rendering a math equation.
 public class Display:NSObject {
-    
-    // needed for isIos6Supported() func above
-    static var initialized = false
-    static var supported = false
     
     /// Draws itself in the given graphics context.
     public func draw(_ context:CGContext) {
@@ -135,19 +115,14 @@ public class CTLineDisplay : Display {
         // Some glyphs (especially italic/oblique accented characters) extend beyond their advance width.
         // Using max() ensures we account for overhang while maintaining proper spacing for normal glyphs.
         let typographicWidth = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
-        if isIos6Supported() {
-            let bounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
-            self.ascent = max(0, CGRectGetMaxY(bounds) - 0);
-            self.descent = max(0, 0 - CGRectGetMinY(bounds));
-            // Use the maximum of visual and typographic width to handle both:
-            // 1. Overhanging glyphs (visual > typographic) - prevents clipping
-            // 2. Normal glyphs (typographic >= visual) - maintains correct spacing
-            let visualWidth = CGRectGetMaxX(bounds)
-            self.width = max(typographicWidth, visualWidth);
-        } else {
-            // Our own implementation of the ios6 function to get glyph path bounds.
-            self.computeDimensions(font, typographicWidth: typographicWidth)
-        }
+        let bounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
+        self.ascent = max(0, CGRectGetMaxY(bounds))
+        self.descent = max(0, -CGRectGetMinY(bounds))
+        // Use the maximum of visual and typographic width to handle both:
+        // 1. Overhanging glyphs (visual > typographic) - prevents clipping
+        // 2. Normal glyphs (typographic >= visual) - maintains correct spacing
+        let visualWidth = CGRectGetMaxX(bounds)
+        self.width = max(typographicWidth, visualWidth)
     }
     
     override var textColor: MathColor? {
@@ -161,49 +136,6 @@ public class CTLineDisplay : Display {
         get { super.textColor }
     }
 
-    func computeDimensions(_ font:FontInstance?, typographicWidth: CGFloat) {
-        let runs = CTLineGetGlyphRuns(line) as NSArray
-        var maxVisualWidth: CGFloat = 0
-        var currentX: CGFloat = 0
-
-        for obj in runs {
-            let run = obj as! CTRun?
-            let numGlyphs = CTRunGetGlyphCount(run!)
-            var glyphs = [CGGlyph]()
-            glyphs.reserveCapacity(numGlyphs)
-            CTRunGetGlyphs(run!, CFRangeMake(0, numGlyphs), &glyphs);
-            let bounds = CTFontGetBoundingRectsForGlyphs(font!.ctFont, .horizontal, glyphs, nil, numGlyphs);
-            let ascent = max(0, CGRectGetMaxY(bounds) - 0);
-            // Descent is how much the line goes below the origin. However if the line is all above the origin, then descent can't be negative.
-            let descent = max(0, 0 - CGRectGetMinY(bounds));
-            if (ascent > self.ascent) {
-                self.ascent = ascent;
-            }
-            if (descent > self.descent) {
-                self.descent = descent;
-            }
-
-            // Calculate visual width using glyph extent
-            // Get the rightmost edge of this run's glyphs
-            let runVisualWidth = CGRectGetMaxX(bounds)
-            let runRightEdge = currentX + runVisualWidth
-
-            // Get advances to know where next run starts
-            var advances = [CGSize](repeating: CGSize.zero, count: numGlyphs)
-            CTRunGetAdvances(run!, CFRangeMake(0, numGlyphs), &advances)
-            for advance in advances {
-                currentX += advance.width
-            }
-
-            if (runRightEdge > maxVisualWidth) {
-                maxVisualWidth = runRightEdge
-            }
-        }
-
-        // Use maximum of typographic and visual width
-        self.width = max(typographicWidth, maxVisualWidth)
-    }
-    
     override public func draw(_ context: CGContext) {
         super.draw(context)
         context.saveGState()

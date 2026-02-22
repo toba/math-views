@@ -27,9 +27,7 @@ final class WidehatGlyphTest: XCTestCase {
             let variants = mathTable.getHorizontalVariantsForGlyph(baseGlyph)
             print("  Found \(variants.count) horizontal variant(s)")
 
-            for (index, variantNum) in variants.enumerated() {
-                guard let variantNum = variantNum else { continue }
-                let variantGlyph = CGGlyph(variantNum.uint16Value)
+            for (index, variantGlyph) in variants.enumerated() {
                 let variantName = font.get(nameForGlyph: variantGlyph)
 
                 var glyph = variantGlyph
@@ -76,9 +74,7 @@ final class WidehatGlyphTest: XCTestCase {
             let variants = mathTable.getHorizontalVariantsForGlyph(baseGlyph)
             print("  Found \(variants.count) horizontal variant(s)")
 
-            for (index, variantNum) in variants.enumerated() {
-                guard let variantNum = variantNum else { continue }
-                let variantGlyph = CGGlyph(variantNum.uint16Value)
+            for (index, variantGlyph) in variants.enumerated() {
                 let variantName = font.get(nameForGlyph: variantGlyph)
 
                 var glyph = variantGlyph

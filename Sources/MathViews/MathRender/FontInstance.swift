@@ -15,7 +15,7 @@ public class FontInstance {
     var defaultCGFont: CGFont!
     var ctFont: CTFont!
     var mathTable: FontMathTable?
-    var rawMathTable: NSDictionary?
+    var rawMathTable: [String: Any]?
 
     /// Fallback font for characters not supported by the main math font.
     /// Defaults to the system font at the same size. This is particularly useful
@@ -41,7 +41,7 @@ public class FontInstance {
         
         //print("Loading associated .plist")
         let mathTablePlist = bundle.url(forResource:name, withExtension:"plist")
-        self.rawMathTable = NSDictionary(contentsOf: mathTablePlist!)
+        self.rawMathTable = NSDictionary(contentsOf: mathTablePlist!) as? [String: Any]
         self.mathTable = FontMathTable(withFont:self, mathTable:rawMathTable!)
     }
     

@@ -437,35 +437,12 @@ class Typesetter {
     var spaced = false
     var maxWidth: CGFloat = 0  // Maximum width for line breaking, 0 means no constraint
 
-    static func createLineForMathList(_ mathList:MathList?, font:FontInstance?, style:LineStyle) -> MathListDisplay? {
+    static func createLineForMathList(_ mathList:MathList?, font:FontInstance?, style:LineStyle, maxWidth:CGFloat = 0) -> MathListDisplay? {
         let finalizedList = mathList?.finalized
-        // default is not cramped, no width constraint
-        return self.createLineForMathList(finalizedList, font:font, style:style, cramped:false, maxWidth: 0)
+        return self.createLineForMathList(finalizedList, font:font, style:style, cramped:false, spaced:false, maxWidth: maxWidth)
     }
 
-    static func createLineForMathList(_ mathList:MathList?, font:FontInstance?, style:LineStyle, maxWidth:CGFloat) -> MathListDisplay? {
-        let finalizedList = mathList?.finalized
-        // default is not cramped
-        return self.createLineForMathList(finalizedList, font:font, style:style, cramped:false, maxWidth: maxWidth)
-    }
-
-    // Internal
-    static func createLineForMathList(_ mathList:MathList?, font:FontInstance?, style:LineStyle, cramped:Bool) -> MathListDisplay? {
-        return self.createLineForMathList(mathList, font:font, style:style, cramped:cramped, spaced:false, maxWidth: 0)
-    }
-
-    // Internal
-    static func createLineForMathList(_ mathList:MathList?, font:FontInstance?, style:LineStyle, cramped:Bool, maxWidth:CGFloat) -> MathListDisplay? {
-        return self.createLineForMathList(mathList, font:font, style:style, cramped:cramped, spaced:false, maxWidth: maxWidth)
-    }
-
-    // Internal
-    static func createLineForMathList(_ mathList:MathList?, font:FontInstance?, style:LineStyle, cramped:Bool, spaced:Bool) -> MathListDisplay? {
-        return self.createLineForMathList(mathList, font:font, style:style, cramped:cramped, spaced:spaced, maxWidth: 0)
-    }
-
-    // Internal
-    static func createLineForMathList(_ mathList:MathList?, font:FontInstance?, style:LineStyle, cramped:Bool, spaced:Bool, maxWidth:CGFloat) -> MathListDisplay? {
+    static func createLineForMathList(_ mathList:MathList?, font:FontInstance?, style:LineStyle, cramped:Bool, spaced:Bool = false, maxWidth:CGFloat = 0) -> MathListDisplay? {
         assert(font != nil)
 
         // Always use tokenization approach
@@ -970,19 +947,14 @@ class Typesetter {
     func findGlyph(_ glyph:CGGlyph, withHeight height:CGFloat, glyphAscent:inout CGFloat, glyphDescent:inout CGFloat, glyphWidth:inout CGFloat) -> CGGlyph {
         let variants = styleFont.mathTable!.getVerticalVariantsForGlyph(glyph)
         let numVariants = variants.count;
-        var glyphs = [CGGlyph]()// numVariants)
-        glyphs.reserveCapacity(numVariants)
-        for i in 0 ..< numVariants {
-            let glyph = variants[i]!.uint16Value
-            glyphs.append(glyph)
-        }
-        
+        var glyphs = variants
+
         var bboxes = [CGRect](repeating: CGRect.zero, count: numVariants)
         var advances = [CGSize](repeating: CGSize.zero, count: numVariants)
-        
+
         // Get the bounds for these glyphs
-        CTFontGetBoundingRectsForGlyphs(styleFont.ctFont, .horizontal, glyphs, &bboxes, numVariants)
-        CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, glyphs, &advances, numVariants);
+        CTFontGetBoundingRectsForGlyphs(styleFont.ctFont, .horizontal, &glyphs, &bboxes, numVariants)
+        CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyphs, &advances, numVariants);
         var ascent=CGFloat(0), descent=CGFloat(0), width=CGFloat(0)
         for i in 0..<numVariants {
             let bounds = bboxes[i]
@@ -1007,10 +979,10 @@ class Typesetter {
         if parts.count == 0 {
             return nil
         }
-        var glyphs = [NSNumber](), offsets = [NSNumber]()
+        var glyphs = [CGGlyph](), offsets = [CGFloat]()
         var height:CGFloat=0
         self.constructGlyphWithParts(parts, glyphHeight:glyphHeight, glyphs:&glyphs, offsets:&offsets, height:&height)
-        var first = glyphs[0].uint16Value
+        var first = glyphs[0]
         let width = CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &first, nil, 1);
         let display = GlyphConstructionDisplay(withGlyphs: glyphs, offsets: offsets, font: styleFont)
         display.width = width;
@@ -1019,17 +991,17 @@ class Typesetter {
         return display;
     }
     
-    func constructGlyphWithParts(_ parts:[GlyphPart], glyphHeight:CGFloat, glyphs:inout [NSNumber], offsets:inout [NSNumber], height:inout CGFloat) {
+    func constructGlyphWithParts(_ parts:[GlyphPart], glyphHeight:CGFloat, glyphs:inout [CGGlyph], offsets:inout [CGFloat], height:inout CGFloat) {
         // Loop forever until the glyph height is valid
         for numExtenders in 0..<Int.max {
-            var glyphsRv = [NSNumber]()
-            var offsetsRv = [NSNumber]()
-            
+            var glyphsRv = [CGGlyph]()
+            var offsetsRv = [CGFloat]()
+
             var prev:GlyphPart? = nil;
             let minDistance = styleFont.mathTable!.minConnectorOverlap;
             var minOffset = CGFloat(0)
             var maxDelta = CGFloat.greatestFiniteMagnitude  // the maximum amount we can increase the offsets by
-            
+
             for part in parts {
                 var repeats = 1;
                 if part.isExtender {
@@ -1037,7 +1009,7 @@ class Typesetter {
                 }
                 // add the extender num extender times
                 for _ in 0 ..< repeats {
-                    glyphsRv.append(NSNumber(value: part.glyph)) // addObject:[NSNumber numberWithShort:part.glyph])
+                    glyphsRv.append(part.glyph)
                     if prev != nil {
                         let maxOverlap = min(prev!.endConnectorLength, part.startConnectorLength);
                         // the minimum amount we can add to the offset
@@ -1048,11 +1020,11 @@ class Typesetter {
                         maxDelta = min(maxDelta, maxOffsetDelta - minOffsetDelta);
                         minOffset = minOffset + minOffsetDelta;
                     }
-                    offsetsRv.append(NSNumber(floatLiteral: minOffset))  // addObject:[NSNumber numberWithFloat:minOffset])
+                    offsetsRv.append(minOffset)
                     prev = part
                 }
             }
-            
+
             assert(glyphsRv.count == offsetsRv.count, "Offsets should match the glyphs");
             if prev == nil {
                 continue;   // maybe only extenders
@@ -1068,12 +1040,12 @@ class Typesetter {
             } else if (glyphHeight <= maxHeight) {
                 // spread the delta equally between all the connectors
                 let delta = glyphHeight - minHeight;
-                let deltaIncrease = Float(delta) / Float(glyphsRv.count - 1)
+                let deltaIncrease = delta / CGFloat(glyphsRv.count - 1)
                 var lastOffset = CGFloat(0)
                 for i in 0..<offsetsRv.count {
-                    let offset = offsetsRv[i].floatValue + Float(i)*deltaIncrease;
-                    offsetsRv[i] = NSNumber(value:offset)
-                    lastOffset = CGFloat(offset)
+                    let offset = offsetsRv[i] + CGFloat(i) * deltaIncrease;
+                    offsetsRv[i] = offset
+                    lastOffset = offset
                 }
                 // we are done
                 glyphs = glyphsRv
@@ -1362,12 +1334,7 @@ class Typesetter {
         let variants = styleFont.mathTable!.getHorizontalVariantsForGlyph(glyph)
         let numVariants = variants.count
         assert(numVariants > 0, "A glyph is always it's own variant, so number of variants should be > 0");
-        var glyphs = [CGGlyph]() // [numVariants)
-        glyphs.reserveCapacity(numVariants)
-        for i in 0 ..< numVariants {
-            let glyph = variants[i]!.uint16Value
-            glyphs.append(glyph)
-        }
+        var glyphs = variants
 
         var curGlyph = glyphs[0]  // if no other glyph is found, we'll return the first one.
         var bboxes = [CGRect](repeating: CGRect.zero, count: numVariants) // [numVariants)
@@ -1563,9 +1530,9 @@ class Typesetter {
         if isArrowAccent && !accent.isStretchy && glyphWidth == 0 {
             guard let mathTable = styleFont.mathTable else { return nil }
             let variants = mathTable.getHorizontalVariantsForGlyph(accentGlyph)
-            if variants.count > 1, let variantNum = variants[1] {
+            if variants.count > 1 {
                 // Use the first variant (.h1) which has proper width
-                accentGlyph = CGGlyph(variantNum.uint16Value)
+                accentGlyph = variants[1]
                 var glyph = accentGlyph
                 var advances = CGSize.zero
                 CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyph, &advances, 1)

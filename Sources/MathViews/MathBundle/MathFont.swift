@@ -64,7 +64,7 @@ public enum MathFont: String, CaseIterable, Identifiable {
     public func ctFont(withSize size: CGFloat) -> CTFont {
         BundleManager.manager.obtainCTFont(font: self, withSize: size)
     }
-    internal func rawMathTable() -> NSDictionary {
+    internal func rawMathTable() -> [String: Any] {
         BundleManager.manager.obtainRawMathTable(font: self)
     }
     
@@ -95,7 +95,7 @@ private class BundleManager {
 
     private var cgFonts = [MathFont: CGFont]()
     private var ctFonts = [CTFontSizePair: CTFont]()
-    private var rawMathTables = [MathFont: NSDictionary]()
+    private var rawMathTables = [MathFont: [String: Any]]()
 
     private let threadSafeQueue = DispatchQueue(label: "com.smartmath.mathfont.threadsafequeue",
                                                 qos: .userInitiated,
@@ -133,13 +133,13 @@ private class BundleManager {
               let mathTablePlist = Bundle(url: frameworkBundleURL)?.url(forResource: mathFont.rawValue, withExtension:"plist") else {
             throw FontError.fontPathNotFound
         }
-        guard let rawMathTable = NSDictionary(contentsOf: mathTablePlist),
-                let version = rawMathTable["version"] as? String,
+        guard let plist = NSDictionary(contentsOf: mathTablePlist) as? [String: Any],
+                let version = plist["version"] as? String,
                 version == "1.3" else {
             throw FontError.invalidMathTable
         }
-        
-        rawMathTables[mathFont] = rawMathTable
+
+        rawMathTables[mathFont] = plist
         
         let threadName = Thread.isMainThread ? "main" : "global"
         debugPrint("mathFonts bundle resource: \(mathFont.rawValue).plist registered on \(threadName).")
@@ -188,7 +188,7 @@ private class BundleManager {
             }
         })
     }
-    fileprivate func obtainRawMathTable(font: MathFont) -> NSDictionary {
+    fileprivate func obtainRawMathTable(font: MathFont) -> [String: Any] {
         onDemandRegistration(mathFont: font)
         guard let mathTable = threadSafeQueue.sync(execute: { rawMathTables[font] } ) else {
             fatalError("\(#function) unable to locate mathTable: \(font.rawValue).plist")

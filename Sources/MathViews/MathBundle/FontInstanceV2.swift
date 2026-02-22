@@ -51,7 +51,7 @@ public final class FontInstanceV2: FontInstance {
             return _mathTab
         }
     }
-    override var rawMathTable: NSDictionary? {
+    override var rawMathTable: [String: Any]? {
         set { fatalError("\(#function): change to \(font.rawValue) not allowed.") }
         get { fatalError("\(#function): access to \(font.rawValue) not allowed.") }
     }

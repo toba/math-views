@@ -528,16 +528,12 @@ class GlyphConstructionDisplay:DisplayDS {
     var font:FontInstance?
     var numGlyphs:Int=0
     
-    init(withGlyphs glyphs:[NSNumber?], offsets:[NSNumber?], font:FontInstance?) {
+    init(withGlyphs glyphs:[CGGlyph], offsets:[CGFloat], font:FontInstance?) {
         super.init()
         assert(glyphs.count == offsets.count, "Glyphs and offsets need to match")
         self.numGlyphs = glyphs.count;
-        self.glyphs = [CGGlyph](repeating: CGGlyph(), count: self.numGlyphs)  //malloc(sizeof(CGGlyph) * _numGlyphs);
-        self.positions = [CGPoint](repeating: CGPoint.zero, count: self.numGlyphs) //malloc(sizeof(CGPoint) * _numGlyphs);
-        for i in 0 ..< self.numGlyphs {
-            self.glyphs[i] = glyphs[i]!.uint16Value
-            self.positions[i] = CGPointMake(0, CGFloat(offsets[i]!.floatValue))
-        }
+        self.glyphs = glyphs
+        self.positions = offsets.map { CGPoint(x: 0, y: $0) }
         self.font = font
         self.position = CGPoint.zero
     }

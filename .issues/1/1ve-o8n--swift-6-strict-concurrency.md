@@ -9,7 +9,8 @@ updated_at: 2026-02-22T17:08:53Z
 sync:
     github:
         issue_number: "2"
-        synced_at: "2026-02-22T17:29:40Z"
+        milestone_number: "1"
+        synced_at: "2026-02-22T18:51:00Z"
 ---
 
 ## Goal

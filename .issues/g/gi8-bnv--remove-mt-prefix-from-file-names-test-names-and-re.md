@@ -7,6 +7,10 @@ priority: normal
 created_at: 2026-02-22T17:34:45Z
 updated_at: 2026-02-22T17:35:28Z
 parent: 1ve-o8n
+sync:
+    github:
+        issue_number: "10"
+        synced_at: "2026-02-22T18:51:01Z"
 ---
 
 ## Goal

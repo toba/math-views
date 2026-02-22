@@ -9,7 +9,7 @@ updated_at: 2026-02-22T16:44:34Z
 sync:
     github:
         issue_number: "3"
-        synced_at: "2026-02-22T17:29:40Z"
+        synced_at: "2026-02-22T18:51:00Z"
 ---
 
 Support `\middle` for use between `\left` and `\right` to add delimiters in the middle of expressions.

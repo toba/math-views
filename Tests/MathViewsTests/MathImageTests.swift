@@ -1,26 +1,26 @@
-import XCTest
 import Testing
 @testable import MathViews
+import CoreGraphics
+import Foundation
 
-final class MathImageTests: XCTestCase {
+struct MathImageTests {
     func safeImage(fileName: String, pngData: Data) {
         let imageFileURL = URL(fileURLWithPath: NSTemporaryDirectory().appending("image-\(fileName).png"))
         try? pngData.write(to: imageFileURL, options: [.atomicWrite])
-        //print("\(#function) \(imageFileURL.path)")
     }
-    func testMathImageScript() throws {
+    @Test func mathImageScript() throws {
         let latex = Latex.samples.randomElement()!
         let mathfont = MathFont.allCases.randomElement()!
         let fontsize = CGFloat.random(in: 24 ... 36)
         let result = MathImageResult.useMathImage(latex: latex, font: mathfont, fontSize: fontsize)
-        XCTAssertNil(result.error)
-        XCTAssertNotNil(result.image)
-        XCTAssertNotNil(result.layoutInfo)
+        #expect(result.error == nil)
+        #expect(result.image != nil)
+        #expect(result.layoutInfo != nil)
         if result.error == nil, let image = result.image, let imageData = image.pngData() {
             safeImage(fileName: "test", pngData: imageData)
         }
     }
-    func testSequentialMultipleImageScript() throws {
+    @Test func sequentialMultipleImageScript() throws {
         var latex: String { Latex.samples.randomElement()! }
         var mathfont: MathFont { MathFont.allCases.randomElement()! }
         var fontsize: CGFloat { CGFloat.random(in: 20 ... 40) }
@@ -29,16 +29,16 @@ final class MathImageTests: XCTestCase {
             switch caseNumber % 2 {
             case 0:
                 result = MathImageResult.useMathImage(latex: latex, font: mathfont, fontSize: fontsize)
-                XCTAssertNil(result.error)
-                XCTAssertNotNil(result.image)
-                XCTAssertNotNil(result.layoutInfo)
+                #expect(result.error == nil)
+                #expect(result.image != nil)
+                #expect(result.layoutInfo != nil)
                 if result.error == nil, let image = result.image, let imageData = image.pngData() {
                     safeImage(fileName: "\(caseNumber)", pngData: imageData)
                 }
             default:
                 result = MathImageResult.useMathImageRenderer(latex: latex, font: mathfont, fontSize: fontsize)
-                XCTAssertNil(result.error)
-                XCTAssertNotNil(result.image)
+                #expect(result.error == nil)
+                #expect(result.image != nil)
                 if result.error == nil, let image = result.image, let imageData = image.pngData() {
                     safeImage(fileName: "\(caseNumber)", pngData: imageData)
                 }
@@ -46,57 +46,33 @@ final class MathImageTests: XCTestCase {
         }
     }
 
-    private let executionQueue = DispatchQueue(label: "com.swiftmath.mathbundle", attributes: .concurrent)
-    private let executionGroup = DispatchGroup()
-
-    let totalCases = 20
-    var testCount = 0
-
-    func testConcurrentMathImageScript() throws {
+    @Test func concurrentMathImageScript() {
+        let queue = DispatchQueue(label: "com.swiftmath.mathbundle", attributes: .concurrent)
+        let group = DispatchGroup()
         var latex: String { Latex.samples.randomElement()! }
         var mathfont: MathFont { MathFont.allCases.randomElement()! }
         var size: CGFloat { CGFloat.random(in: 20 ... 40) }
+        let totalCases = 20
         for caseNumber in 0 ..< totalCases {
-            switch caseNumber % 2 {
-            case 0:
-                helperConcurrentMathImage(caseNumber, latex: latex, mathfont: mathfont, fontsize: size, in: executionGroup, on: executionQueue)
-            default:
-                helperConcurrentMathImageRenderer(caseNumber, latex: latex, mathfont: mathfont, fontsize: size, in: executionGroup, on: executionQueue)
+            group.enter()
+            let l = latex, m = mathfont, s = size
+            queue.async {
+                defer { group.leave() }
+                let result: MathImageResult
+                switch caseNumber % 2 {
+                case 0:
+                    result = MathImageResult.useMathImage(latex: l, font: m, fontSize: s)
+                    #expect(result.error == nil)
+                    #expect(result.image != nil)
+                    #expect(result.layoutInfo != nil)
+                default:
+                    result = MathImageResult.useMathImageRenderer(latex: l, font: m, fontSize: s)
+                    #expect(result.error == nil)
+                    #expect(result.image != nil)
+                }
             }
         }
-        executionGroup.notify(queue: .main) { [weak self] in
-            XCTAssertEqual(self?.testCount,self?.totalCases)
-        }
-        executionGroup.wait()
-    }
-    func helperConcurrentMathImage(_ count: Int, latex: String, mathfont: MathFont, fontsize: CGFloat, in group: DispatchGroup, on queue: DispatchQueue) {
-        let workitem = DispatchWorkItem { [weak self] in
-            let result = MathImageResult.useMathImage(latex: latex, font: mathfont, fontSize: fontsize)
-            XCTAssertNil(result.error)
-            XCTAssertNotNil(result.image)
-            XCTAssertNotNil(result.layoutInfo)
-            if result.error == nil, let image = result.image, let imageData = image.pngData() {
-                self?.safeImage(fileName: "\(count)", pngData: imageData)
-            }
-        }
-        workitem.notify(queue: .main) { [weak self] in
-            self?.testCount += 1
-        }
-        queue.async(group: group, execute: workitem)
-    }
-    func helperConcurrentMathImageRenderer(_ count: Int, latex: String, mathfont: MathFont, fontsize: CGFloat, in group: DispatchGroup, on queue: DispatchQueue) {
-        let workitem = DispatchWorkItem { [weak self] in
-            let result = MathImageResult.useMathImageRenderer(latex: latex, font: mathfont, fontSize: fontsize)
-            XCTAssertNil(result.error)
-            XCTAssertNotNil(result.image)
-            if result.error == nil, let image = result.image, let imageData = image.pngData() {
-                self?.safeImage(fileName: "\(count)", pngData: imageData)
-            }
-        }
-        workitem.notify(queue: .main) { [weak self] in
-            self?.testCount += 1
-        }
-        queue.async(group: group, execute: workitem)
+        group.wait()
     }
 }
 struct MathImageResult {
@@ -125,6 +101,7 @@ extension MathImageResult {
     }
 }
 #if os(macOS)
+import AppKit
 extension NSBitmapImageRep {
     var png: Data? { representation(using: .png, properties: [:]) }
 }

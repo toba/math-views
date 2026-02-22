@@ -1,79 +1,55 @@
-import XCTest
+import Testing
 @testable import MathViews
+import CoreGraphics
+import Foundation
 
-final class FontInstanceV2Tests: XCTestCase {
-    func testFontInstanceV2Script() throws {
+struct FontInstanceV2Tests {
+    @Test func fontInstanceV2Script() {
         let size = CGFloat(Int.random(in: 20 ... 40))
-        MathFont.allCases.forEach {
-            let fontInst = $0.fontInstance(size: size)
+        for font in MathFont.allCases {
+            let fontInst = font.fontInstance(size: size)
             let mTable = fontInst.mathTable?._mathTable
-            XCTAssertNotNil(fontInst)
-            XCTAssertNotNil(mTable)
+            #expect(fontInst != nil)
+            #expect(mTable != nil)
         }
     }
-    private let executionQueue = DispatchQueue(label: "com.swiftmath.mathbundle", attributes: .concurrent)
-    private let executionGroup = DispatchGroup()
-    let totalCases = 1000
-    var testCount = 0
-    func testConcurrentThreadsafeScript() throws {
-        testCount = 0
-        var mathFont: MathFont { .allCases.randomElement()! }
-        for caseNumber in 0 ..< totalCases {
-            helperConcurrentFontInstanceV2(caseNumber, mathFont: mathFont, in: executionGroup, on: executionQueue)
+
+    @Test func concurrentThreadsafe() {
+        let queue = DispatchQueue(label: "com.swiftmath.mathbundle", attributes: .concurrent)
+        let group = DispatchGroup()
+        let totalCases = 1000
+        for _ in 0 ..< totalCases {
+            let mathFont = MathFont.allCases.randomElement()!
+            let size = CGFloat.random(in: 20 ... 40)
+            group.enter()
+            queue.async {
+                defer { group.leave() }
+                let fontV2 = mathFont.fontInstance(size: size)
+                #expect(fontV2 != nil)
+                let (cgfont, ctfont) = (fontV2.defaultCGFont, fontV2.ctFont)
+                #expect(cgfont != nil)
+                #expect(ctfont != nil)
+            }
         }
-        executionGroup.notify(queue: .main) { [weak self] in
-            guard let self = self else { return }
-            XCTAssertEqual(self.testCount, totalCases)
-        }
-        executionGroup.wait()
+        group.wait()
     }
-    func helperConcurrentFontInstanceV2(_ count: Int, mathFont: MathFont, in group: DispatchGroup, on queue: DispatchQueue) {
-        let size = CGFloat.random(in: 20 ... 40)
-        let workitem = DispatchWorkItem {
-            let fontV2 = mathFont.fontInstance(size: size)
-            XCTAssertNotNil(fontV2)
-            let (cgfont, ctfont) = (fontV2.defaultCGFont, fontV2.ctFont)
-            XCTAssertNotNil(cgfont)
-            XCTAssertNotNil(ctfont)
+
+    @Test func concurrentThreadsafeMathTableLock() {
+        let queue = DispatchQueue(label: "com.swiftmath.mathbundle", attributes: .concurrent)
+        let group = DispatchGroup()
+        let totalCases = 1000
+        let fontInstances = (0 ..< 5).map { _ in
+            MathFont.allCases.randomElement()!.fontInstance(size: CGFloat.random(in: 20 ... 40))
         }
-        workitem.notify(queue: .main) { [weak self] in
-            // print("\(Thread.isMainThread ? "main" : "global") completed .....")
-            let fontV2 = mathFont.fontInstance(size: size)
-            XCTAssertNotNil(fontV2)
-            let (cgfont, ctfont) = (fontV2.defaultCGFont, fontV2.ctFont)
-            XCTAssertNotNil(cgfont)
-            XCTAssertNotNil(ctfont)
-            let mTable = mathFont.rawMathTable()
-            XCTAssertNotNil(mTable)
-            self?.testCount += 1
+        for _ in 0 ..< totalCases {
+            let fontInst = fontInstances.randomElement()!
+            group.enter()
+            queue.async {
+                defer { group.leave() }
+                let mathTable = fontInst.mathTable as? FontMathTableV2
+                #expect(mathTable != nil)
+            }
         }
-        queue.async(group: group, execute: workitem)
-    }
-    func testConcurrentThreadsafeMathTableLockScript() throws {
-        testCount = 0
-        var mathFont: MathFont { .allCases.randomElement()! }
-        var size: CGFloat { CGFloat.random(in: 20 ... 40) }
-        let fontInstances = Array( 0 ..< 5 ).map { _ in mathFont.fontInstance(size: size) }
-        for caseNumber in 0 ..< totalCases {
-            helperConcurrentFontInstanceV2MathTableLock(caseNumber, fontInst: fontInstances.randomElement()!, in: executionGroup, on: executionQueue)
-        }
-        executionGroup.notify(queue: .main) { [weak self] in
-            guard let self = self else { return }
-            XCTAssertEqual(self.testCount, totalCases)
-        }
-        executionGroup.wait()
-    }
-    func helperConcurrentFontInstanceV2MathTableLock(_ count: Int, fontInst: FontInstanceV2, in group: DispatchGroup, on queue: DispatchQueue) {
-        let workitem = DispatchWorkItem {
-            let mathTable = fontInst.mathTable as? FontMathTableV2
-            // each mathTable is initialized once per fontInst with a NSLock.
-            // this is even when mathTable is accessed via different threads.
-            XCTAssertNotNil(mathTable)
-        }
-        workitem.notify(queue: .main) { [weak self] in
-            // print("\(Thread.isMainThread ? "main" : "global") completed .....")
-            self?.testCount += 1
-        }
-        queue.async(group: group, execute: workitem)
+        group.wait()
     }
 }

@@ -8,7 +8,7 @@ import Testing
   import UIKit
 #endif
 
-struct DebugOverlapTest {
+@MainActor struct DebugOverlapTest {
   @Test func debugOverlap() {
     let label = MathUILabel()
     label.latex = "y=x^{2}+3x+4x+9x+8x+8+\\sqrt{\\dfrac{3x^{2}+5x}{\\cos x}}"

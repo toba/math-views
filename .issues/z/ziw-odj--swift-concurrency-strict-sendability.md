@@ -1,11 +1,11 @@
 ---
 # ziw-odj
 title: Swift Concurrency & Strict Sendability
-status: ready
+status: completed
 type: epic
 priority: normal
 created_at: 2026-02-22T17:08:14Z
-updated_at: 2026-02-22T19:19:32Z
+updated_at: 2026-02-23T00:13:49Z
 parent: 1ve-o8n
 blocking:
     - 3ss-4pl
@@ -97,3 +97,34 @@ After removing NSObject and locks:
 ### @MainActor Scope
 
 Mark the `Display` class hierarchy `@MainActor` since it draws via CoreText/CoreGraphics which must run on the main thread. This gives compile-time guarantees rather than runtime crashes. The `Typesetter` creates display objects but does not draw — it should remain nonisolated, with the handoff to `@MainActor` happening at the view layer.
+
+
+## Summary of Changes
+
+Replaced 6 lock-based concurrency primitives with modern Swift 6 alternatives:
+
+### Static let conversions (eliminated 4 locks)
+- `Typesetter.swift`: Global `var interElementSpaceArray` + NSLock → file-level `let interElementSpaces`
+- `MathAtomFactory.swift`: `delimValueLock` + `_delimValueToName` → `static let delimValueToName`
+- `MathAtomFactory.swift`: `accentValueLock` + `_accentValueToName` → `static let accentValueToName`
+- `MathAtomFactory.swift`: `supportedAccentedCharacters` var → let
+
+### Mutex conversions (replaced 2 remaining locks)
+- `FontInstance.swift`: NSLock + `_mathTab` → `Mutex<FontMathTable?>`
+- `MathFont.swift`: DispatchQueue (concurrent + barrier) → `Mutex<CacheState>` with Sendable wrappers
+- `MathAtomFactory.swift`: `textToLatexLock` + mutable `supportedLatexSymbols` → `Mutex<SymbolState>`
+
+### Sendable conformances
+- `MathAtom`, `MathList`: `@unchecked Sendable`
+- `Display`: `@unchecked Sendable`
+- `FontInstance`: `@unchecked Sendable`
+- `FontMathTable`: `@unchecked Sendable`
+- `MathFont`, `MathAtomType`, `FontStyle`, `LineStyle`: `Sendable`
+- Retroactive `@unchecked Sendable` for `CGFont`, `CGDataProvider`
+- `SendableCTFont`, `RawMathTableData` wrappers for Mutex sending boundary
+
+### Swift 6 strict concurrency
+- `Package.swift`: `.swiftLanguageMode(.v6)` + 5 upcoming features
+- Test files using MathUILabel annotated with `@MainActor` (NSView/UIView isolation)
+
+All 595 tests pass.

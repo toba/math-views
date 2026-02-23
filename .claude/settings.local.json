@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(jig todo:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "mcp__xc-build__search_crash_reports"
     ]
   }
 }

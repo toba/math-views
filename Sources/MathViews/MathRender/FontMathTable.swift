@@ -32,7 +32,7 @@ struct GlyphPart {
 
  Remark: This class is not meant to be used outside of this library.
  */
-class FontMathTable {
+class FontMathTable: @unchecked Sendable {
 
     let mathFont: MathFont
     let fontSize: CGFloat

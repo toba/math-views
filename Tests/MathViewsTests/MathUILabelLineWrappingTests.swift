@@ -11,7 +11,7 @@ import Testing
   import UIKit
 #endif
 
-struct MathUILabelLineWrappingTests {
+@MainActor struct MathUILabelLineWrappingTests {
 
   // MARK: - Helper Functions for Punctuation Tests
 

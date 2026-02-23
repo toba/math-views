@@ -7,7 +7,12 @@ let upcomingFeatures: [SwiftSetting] = [
     .enableUpcomingFeature("ExistentialAny"),
     .enableUpcomingFeature("MemberImportVisibility"),
     .enableUpcomingFeature("InternalImportsByDefault"),
-    .swiftLanguageMode(.v5),
+    .enableUpcomingFeature("GlobalConcurrency"),
+    .enableUpcomingFeature("RegionBasedIsolation"),
+    .enableUpcomingFeature("InferSendableFromCaptures"),
+    .enableUpcomingFeature("DisableOutwardActorIsolation"),
+    .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+    .swiftLanguageMode(.v6),
 ]
 
 let package = Package(

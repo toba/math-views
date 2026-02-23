@@ -107,7 +107,7 @@ class ElementWidthCalculator {
     func getInterElementSpacing(left: MathAtomType, right: MathAtomType) -> CGFloat {
         let leftIndex = getInterElementSpaceArrayIndexForType(left, row: true)
         let rightIndex = getInterElementSpaceArrayIndexForType(right, row: false)
-        let spaceArray = getInterElementSpaces()[Int(leftIndex)]
+        let spaceArray = interElementSpaces[Int(leftIndex)]
         let spaceType = spaceArray[Int(rightIndex)]
 
         guard spaceType != .invalid else {

@@ -5,7 +5,7 @@ public import Foundation
  
  The type of the atom determines how it is rendered, and spacing between the atoms.
  */
-public enum MathAtomType: Int, CustomStringConvertible, Comparable {
+public enum MathAtomType: Int, CustomStringConvertible, Comparable, Sendable {
     /// A number or text in ordinary format - Ord in TeX
     case ordinary = 1
     /// A number - Does not exist in TeX
@@ -115,7 +115,7 @@ public enum MathAtomType: Int, CustomStringConvertible, Comparable {
  The fontstyle of the atom determines what style the character is rendered in. This only applies to atoms
  of type MathAtomType.variable and MathAtomType.number. None of the other atom types change their font style.
  */
-public enum FontStyle:Int {
+public enum FontStyle:Int, Sendable {
     /// The default latex rendering style. i.e. variables are italic and numbers are roman.
     case defaultStyle = 0,
     /// Roman font style i.e. \mathrm
@@ -149,7 +149,7 @@ public enum FontStyle:Int {
  
  Certain types of atoms inherit from `MathAtom` and may have additional fields.
  */
-public class MathAtom: CustomStringConvertible, Equatable {
+public class MathAtom: CustomStringConvertible, Equatable, @unchecked Sendable {
     public static func == (lhs: MathAtom, rhs: MathAtom) -> Bool { lhs === rhs }
     /** The type of the atom. */
     public var type = MathAtomType.ordinary
@@ -620,7 +620,7 @@ public class MathSpace: MathAtom {
 /**
  Styling of a line of math
  */
-public enum LineStyle:Int, Comparable {
+public enum LineStyle:Int, Comparable, Sendable {
     /// Display style
     case display
     /// Text style (inline)
@@ -896,7 +896,7 @@ extension MathList: CustomStringConvertible {
  
     Note: This class is for **advanced** usage only.
  */
-public class MathList: Equatable {
+public class MathList: Equatable, @unchecked Sendable {
     public static func == (lhs: MathList, rhs: MathList) -> Bool { lhs === rhs }
     
     init?(_ list:MathList?) {

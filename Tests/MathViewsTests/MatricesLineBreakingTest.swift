@@ -20,7 +20,7 @@ import Testing
 ///
 /// Fix: Added fontStyle check to preprocessing to prevent fusion of atoms with
 /// different font styles.
-struct MatricesLineBreakingTest {
+@MainActor struct MatricesLineBreakingTest {
 
   @Test func matricesLineBreakingFixed() throws {
     let label = MathUILabel()

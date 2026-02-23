@@ -1,15 +1,15 @@
 public import Foundation
 public import CoreGraphics
 public import CoreText
+import Synchronization
 
-public final class FontInstance {
+public final class FontInstance: @unchecked Sendable {
     let font: MathFont
     let size: CGFloat
     private let _cgFont: CGFont
     private let _ctFont: CTFont
     private let unitsPerEm: UInt
-    private var _mathTab: FontMathTable?
-    private let mathTableLock = NSLock()
+    private let _mathTab = Mutex<FontMathTable?>(nil)
 
     /// Fallback font for characters not supported by the main math font.
     /// Defaults to the system font at the same size. This is particularly useful
@@ -29,13 +29,12 @@ public final class FontInstance {
     var ctFont: CTFont { _ctFont }
 
     var mathTable: FontMathTable? {
-        guard _mathTab == nil else { return _mathTab }
-        mathTableLock.lock()
-        defer { mathTableLock.unlock() }
-        if _mathTab == nil {
-            _mathTab = FontMathTable(mathFont: font, size: size, unitsPerEm: unitsPerEm)
+        _mathTab.withLock { cached in
+            if cached == nil {
+                cached = FontMathTable(mathFont: font, size: size, unitsPerEm: unitsPerEm)
+            }
+            return cached
         }
-        return _mathTab
     }
 
     /** Returns a copy of this font but with a different size. */

@@ -17,30 +17,17 @@ enum InterElementSpaceType : Int {
     case nsThick
 }
 
-var interElementSpaceArray = [[InterElementSpaceType]]()
-private let interElementLock = NSLock()
-
-func getInterElementSpaces() -> [[InterElementSpaceType]] {
-    if interElementSpaceArray.isEmpty {
-        
-        interElementLock.lock()
-        defer { interElementLock.unlock() }
-        guard interElementSpaceArray.isEmpty else { return interElementSpaceArray }
-        
-        interElementSpaceArray =
-        //   ordinary   operator   binary     relation  open       close     punct     fraction
-        [  [.none,     .thin,     .nsMedium, .nsThick, .none,     .none,    .none,    .nsThin],    // ordinary
-           [.thin,     .thin,     .invalid,  .nsThick, .none,     .none,    .none,    .nsThin],    // operator
-           [.nsMedium, .nsMedium, .invalid,  .invalid, .nsMedium, .invalid, .invalid, .nsMedium],  // binary
-           [.nsThick,  .nsThick,  .invalid,  .none,    .nsThick,  .none,    .none,    .nsThick],   // relation
-           [.none,     .none,     .invalid,  .none,    .none,     .none,    .none,    .none],      // open
-           [.none,     .thin,     .nsMedium, .nsThick, .none,     .none,    .none,    .nsThin],    // close
-           [.nsThin,   .nsThin,   .invalid,  .nsThin,  .nsThin,   .nsThin,  .nsThin,  .nsThin],    // punct
-           [.nsThin,   .thin,     .nsMedium, .nsThick, .nsThin,   .none,    .nsThin,  .nsThin],    // fraction
-           [.nsMedium, .nsThin,   .nsMedium, .nsThick, .none,     .none,    .none,    .nsThin]]    // radical
-    }
-    return interElementSpaceArray
-}
+let interElementSpaces: [[InterElementSpaceType]] =
+    //   ordinary   operator   binary     relation  open       close     punct     fraction
+    [  [.none,     .thin,     .nsMedium, .nsThick, .none,     .none,    .none,    .nsThin],    // ordinary
+       [.thin,     .thin,     .invalid,  .nsThick, .none,     .none,    .none,    .nsThin],    // operator
+       [.nsMedium, .nsMedium, .invalid,  .invalid, .nsMedium, .invalid, .invalid, .nsMedium],  // binary
+       [.nsThick,  .nsThick,  .invalid,  .none,    .nsThick,  .none,    .none,    .nsThick],   // relation
+       [.none,     .none,     .invalid,  .none,    .none,     .none,    .none,    .none],      // open
+       [.none,     .thin,     .nsMedium, .nsThick, .none,     .none,    .none,    .nsThin],    // close
+       [.nsThin,   .nsThin,   .invalid,  .nsThin,  .nsThin,   .nsThin,  .nsThin,  .nsThin],    // punct
+       [.nsThin,   .thin,     .nsMedium, .nsThick, .nsThin,   .none,    .nsThin,  .nsThin],    // fraction
+       [.nsMedium, .nsThin,   .nsMedium, .nsThick, .none,     .none,    .none,    .nsThin]]    // radical
 
 
 // Get's the index for the given type. If row is true, the index is for the row (i.e. left element) otherwise it is for the column (right element)
@@ -567,7 +554,7 @@ class Typesetter {
     func getInterElementSpace(_ left: MathAtomType, right:MathAtomType) -> CGFloat {
         let leftIndex = getInterElementSpaceArrayIndexForType(left, row: true)
         let rightIndex = getInterElementSpaceArrayIndexForType(right, row: false)
-        let spaceArray = getInterElementSpaces()[Int(leftIndex)]
+        let spaceArray = interElementSpaces[Int(leftIndex)]
         let spaceTypeObj = spaceArray[Int(rightIndex)]
         let spaceType = spaceTypeObj
         assert(spaceType != .invalid, "Invalid space between \(left) and \(right)")

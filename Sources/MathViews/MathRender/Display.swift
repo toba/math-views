@@ -11,7 +11,7 @@ protocol DownShift {
 // MARK: - Display
 
 /// The base class for rendering a math equation.
-public class Display {
+public class Display: @unchecked Sendable {
 
     init() { }
 

@@ -24,7 +24,7 @@ extension CGPoint {
 
 }
 
-struct TypesetterTests {
+@MainActor struct TypesetterTests {
 
   let font: FontInstance
 

@@ -1440,7 +1440,7 @@ struct TypesetterTests {
             FontStyle.defaultStyle,
             .roman,
             .bold,
-            .caligraphic,
+            .calligraphic,
             .typewriter,
             .italic,
             .sansSerif,

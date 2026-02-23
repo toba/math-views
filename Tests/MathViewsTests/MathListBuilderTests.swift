@@ -1505,7 +1505,7 @@ struct MathListBuilderTests {
         var atom = list.atoms[0]
         #expect(atom.type == .variable, "\(desc)")
         #expect(atom.nucleus == "x", "\(desc)")
-        #expect(atom.fontStyle == .caligraphic)
+        #expect(atom.fontStyle == .calligraphic)
 
         atom = list.atoms[1]
         #expect(atom.type == .variable, "\(desc)")

@@ -592,8 +592,8 @@ public enum MathAtomFactory {
         "mathbf": .bold,
         "bf": .bold,
         "textbf": .bold,
-        "mathcal": .caligraphic,
-        "cal": .caligraphic,
+        "mathcal": .calligraphic,
+        "cal": .calligraphic,
         "mathtt": .typewriter,
         "texttt": .typewriter,
         "mathit": .italic,
@@ -621,7 +621,7 @@ public enum MathAtomFactory {
             case .roman: return "mathrm"
             case .bold: return "mathbf"
             case .fraktur: return "mathfrak"
-            case .caligraphic: return "mathcal"
+            case .calligraphic: return "mathcal"
             case .italic: return "mathit"
             case .sansSerif: return "mathsf"
             case .blackboard: return "mathbb"

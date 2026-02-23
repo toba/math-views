@@ -122,7 +122,7 @@ public enum FontStyle: Int, Sendable {
         /// Bold font style i.e. \mathbf
         bold,
         /// Caligraphic font style i.e. \mathcal
-        caligraphic,
+        calligraphic,
         /// Typewriter (monospace) style i.e. \mathtt
         typewriter,
         /// Italic style i.e. \mathit
@@ -786,9 +786,9 @@ public final class MathTable: MathAtom {
 
     override public var finalized: MathAtom {
         guard let table = super.finalized as? MathTable else { return super.finalized }
-        for var row in table.cells {
-            for i in 0 ..< row.count {
-                row[i] = row[i].finalized
+        for rowIndex in table.cells.indices {
+            for colIndex in table.cells[rowIndex].indices {
+                table.cells[rowIndex][colIndex] = table.cells[rowIndex][colIndex].finalized
             }
         }
         return table
@@ -948,8 +948,8 @@ public final class MathList: Equatable {
 
     public init() {}
 
-    func checkIndex(_ array: [Any], index: Int) {
-        precondition(array.indices.contains(index), "Index \(index) out of bounds")
+    private func checkIndex(_ index: Int) {
+        precondition(atoms.indices.contains(index), "Index \(index) out of bounds")
     }
 
     /// Add an atom to the end of the list.
@@ -995,14 +995,14 @@ public final class MathList: Equatable {
     /// - parameter index: The index at which to remove the atom. Must be less than the number of atoms
     /// in the list.
     public func removeAtom(at index: Int) {
-        checkIndex(atoms, index: index)
+        checkIndex(index)
         atoms.remove(at: index)
     }
 
     /// Removes all the atoms within the given range.
     public func removeAtoms(in range: ClosedRange<Int>) {
-        checkIndex(atoms, index: range.lowerBound)
-        checkIndex(atoms, index: range.upperBound)
+        checkIndex(range.lowerBound)
+        checkIndex(range.upperBound)
         atoms.removeSubrange(range)
     }
 

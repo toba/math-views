@@ -1,87 +1,89 @@
-import Testing
-import CoreText
-@testable import MathViews
-import Foundation
 import CoreGraphics
+import CoreText
+import Foundation
+import Testing
+
+@testable import MathViews
 
 #if os(macOS)
-import AppKit
+  import AppKit
 #endif
 
 struct MathFontTests {
-    @Test func mathFontScript() {
-        let size = Int.random(in: 20 ... 40)
-        for font in MathFont.allCases {
-            #expect(
-                font.coreTextFont(size: CGFloat(size)).fontSize == CGFloat(size),
-                "coreTextFont fontSize != size.",
-            )
-            #expect(
-                font.graphicsFont().postScriptName as? String == font.postScriptName,
-                "graphicsFont.postScriptName != postScriptName",
-            )
-            #expect(
-                CTFontCopyFamilyName(font.coreTextFont(size: CGFloat(size))) as String == font
-                    .fontFamilyName,
-                "coreTextFont.family != familyName",
-            )
-        }
-        #if os(iOS) || os(visionOS)
-        for name in fontNames {
-            #expect(UIFont(name: name, size: CGFloat(size)) != nil)
-        }
-        for name in fontFamilyNames {
-            #expect(UIFont.fontNames(forFamilyName: name) != nil)
-        }
-        #endif
-        #if os(macOS)
-        for name in fontNames {
-            let font = NSFont(name: name, size: CGFloat(size))
-            #expect(font != nil)
-        }
-        #endif
+  @Test func mathFontScript() {
+    let size = Int.random(in: 20...40)
+    for font in MathFont.allCases {
+      #expect(
+        font.coreTextFont(size: CGFloat(size)).fontSize == CGFloat(size),
+        "coreTextFont fontSize != size.",
+      )
+      #expect(
+        font.graphicsFont().postScriptName as? String == font.postScriptName,
+        "graphicsFont.postScriptName != postScriptName",
+      )
+      #expect(
+        CTFontCopyFamilyName(font.coreTextFont(size: CGFloat(size))) as String
+          == font
+          .fontFamilyName,
+        "coreTextFont.family != familyName",
+      )
+    }
+    #if os(iOS) || os(visionOS)
+      for name in fontNames {
+        #expect(UIFont(name: name, size: CGFloat(size)) != nil)
+      }
+      for name in fontFamilyNames {
+        #expect(UIFont.fontNames(forFamilyName: name) != nil)
+      }
+    #endif
+    #if os(macOS)
+      for name in fontNames {
+        let font = NSFont(name: name, size: CGFloat(size))
+        #expect(font != nil)
+      }
+    #endif
+  }
+
+  @Test func onDemandMathFontScript() throws {
+    let size = Int.random(in: 20...40)
+    let mathFont = try #require(MathFont.allCases.randomElement())
+    #expect(
+      mathFont.coreTextFont(size: CGFloat(size)).fontSize == CGFloat(size),
+      "coreTextFont fontSize test",
+    )
+  }
+
+  var fontNames: [String] {
+    MathFont.allCases.map(\.postScriptName)
+  }
+
+  var fontFamilyNames: [String] {
+    MathFont.allCases.map(\.fontFamilyName)
+  }
+
+  @Test func fallbackFont() throws {
+    #if os(iOS) || os(visionOS)
+      let systemFont = UIFont.systemFont(ofSize: 20)
+      let systemCTFont = CTFontCreateWithName(systemFont.fontName as CFString, 20, nil)
+    #elseif os(macOS)
+      let systemFont = NSFont.systemFont(ofSize: 20)
+      let systemCTFont = CTFontCreateWithName(systemFont.fontName as CFString, 20, nil)
+    #endif
+
+    let mathFont = MathFont.latinModern.fontInstance(size: 20)
+    mathFont.fallbackFont = systemCTFont
+
+    let mathList = try MathListBuilder.buildChecked(fromString: "\\text{中文测试}")
+
+    #expect(mathList.atoms.count == 4, "Should have 4 atoms for 4 Chinese characters")
+
+    for atom in mathList.atoms {
+      #expect(atom.fontStyle == .roman, "Text atoms should have roman font style")
     }
 
-    @Test func onDemandMathFontScript() throws {
-        let size = Int.random(in: 20 ... 40)
-        let mathFont = try #require(MathFont.allCases.randomElement())
-        #expect(
-            mathFont.coreTextFont(size: CGFloat(size)).fontSize == CGFloat(size),
-            "coreTextFont fontSize test",
-        )
-    }
+    let display = Typesetter.makeLineDisplay(for: mathList, font: mathFont, style: .text)
 
-    var fontNames: [String] {
-        MathFont.allCases.map(\.postScriptName)
-    }
-
-    var fontFamilyNames: [String] {
-        MathFont.allCases.map(\.fontFamilyName)
-    }
-
-    @Test func fallbackFont() throws {
-        #if os(iOS) || os(visionOS)
-        let systemFont = UIFont.systemFont(ofSize: 20)
-        let systemCTFont = CTFontCreateWithName(systemFont.fontName as CFString, 20, nil)
-        #elseif os(macOS)
-        let systemFont = NSFont.systemFont(ofSize: 20)
-        let systemCTFont = CTFontCreateWithName(systemFont.fontName as CFString, 20, nil)
-        #endif
-
-        let mathFont = MathFont.latinModern.fontInstance(size: 20)
-        mathFont.fallbackFont = systemCTFont
-
-        let mathList = try MathListBuilder.buildChecked(fromString: "\\text{中文测试}")
-
-        #expect(mathList.atoms.count == 4, "Should have 4 atoms for 4 Chinese characters")
-
-        for atom in mathList.atoms {
-            #expect(atom.fontStyle == .roman, "Text atoms should have roman font style")
-        }
-
-        let display = Typesetter.makeLineDisplay(for: mathList, font: mathFont, style: .text)
-
-        #expect(display != nil, "Display should be created with fallback font")
-        #expect((display?.width ?? 0) > 0, "Display should have non-zero width with fallback font")
-    }
+    #expect(display != nil, "Display should be created with fallback font")
+    #expect((display?.width ?? 0) > 0, "Display should have non-zero width with fallback font")
+  }
 }

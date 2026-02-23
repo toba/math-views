@@ -3,9 +3,9 @@ import Foundation
 import QuartzCore
 
 #if os(iOS) || os(visionOS)
-import UIKit
+  import UIKit
 #elseif os(macOS)
-import AppKit
+  import AppKit
 #endif
 
 /// Renders a single glyph from a math font using `CTFontDrawGlyphs`.
@@ -15,50 +15,50 @@ import AppKit
 /// Supports vertical baseline shifting (via ``ShiftableDisplay``) for centering on
 /// the math axis, and horizontal scaling for stretchy arrows.
 final class GlyphDisplay: ShiftableDisplay {
-    /// The CoreGraphics glyph identifier to draw.
-    var glyph: CGGlyph!
-    /// The font instance providing the glyph and its metrics.
-    var font: FontInstance?
-    /// Horizontal scale factor for stretching glyphs (1.0 = no scaling).
-    /// Applied via `CGContext.scaleBy` during drawing for stretchy arrows.
-    var scaleX: CGFloat = 1.0
+  /// The CoreGraphics glyph identifier to draw.
+  var glyph: CGGlyph!
+  /// The font instance providing the glyph and its metrics.
+  var font: FontInstance?
+  /// Horizontal scale factor for stretching glyphs (1.0 = no scaling).
+  /// Applied via `CGContext.scaleBy` during drawing for stretchy arrows.
+  var scaleX: CGFloat = 1.0
 
-    init(glyph: CGGlyph, range: Range<Int>, font: FontInstance?) {
-        super.init()
-        self.font = font
-        self.glyph = glyph
+  init(glyph: CGGlyph, range: Range<Int>, font: FontInstance?) {
+    super.init()
+    self.font = font
+    self.glyph = glyph
 
-        position = CGPoint.zero
-        self.range = range
-    }
+    position = CGPoint.zero
+    self.range = range
+  }
 
-    override func draw(_ context: CGContext) {
-        super.draw(context)
-        context.saveGState()
+  override func draw(_ context: CGContext) {
+    super.draw(context)
+    context.saveGState()
 
-        context.setFillColor(textColor?.cgColor ?? PlatformColor.black.cgColor)
+    context.setFillColor(textColor?.cgColor ?? PlatformColor.black.cgColor)
 
-        // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
-        context.translateBy(x: position.x, y: position.y - shiftDown)
+    // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
+    context.translateBy(x: position.x, y: position.y - shiftDown)
 
-        // Apply horizontal scaling if needed (for stretchy arrows)
-        if scaleX != 1.0 { context.scaleBy(x: scaleX, y: 1.0) }
+    // Apply horizontal scaling if needed (for stretchy arrows)
+    if scaleX != 1.0 { context.scaleBy(x: scaleX, y: 1.0) }
 
-        context.textPosition = CGPoint.zero
+    context.textPosition = CGPoint.zero
 
-        var pos = CGPoint.zero
-        CTFontDrawGlyphs(font!.coreTextFont, &glyph, &pos, 1, context)
+    var pos = CGPoint.zero
+    CTFontDrawGlyphs(font!.coreTextFont, &glyph, &pos, 1, context)
 
-        context.restoreGState()
-    }
+    context.restoreGState()
+  }
 
-    override var ascent: CGFloat {
-        get { super.ascent - shiftDown }
-        set { super.ascent = newValue }
-    }
+  override var ascent: CGFloat {
+    get { super.ascent - shiftDown }
+    set { super.ascent = newValue }
+  }
 
-    override var descent: CGFloat {
-        get { super.descent + shiftDown }
-        set { super.descent = newValue }
-    }
+  override var descent: CGFloat {
+    get { super.descent + shiftDown }
+    set { super.descent = newValue }
+  }
 }

@@ -523,51 +523,17 @@ extension Typesetter {
             // For wide accents: if the largest glyph variant is still smaller than content width,
             // scale it horizontally to fully cover the content
             if glyphWidth < accenteeWidth {
-                // Add padding to make accent extend slightly beyond content
-                // Use ~0.1em padding (less than arrows which use ~0.167em)
                 let widePadding = styleFont.fontSize * Self.wideAccentPaddingFraction
                 let targetWidth = accenteeWidth + widePadding
-
-                let scaleX = targetWidth / glyphWidth
-                let accentGlyphDisplay = GlyphDisplay(
-                    glyph: accentGlyph, range: accent.indexRange, font: styleFont,
+                let glyphDisplay = makeScaledAccentGlyph(
+                    accentGlyph, glyphWidth: glyphWidth, targetWidth: targetWidth,
+                    accent: accent, glyphAscent: glyphAscent, glyphDescent: glyphDescent,
+                    height: height,
                 )
-                accentGlyphDisplay.scaleX = scaleX // Apply horizontal scaling
-                accentGlyphDisplay.ascent = glyphAscent
-                accentGlyphDisplay.descent = glyphDescent
-                accentGlyphDisplay.width = targetWidth // Set width to include padding
-                accentGlyphDisplay.position = CGPoint(x: 0, y: height) // Align to left edge
-
-                var finalAccentee = accentee
-                if isSingleCharAccentee(accent),
-                   accent.subScript != nil || accent.superScript != nil
-                {
-                    // Attach the super/subscripts to the accentee instead of the accent.
-                    guard let innerList = accent.innerList,
-                          !innerList.atoms.isEmpty
-                    else { return nil }
-                    let innerAtom = innerList.atoms[0]
-                    innerAtom.superScript = accent.superScript
-                    innerAtom.subScript = accent.subScript
-                    accent.superScript = nil
-                    accent.subScript = nil
-                    if let remadeAccentee = Typesetter.makeLineDisplay(
-                        for: accent.innerList, font: font, style: style, cramped: cramped,
-                    ) {
-                        finalAccentee = remadeAccentee
-                    }
-                }
-
-                let display = AccentDisplay(
-                    accent: accentGlyphDisplay, accentee: finalAccentee,
-                    range: accent.indexRange,
+                return buildAccentDisplay(
+                    accentGlyph: glyphDisplay, accentee: accentee, accent: accent,
+                    height: height, glyphAscent: glyphAscent,
                 )
-                display.width = finalAccentee.width
-                display.descent = finalAccentee.descent
-                let ascent = height + glyphAscent
-                display.ascent = max(finalAccentee.ascent, ascent)
-                display.position = currentPosition
-                return display
             } else {
                 // Wide accent glyph is wide enough: center it over the content
                 skew = (accenteeWidth - glyphWidth) / 2
@@ -596,51 +562,17 @@ extension Typesetter {
             // Add small padding to make arrow tip extend slightly beyond content
             // For non-stretchy accents (\vec): always center without scaling
             if accent.isStretchy, glyphWidth < accenteeWidth {
-                // Add padding to make arrow extend beyond content on the tip side
-                // Use approximately 0.15-0.2em extra width
                 let arrowPadding = styleFont.fontSize * Self.arrowPaddingFraction
                 let targetWidth = accenteeWidth + arrowPadding
-
-                let scaleX = targetWidth / glyphWidth
-                let accentGlyphDisplay = GlyphDisplay(
-                    glyph: accentGlyph, range: accent.indexRange, font: styleFont,
+                let glyphDisplay = makeScaledAccentGlyph(
+                    accentGlyph, glyphWidth: glyphWidth, targetWidth: targetWidth,
+                    accent: accent, glyphAscent: glyphAscent, glyphDescent: glyphDescent,
+                    height: height,
                 )
-                accentGlyphDisplay.scaleX = scaleX // Apply horizontal scaling
-                accentGlyphDisplay.ascent = glyphAscent
-                accentGlyphDisplay.descent = glyphDescent
-                accentGlyphDisplay.width = targetWidth // Set width to include padding
-                accentGlyphDisplay.position = CGPoint(x: 0, y: height) // Align to left edge
-
-                var finalAccentee = accentee
-                if isSingleCharAccentee(accent),
-                   accent.subScript != nil || accent.superScript != nil
-                {
-                    // Attach the super/subscripts to the accentee instead of the accent.
-                    guard let innerList = accent.innerList,
-                          !innerList.atoms.isEmpty
-                    else { return nil }
-                    let innerAtom = innerList.atoms[0]
-                    innerAtom.superScript = accent.superScript
-                    innerAtom.subScript = accent.subScript
-                    accent.superScript = nil
-                    accent.subScript = nil
-                    if let remadeAccentee = Typesetter.makeLineDisplay(
-                        for: accent.innerList, font: font, style: style, cramped: cramped,
-                    ) {
-                        finalAccentee = remadeAccentee
-                    }
-                }
-
-                let display = AccentDisplay(
-                    accent: accentGlyphDisplay, accentee: finalAccentee,
-                    range: accent.indexRange,
+                return buildAccentDisplay(
+                    accentGlyph: glyphDisplay, accentee: accentee, accent: accent,
+                    height: height, glyphAscent: glyphAscent,
                 )
-                display.width = finalAccentee.width
-                display.descent = finalAccentee.descent
-                let ascent = height + glyphAscent
-                display.ascent = max(finalAccentee.ascent, ascent)
-                display.position = currentPosition
-                return display
             } else {
                 // Arrow glyph is wide enough or is non-stretchy (\vec): center it over the content
                 skew = (accenteeWidth - glyphWidth) / 2
@@ -653,18 +585,52 @@ extension Typesetter {
             height = accentee.ascent - delta // This is always positive since delta <= height.
         }
 
-        let accentPosition = CGPoint(x: skew, y: height)
         let accentGlyphDisplay = GlyphDisplay(
             glyph: accentGlyph, range: accent.indexRange, font: styleFont,
         )
         accentGlyphDisplay.ascent = glyphAscent
         accentGlyphDisplay.descent = glyphDescent
         accentGlyphDisplay.width = glyphWidth
-        accentGlyphDisplay.position = accentPosition
+        accentGlyphDisplay.position = CGPoint(x: skew, y: height)
 
+        return buildAccentDisplay(
+            accentGlyph: accentGlyphDisplay, accentee: accentee, accent: accent,
+            height: height, glyphAscent: glyphAscent,
+        )
+    }
+
+    /// Creates a horizontally-scaled `GlyphDisplay` for a stretched accent (arrow or wide).
+    private func makeScaledAccentGlyph(
+        _ glyph: CGGlyph,
+        glyphWidth: CGFloat,
+        targetWidth: CGFloat,
+        accent: Accent,
+        glyphAscent: CGFloat,
+        glyphDescent: CGFloat,
+        height: CGFloat,
+    ) -> GlyphDisplay {
+        let display = GlyphDisplay(glyph: glyph, range: accent.indexRange, font: styleFont)
+        display.scaleX = targetWidth / glyphWidth
+        display.ascent = glyphAscent
+        display.descent = glyphDescent
+        display.width = targetWidth
+        display.position = CGPoint(x: 0, y: height)
+        return display
+    }
+
+    /// Builds an `AccentDisplay` from a positioned glyph and accentee, reattaching scripts
+    /// from the accent to the accentee when the accentee is a single character with scripts.
+    private func buildAccentDisplay(
+        accentGlyph: GlyphDisplay,
+        accentee: MathListDisplay,
+        accent: Accent,
+        height: CGFloat,
+        glyphAscent: CGFloat,
+    ) -> AccentDisplay? {
         var finalAccentee = accentee
-        if isSingleCharAccentee(accent), accent.subScript != nil || accent.superScript != nil {
-            // Attach the super/subscripts to the accentee instead of the accent.
+        if isSingleCharAccentee(accent),
+           accent.subScript != nil || accent.superScript != nil
+        {
             guard let innerList = accent.innerList,
                   !innerList.atoms.isEmpty
             else { return nil }
@@ -673,9 +639,6 @@ extension Typesetter {
             innerAtom.subScript = accent.subScript
             accent.superScript = nil
             accent.subScript = nil
-            // Remake the accentee (now with sub/superscripts)
-            // Note: Latex adjusts the heights in case the height of the char is different in non-cramped mode. However this shouldn't be the case since cramping
-            // only affects fractions and superscripts. We skip adjusting the heights.
             if let remadeAccentee = Typesetter.makeLineDisplay(
                 for: accent.innerList, font: font, style: style, cramped: cramped,
             ) {
@@ -684,18 +647,12 @@ extension Typesetter {
         }
 
         let display = AccentDisplay(
-            accent: accentGlyphDisplay, accentee: finalAccentee, range: accent.indexRange,
+            accent: accentGlyph, accentee: finalAccentee, range: accent.indexRange,
         )
         display.width = finalAccentee.width
         display.descent = finalAccentee.descent
-
-        // Calculate total ascent based on positioning
-        // For arrows: height already includes spacing, so ascent = height + glyphAscent
-        // For regular accents: ascent = accentee.ascent - delta + glyphAscent (existing formula)
-        let ascent = height + glyphAscent
-        display.ascent = max(finalAccentee.ascent, ascent)
+        display.ascent = max(finalAccentee.ascent, height + glyphAscent)
         display.position = currentPosition
-
         return display
     }
 

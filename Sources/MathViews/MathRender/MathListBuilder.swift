@@ -1,7 +1,21 @@
 public import Foundation
 
-/// `MathListBuilder` is a class for parsing LaTeX into an `MathList` that
-/// can be rendered and processed mathematically.
+/// Parses LaTeX math strings into a ``MathList`` (abstract syntax tree).
+///
+/// The parser handles math delimiters (`$...$`, `$$...$$`, `\(...\)`, `\[...\]`),
+/// commands (`\frac`, `\sqrt`, `\sum`, etc.), environments (`\begin{matrix}...\end{matrix}`),
+/// and font-style switches (`\mathbf`, `\mathrm`, etc.).
+///
+/// ```swift
+/// // Non-throwing — returns nil on parse error
+/// let list = MathListBuilder.build(fromString: "x^2 + y^2 = z^2")
+///
+/// // Throwing — returns ParseError with details
+/// let list = try MathListBuilder.buildChecked(fromString: "\\frac{1}{2}")
+///
+/// // Round-trip back to LaTeX
+/// let latex = MathListBuilder.mathListToString(list)
+/// ```
 struct EnvProperties {
     var envName: String?
     var ended: Bool
@@ -16,7 +30,9 @@ struct EnvProperties {
     }
 }
 
-/// The error encountered when parsing a LaTeX string.
+/// An error encountered while parsing a LaTeX string with ``MathListBuilder``.
+///
+/// Each case carries a descriptive message string. Use `localizedDescription` to access it.
 public enum ParseError: Error, Equatable {
     /// The braces { } do not match.
     case mismatchBraces(String)
@@ -67,8 +83,9 @@ public enum ParseError: Error, Equatable {
     }
 }
 
-/// `MathListBuilder` is a class for parsing LaTeX into an `MathList` that
-/// can be rendered and processed mathematically.
+/// Parses LaTeX math strings into a ``MathList`` (abstract syntax tree).
+///
+/// See <doc:RenderingPipeline> for how parsing fits into the rendering pipeline.
 public struct MathListBuilder {
     /// The math mode determines rendering style (inline vs display)
     enum MathMode {
@@ -707,12 +724,12 @@ public struct MathListBuilder {
                         }
                     }
                 } else if atom.type == .overline {
-                    if let overline = atom as? OverLine {
+                    if let overline = atom as? Overline {
                         str += "\\overline"
                         str += "{\(mathListToString(overline.innerList!))}"
                     }
                 } else if atom.type == .underline {
-                    if let underline = atom as? UnderLine {
+                    if let underline = atom as? Underline {
                         str += "\\underline"
                         str += "{\(mathListToString(underline.innerList!))}"
                     }
@@ -967,12 +984,12 @@ public struct MathListBuilder {
             return newInner
         } else if command == "overline" {
             // The overline command has 1 arguments
-            let over = OverLine()
+            let over = Overline()
             over.innerList = buildInternal(true)
             return over
         } else if command == "underline" {
             // The underline command has 1 arguments
-            let under = UnderLine()
+            let under = Underline()
             under.innerList = buildInternal(true)
             return under
         } else if command == "substack" {
@@ -1431,12 +1448,12 @@ public struct MathListBuilder {
             currentInnerAtom = oldInner
             return newInner
         } else if command == "overline" {
-            let over = OverLine()
+            let over = Overline()
             over.innerList = buildInternal(true)
 
             return over
         } else if command == "underline" {
-            let under = UnderLine()
+            let under = Underline()
             under.innerList = buildInternal(true)
 
             return under

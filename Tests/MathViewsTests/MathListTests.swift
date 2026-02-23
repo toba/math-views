@@ -447,11 +447,11 @@ struct MathListTests {
         list.add(atom2)
         list.add(atom3)
 
-        let over = OverLine()
+        let over = Overline()
         #expect(over.type == .overline)
         over.innerList = list
 
-        let copy = OverLine(over)
+        let copy = Overline(over)
         try checkAtomCopy(copy, original: over, forTest: "MathListTests")
         try checkListCopy(copy.innerList, original: over.innerList, forTest: "MathListTests")
     }
@@ -465,11 +465,11 @@ struct MathListTests {
         list.add(atom2)
         list.add(atom3)
 
-        let under = UnderLine()
+        let under = Underline()
         #expect(under.type == .underline)
         under.innerList = list
 
-        let copy = UnderLine(under)
+        let copy = Underline(under)
         try checkAtomCopy(copy, original: under, forTest: "MathListTests")
         try checkListCopy(copy.innerList, original: under.innerList, forTest: "MathListTests")
     }

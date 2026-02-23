@@ -55,20 +55,20 @@ final class FontMathTable {
 
     func constantFromTable(_ name: String) -> CGFloat {
         guard let constants = _mathTable[kConstants] as? [String: Any],
-              let val = constants[name] as? Int
+              let value = constants[name] as? Int
         else {
             return .zero
         }
-        return fontUnitsToPt(val)
+        return fontUnitsToPt(value)
     }
 
     func percentFromTable(_ percentName: String) -> CGFloat {
-        guard let consts = _mathTable[kConstants] as? [String: Any],
-              let val = consts[percentName] as? Int
+        guard let constants = _mathTable[kConstants] as? [String: Any],
+              let value = constants[percentName] as? Int
         else {
             return .zero
         }
-        return CGFloat(val) / 100
+        return CGFloat(value) / 100
     }
 
     // MARK: - Fractions
@@ -271,11 +271,11 @@ final class FontMathTable {
         let glyphName = font.glyphName(for: glyph)
 
         guard let italics = _mathTable[kItalic] as? [String: Any],
-              let val = italics[glyphName] as? Int
+              let value = italics[glyphName] as? Int
         else {
             return .zero
         }
-        return fontUnitsToPt(val)
+        return fontUnitsToPt(value)
     }
 
     // MARK: - Accents
@@ -289,14 +289,14 @@ final class FontMathTable {
         let glyphName = font.glyphName(for: glyph)
 
         guard let accents = _mathTable[kAccents] as? [String: Any],
-              let val = accents[glyphName] as? Int
+              let value = accents[glyphName] as? Int
         else {
             var glyph = glyph
             var advances = CGSize.zero
-            CTFontGetAdvancesForGlyphs(font.ctFont, .horizontal, &glyph, &advances, 1)
+            CTFontGetAdvancesForGlyphs(font.coreTextFont, .horizontal, &glyph, &advances, 1)
             return advances.width / 2
         }
-        return fontUnitsToPt(val)
+        return fontUnitsToPt(value)
     }
 
     // MARK: - Glyph Construction
@@ -315,23 +315,23 @@ final class FontMathTable {
 
         guard let assemblyTable = _mathTable[kVertAssembly] as? [String: Any],
               let assemblyInfo = assemblyTable[glyphName] as? [String: Any],
-              let parts = assemblyInfo[kAssemblyParts] as? [[String: Any]]
+              let partDicts = assemblyInfo[kAssemblyParts] as? [[String: Any]]
         else {
             return []
         }
 
-        var rv = [GlyphPart]()
-        for partInfo in parts {
-            guard let adv = partInfo["advance"] as? Int,
-                  let end = partInfo["endConnector"] as? Int,
-                  let start = partInfo["startConnector"] as? Int,
-                  let ext = partInfo["extender"] as? Int,
+        var parts = [GlyphPart]()
+        for partInfo in partDicts {
+            guard let advance = partInfo["advance"] as? Int,
+                  let endConnector = partInfo["endConnector"] as? Int,
+                  let startConnector = partInfo["startConnector"] as? Int,
+                  let extender = partInfo["extender"] as? Int,
                   let glyphName = partInfo["glyph"] as? String
             else { continue }
-            let fullAdvance = fontUnitsToPt(adv)
-            let endConnectorLength = fontUnitsToPt(end)
-            let startConnectorLength = fontUnitsToPt(start)
-            let isExtender = ext != 0
+            let fullAdvance = fontUnitsToPt(advance)
+            let endConnectorLength = fontUnitsToPt(endConnector)
+            let startConnectorLength = fontUnitsToPt(startConnector)
+            let isExtender = extender != 0
             let glyph = font.glyph(named: glyphName)
             let part = GlyphPart(
                 glyph: glyph, fullAdvance: fullAdvance,
@@ -339,8 +339,8 @@ final class FontMathTable {
                 endConnectorLength: endConnectorLength,
                 isExtender: isExtender,
             )
-            rv.append(part)
+            parts.append(part)
         }
-        return rv
+        return parts
     }
 }

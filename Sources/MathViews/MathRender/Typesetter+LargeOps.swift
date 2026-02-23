@@ -21,13 +21,13 @@ extension Typesetter {
 
         // Get the bounds for these glyphs
         CTFontGetBoundingRectsForGlyphs(
-            styleFont.ctFont,
+            styleFont.coreTextFont,
             .horizontal,
             &glyphs,
             &bboxes,
             numVariants,
         )
-        CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyphs, &advances, numVariants)
+        CTFontGetAdvancesForGlyphs(styleFont.coreTextFont, .horizontal, &glyphs, &advances, numVariants)
         var ascent = CGFloat(0)
         var descent = CGFloat(0)
         var width = CGFloat(0)
@@ -63,7 +63,7 @@ extension Typesetter {
             parts, glyphHeight: glyphHeight, glyphs: &glyphs, offsets: &offsets, height: &height,
         )
         var first = glyphs[0]
-        let width = CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &first, nil, 1)
+        let width = CTFontGetAdvancesForGlyphs(styleFont.coreTextFont, .horizontal, &first, nil, 1)
         let display = GlyphConstructionDisplay(
             glyphs: glyphs,
             offsets: offsets,
@@ -86,12 +86,12 @@ extension Typesetter {
         for numExtenders in 0 ..< 1000 {
             // Estimate capacity: non-extender parts + extender parts * numExtenders
             let estimatedCount = parts.count + parts.filter(\.isExtender).count * (numExtenders - 1)
-            var glyphsRv = [CGGlyph]()
-            glyphsRv.reserveCapacity(max(estimatedCount, parts.count))
-            var offsetsRv = [CGFloat]()
-            offsetsRv.reserveCapacity(max(estimatedCount, parts.count))
+            var accumulatedGlyphs = [CGGlyph]()
+            accumulatedGlyphs.reserveCapacity(max(estimatedCount, parts.count))
+            var accumulatedOffsets = [CGFloat]()
+            accumulatedOffsets.reserveCapacity(max(estimatedCount, parts.count))
 
-            var prev: GlyphPart?
+            var previousPart: GlyphPart?
             let minDistance = styleFont.mathTable!.minConnectorOverlap
             var minOffset = CGFloat(0)
             var maxDelta = CGFloat
@@ -104,48 +104,48 @@ extension Typesetter {
                 }
                 // add the extender num extender times
                 for _ in 0 ..< repeats {
-                    glyphsRv.append(part.glyph)
-                    if prev != nil {
-                        let maxOverlap = min(prev!.endConnectorLength, part.startConnectorLength)
+                    accumulatedGlyphs.append(part.glyph)
+                    if previousPart != nil {
+                        let maxOverlap = min(previousPart!.endConnectorLength, part.startConnectorLength)
                         // the minimum amount we can add to the offset
-                        let minOffsetDelta = prev!.fullAdvance - maxOverlap
+                        let minOffsetDelta = previousPart!.fullAdvance - maxOverlap
                         // The maximum amount we can add to the offset.
-                        let maxOffsetDelta = prev!.fullAdvance - minDistance
+                        let maxOffsetDelta = previousPart!.fullAdvance - minDistance
                         // we can increase the offsets by at most max - min.
                         maxDelta = min(maxDelta, maxOffsetDelta - minOffsetDelta)
                         minOffset = minOffset + minOffsetDelta
                     }
-                    offsetsRv.append(minOffset)
-                    prev = part
+                    accumulatedOffsets.append(minOffset)
+                    previousPart = part
                 }
             }
 
-            assert(glyphsRv.count == offsetsRv.count, "Offsets should match the glyphs")
-            if prev == nil {
+            assert(accumulatedGlyphs.count == accumulatedOffsets.count, "Offsets should match the glyphs")
+            if previousPart == nil {
                 continue // maybe only extenders
             }
-            let minHeight = minOffset + prev!.fullAdvance
-            let maxHeight = minHeight + maxDelta * CGFloat(glyphsRv.count - 1)
+            let minHeight = minOffset + previousPart!.fullAdvance
+            let maxHeight = minHeight + maxDelta * CGFloat(accumulatedGlyphs.count - 1)
             if minHeight >= glyphHeight {
                 // we are done
-                glyphs = glyphsRv
-                offsets = offsetsRv
+                glyphs = accumulatedGlyphs
+                offsets = accumulatedOffsets
                 height = minHeight
                 return
             } else if glyphHeight <= maxHeight {
                 // spread the delta equally between all the connectors
                 let delta = glyphHeight - minHeight
-                let deltaIncrease = delta / CGFloat(glyphsRv.count - 1)
+                let deltaIncrease = delta / CGFloat(accumulatedGlyphs.count - 1)
                 var lastOffset = CGFloat(0)
-                for i in 0 ..< offsetsRv.count {
-                    let offset = offsetsRv[i] + CGFloat(i) * deltaIncrease
-                    offsetsRv[i] = offset
+                for i in 0 ..< accumulatedOffsets.count {
+                    let offset = accumulatedOffsets[i] + CGFloat(i) * deltaIncrease
+                    accumulatedOffsets[i] = offset
                     lastOffset = offset
                 }
                 // we are done
-                glyphs = glyphsRv
-                offsets = offsetsRv
-                height = lastOffset + prev!.fullAdvance
+                glyphs = accumulatedGlyphs
+                offsets = accumulatedOffsets
+                height = lastOffset + previousPart!.fullAdvance
                 return
             }
         }
@@ -157,7 +157,7 @@ extension Typesetter {
 
         // Get the glyph from the font
         var glyph = [CGGlyph](repeating: CGGlyph.zero, count: chars.count)
-        let found = CTFontGetGlyphsForCharacters(styleFont.ctFont, &chars, &glyph, chars.count)
+        let found = CTFontGetGlyphsForCharacters(styleFont.coreTextFont, &chars, &glyph, chars.count)
         if !found {
             // Try fallback font if available
             if let fallbackFont = styleFont.fallbackFont {
@@ -202,13 +202,13 @@ extension Typesetter {
 
             // vertically center
             let bbox = CTFontGetBoundingRectsForGlyphs(
-                styleFont.ctFont,
+                styleFont.coreTextFont,
                 .horizontal,
                 &glyph,
                 nil,
                 1,
             )
-            let width = CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyph, nil, 1)
+            let width = CTFontGetAdvancesForGlyphs(styleFont.coreTextFont, .horizontal, &glyph, nil, 1)
             var ascent = CGFloat(0)
             var descent = CGFloat(0)
             bboxDetails(bbox, ascent: &ascent, descent: &descent)
@@ -230,7 +230,7 @@ extension Typesetter {
             let line = NSMutableAttributedString(string: op.nucleus)
             // add the font
             line.addAttribute(
-                kCTFontAttributeName as NSAttributedString.Key, value: styleFont.ctFont,
+                kCTFontAttributeName as NSAttributedString.Key, value: styleFont.coreTextFont,
                 range: NSRange(location: 0, length: line.length),
             )
             let displayAtom = CTLineDisplay(

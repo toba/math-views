@@ -33,7 +33,7 @@ struct WidehatGlyphTest {
 
                 var glyph = variantGlyph
                 var advances = CGSize.zero
-                CTFontGetAdvancesForGlyphs(font.ctFont, .horizontal, &glyph, &advances, 1)
+                CTFontGetAdvancesForGlyphs(font.coreTextFont, .horizontal, &glyph, &advances, 1)
 
                 print(
                     "    [\(index)] \(variantName): width = \(String(format: "%.2f", advances.width))",
@@ -82,7 +82,7 @@ struct WidehatGlyphTest {
 
                 var glyph = variantGlyph
                 var advances = CGSize.zero
-                CTFontGetAdvancesForGlyphs(font.ctFont, .horizontal, &glyph, &advances, 1)
+                CTFontGetAdvancesForGlyphs(font.coreTextFont, .horizontal, &glyph, &advances, 1)
 
                 print(
                     "    [\(index)] \(variantName): width = \(String(format: "%.2f", advances.width))",

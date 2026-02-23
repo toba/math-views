@@ -12,20 +12,20 @@ struct MathFontTests {
     @Test func mathFontScript() {
         let size = Int.random(in: 20 ... 40)
         for font in MathFont.allCases {
-            #expect(font.cgFont() != nil)
-            #expect(font.ctFont(size: CGFloat(size)) != nil)
+            #expect(font.graphicsFont() != nil)
+            #expect(font.coreTextFont(size: CGFloat(size)) != nil)
             #expect(
-                font.ctFont(size: CGFloat(size)).fontSize == CGFloat(size),
-                "ctFont fontSize != size.",
+                font.coreTextFont(size: CGFloat(size)).fontSize == CGFloat(size),
+                "coreTextFont fontSize != size.",
             )
             #expect(
-                font.cgFont().postScriptName as? String == font.postScriptName,
-                "cgFont.postScriptName != postScriptName",
+                font.graphicsFont().postScriptName as? String == font.postScriptName,
+                "graphicsFont.postScriptName != postScriptName",
             )
             #expect(
-                CTFontCopyFamilyName(font.ctFont(size: CGFloat(size))) as String == font
+                CTFontCopyFamilyName(font.coreTextFont(size: CGFloat(size))) as String == font
                     .fontFamilyName,
-                "ctfont.family != familyName",
+                "coreTextFont.family != familyName",
             )
         }
         #if os(iOS) || os(visionOS)
@@ -47,11 +47,11 @@ struct MathFontTests {
     @Test func onDemandMathFontScript() throws {
         let size = Int.random(in: 20 ... 40)
         let mathFont = try #require(MathFont.allCases.randomElement())
-        #expect(mathFont.cgFont() != nil)
-        #expect(mathFont.ctFont(size: CGFloat(size)) != nil)
+        #expect(mathFont.graphicsFont() != nil)
+        #expect(mathFont.coreTextFont(size: CGFloat(size)) != nil)
         #expect(
-            mathFont.ctFont(size: CGFloat(size)).fontSize == CGFloat(size),
-            "ctFont fontSize test",
+            mathFont.coreTextFont(size: CGFloat(size)).fontSize == CGFloat(size),
+            "coreTextFont fontSize test",
         )
     }
 

@@ -381,7 +381,7 @@ final class DisplayGenerator {
         let attrString = NSMutableAttributedString(string: text)
         attrString.addAttribute(
             NSAttributedString.Key(kCTFontAttributeName as String),
-            value: font.ctFont as Any,
+            value: font.coreTextFont as Any,
             range: NSRange(location: 0, length: attrString.length),
         )
 

@@ -4,15 +4,27 @@ public import UIKit
 public import AppKit
 #endif
 
-/// Now available for everyone to use
+/// The bundled OpenType math fonts available for rendering.
+///
+/// Each case corresponds to a `.otf` font file and companion `.plist` (math metrics) in the
+/// package bundle. These are full OpenType math fonts with MATH tables — they contain glyph
+/// variants, construction recipes, and spacing constants that regular text fonts lack.
+///
+/// Use ``fontInstance(size:)`` to create a ``FontInstance`` at a specific point size.
 public enum MathFont: String, CaseIterable, Identifiable, Sendable {
-    public var id: Self { self } // Makes things simpler for SwiftUI
+    public var id: Self { self }
 
+    /// Computer Modern derivative — the classic LaTeX look. Default font. Origin: GUST.
     case latinModern = "latinmodern-math"
+    /// STIX-based serif font with broad Unicode math coverage. Origin: Khaled Hosny.
     case xits = "xits-math"
+    /// Times-like serif font. Origin: GUST (TeX Gyre project).
     case termes = "texgyretermes-math"
+    /// Sans-serif math font. Origin: Google (Noto project).
     case notoSans = "NotoSansMath-Regular"
+    /// Libertine-based serif font. Origin: Libertinus project.
     case libertinus = "LibertinusMath-Regular"
+    /// Garamond-style serif font. Origin: Yuansheng Zhao.
     case garamond = "Garamond-Math"
 
     var fontFamilyName: String {
@@ -39,12 +51,12 @@ public enum MathFont: String, CaseIterable, Identifiable, Sendable {
 
     var fontName: String { rawValue }
 
-    public func cgFont() -> CGFont {
-        BundleManager.manager.obtainCGFont(font: self)
+    public func graphicsFont() -> CGFont {
+        BundleManager.manager.obtainGraphicsFont(font: self)
     }
 
-    public func ctFont(size: CGFloat) -> CTFont {
-        BundleManager.manager.obtainCTFont(font: self, size: size)
+    public func coreTextFont(size: CGFloat) -> CTFont {
+        BundleManager.manager.obtainCoreTextFont(font: self, size: size)
     }
 
     func rawMathTable() -> [String: Any] {
@@ -70,36 +82,34 @@ extension CTFont {
 private final class BundleManager {
     static let manager = BundleManager()
 
-    private var cgFonts = [MathFont: CGFont]()
-    private var ctFonts = [CTFontSizePair: CTFont]()
+    private var graphicsFonts = [MathFont: CGFont]()
+    private var coreTextFonts = [FontSizePair: CTFont]()
     private var rawMathTables = [MathFont: [String: Any]]()
 
-    private static func loadCGFont(mathFont: MathFont) throws(FontError) -> CGFont {
+    private static func loadGraphicsFont(mathFont: MathFont) throws(FontError) -> CGFont {
         guard
             let frameworkBundleURL = Bundle.module.url(
                 forResource: "mathFonts",
                 withExtension: "bundle",
             ),
-            let resourceBundleURL = Bundle(url: frameworkBundleURL)?.path(
-                forResource: mathFont.rawValue, ofType: "otf",
+            let fontURL = Bundle(url: frameworkBundleURL)?.url(
+                forResource: mathFont.rawValue, withExtension: "otf",
             )
         else {
             throw FontError.fontPathNotFound
         }
-        guard let fontData = try? Data(contentsOf: URL(fileURLWithPath: resourceBundleURL)),
-              let dataProvider = CGDataProvider(data: fontData as CFData)
-        else {
-            throw FontError.invalidFontFile
-        }
-        guard let defaultCGFont = CGFont(dataProvider) else {
-            throw FontError.initFontError
-        }
 
-        var errorRef: Unmanaged<CFError>?
-        guard CTFontManagerRegisterGraphicsFont(defaultCGFont, &errorRef) else {
+        guard CTFontManagerRegisterFontsForURL(fontURL as CFURL, .process, nil) else {
             throw FontError.registerFailed
         }
-        return defaultCGFont
+
+        guard let fontData = try? Data(contentsOf: fontURL),
+              let dataProvider = CGDataProvider(data: fontData as CFData),
+              let graphicsFont = CGFont(dataProvider)
+        else {
+            throw FontError.initFontError
+        }
+        return graphicsFont
     }
 
     private static func loadMathTable(mathFont: MathFont) throws(FontError) -> [String: Any] {
@@ -128,14 +138,14 @@ private final class BundleManager {
     }
 
     private func onDemandRegistration(mathFont: MathFont) {
-        guard cgFonts[mathFont] == nil else { return }
+        guard graphicsFonts[mathFont] == nil else { return }
 
         do {
-            let cgFont = try Self.loadCGFont(mathFont: mathFont)
+            let graphicsFont = try Self.loadGraphicsFont(mathFont: mathFont)
             let mathTable = try Self.loadMathTable(mathFont: mathFont)
 
-            if cgFonts[mathFont] == nil {
-                cgFonts[mathFont] = cgFont
+            if graphicsFonts[mathFont] == nil {
+                graphicsFonts[mathFont] = graphicsFont
                 rawMathTables[mathFont] = mathTable
             }
         } catch {
@@ -145,26 +155,26 @@ private final class BundleManager {
         }
     }
 
-    fileprivate func obtainCGFont(font: MathFont) -> CGFont {
+    fileprivate func obtainGraphicsFont(font: MathFont) -> CGFont {
         onDemandRegistration(mathFont: font)
-        guard let cgFont = cgFonts[font] else {
+        guard let graphicsFont = graphicsFonts[font] else {
             fatalError("unable to locate CGFont \(font.fontName)")
         }
-        return cgFont
+        return graphicsFont
     }
 
-    fileprivate func obtainCTFont(font: MathFont, size: CGFloat) -> CTFont {
+    fileprivate func obtainCoreTextFont(font: MathFont, size: CGFloat) -> CTFont {
         onDemandRegistration(mathFont: font)
-        let fontSizePair = CTFontSizePair(font: font, size: size)
+        let fontSizePair = FontSizePair(font: font, size: size)
 
-        if let cached = ctFonts[fontSizePair] {
+        if let cached = coreTextFonts[fontSizePair] {
             return cached
         }
-        guard let cgFont = cgFonts[font] else {
+        guard let graphicsFont = graphicsFonts[font] else {
             fatalError("unable to locate CGFont \(font.fontName) to create CTFont")
         }
-        let result = CTFontCreateWithGraphicsFont(cgFont, size, nil, nil)
-        ctFonts[fontSizePair] = result
+        let result = CTFontCreateWithGraphicsFont(graphicsFont, size, nil, nil)
+        coreTextFonts[fontSizePair] = result
         return result
     }
 
@@ -184,7 +194,7 @@ private final class BundleManager {
         case invalidMathTable
     }
 
-    private nonisolated struct CTFontSizePair: Hashable {
+    private nonisolated struct FontSizePair: Hashable {
         let font: MathFont
         let size: CGFloat
     }

@@ -1,5 +1,12 @@
 import Foundation
 
+/// Unicode code point constants used for font style transformations.
+///
+/// When the typesetter applies a font style (bold, italic, fraktur, etc.) it maps each
+/// ASCII letter or digit to the corresponding code point in the Unicode
+/// *Mathematical Alphanumeric Symbols* block (U+1D400–U+1D7FF). These constants
+/// are the starting offsets for each style×case combination. For example, to render
+/// a bold uppercase "A", the typesetter computes `mathCapitalBoldStart + (codePoint("A") - codePoint("A"))`.
 public enum UnicodeSymbol {
     static let multiplication = "\u{00D7}"
     static let division = "\u{00F7}"

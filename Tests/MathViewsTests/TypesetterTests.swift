@@ -1169,7 +1169,7 @@ struct TypesetterTests {
 
     @Test func overline() throws {
         let mathList = MathList()
-        let over = OverLine()
+        let over = Overline()
         let inner = MathList()
         inner.add(MathAtomFactory.atom(forCharacter: "1"))
         over.innerList = inner
@@ -1221,7 +1221,7 @@ struct TypesetterTests {
 
     @Test func underline() throws {
         let mathList = MathList()
-        let under = UnderLine()
+        let under = Underline()
         let inner = MathList()
         inner.add(MathAtomFactory.atom(forCharacter: "1"))
         under.innerList = inner
@@ -1751,7 +1751,7 @@ struct TypesetterTests {
                 var glyphCopy = glyph
                 var boundingRect = CGRect.zero
                 CTFontGetBoundingRectsForGlyphs(
-                    font.ctFont,
+                    font.coreTextFont,
                     .horizontal,
                     &glyphCopy,
                     &boundingRect,

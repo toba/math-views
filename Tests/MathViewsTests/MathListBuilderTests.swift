@@ -1092,7 +1092,7 @@ struct MathListBuilderTests {
 
         #expect(list != nil, "\(desc)")
         #expect((list.atoms.count) == 1, "desc")
-        let over = try #require(list.atoms[0] as? OverLine)
+        let over = try #require(list.atoms[0] as? Overline)
         #expect(over.type == .overline, "\(desc)")
         #expect(over.nucleus.isEmpty, "\(desc)")
 
@@ -1115,7 +1115,7 @@ struct MathListBuilderTests {
 
         #expect(list != nil, "\(desc)")
         #expect((list.atoms.count) == 1, "desc")
-        let under = try #require(list.atoms[0] as? UnderLine)
+        let under = try #require(list.atoms[0] as? Underline)
         #expect(under.type == .underline, "\(desc)")
         #expect(under.nucleus.isEmpty, "\(desc)")
 

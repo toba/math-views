@@ -1,67 +1,95 @@
 public import Foundation
 
-/// The type of atom in a `MathList`.
+/// The type of atom in a ``MathList``.
 ///
-/// The type of the atom determines how it is rendered, and spacing between the atoms.
+/// Each atom type maps to a TeX category that controls both rendering and the spacing
+/// inserted between adjacent atoms (the "inter-element spacing matrix").
+/// See <doc:RenderingPipeline> for how atom types flow through the pipeline.
 public enum MathAtomType: Int, CustomStringConvertible, Comparable, Sendable {
-    /// A number or text in ordinary format - Ord in TeX
+    /// An ordinary symbol with no special spacing — letters, digits, and miscellaneous
+    /// symbols that don't fit another category. TeX's *Ord* class.
     case ordinary = 1
-    /// A number - Does not exist in TeX
+    /// A numeric digit (`0`–`9` and `.`). Not a native TeX category — MathViews
+    /// distinguishes numbers so the finalizer can fuse adjacent digits (e.g. "1" + "2" → "12").
     case number
-    /// A variable (i.e. text in italic format) - Does not exist in TeX
+    /// A variable rendered in italic by default. Not a native TeX category — MathViews
+    /// separates variables from ordinary atoms so font-style commands like `\mathbf` apply correctly.
     case variable
-    /// A large operator such as (sin/cos, integral etc.) - Op in TeX
+    /// A large operator like `∑` (sum), `∫` (integral), or named functions (`\sin`, `\cos`).
+    /// In TeX these are *Op* atoms. In display mode they render larger and can have
+    /// limits placed above and below rather than as sub/superscripts.
     case largeOperator
-    /// A binary operator - Bin in TeX
+    /// A binary operator such as `+`, `−`, `×`, `∪`. TeX's *Bin* class.
+    /// Medium spacing is inserted on both sides (except in script styles).
+    /// The finalizer reclassifies leading or trailing binary operators as ``unaryOperator``.
     case binaryOperator
-    /// A unary operator - Does not exist in TeX.
+    /// A unary operator — a binary operator that was reclassified during finalization
+    /// because it appeared at the start of a list or after an open delimiter. For example,
+    /// the `−` in `−x` is unary, not binary. Does not exist in TeX's original grammar.
     case unaryOperator
-    /// A relation, e.g. = > < etc. - Rel in TeX
+    /// A relation symbol such as `=`, `<`, `>`, `≤`, `≥`, `≠`. TeX's *Rel* class.
+    /// Thick spacing is inserted on both sides (except in script styles).
     case relation
-    /// Open brackets - Open in TeX
+    /// An opening delimiter: `(`, `[`, `{`, `⟨`. TeX's *Open* class.
+    /// No spacing after an open delimiter.
     case open
-    /// Close brackets - Close in TeX
+    /// A closing delimiter: `)`, `]`, `}`, `⟩`. TeX's *Close* class.
+    /// No spacing before a close delimiter.
     case close
-    /// A fraction e.g 1/2 - generalized fraction node in TeX
+    /// A fraction with numerator and denominator, optionally separated by a rule line.
+    /// TeX's generalized fraction node. Covers `\frac`, `\over`, `\atop`, `\choose`, `\binom`.
     case fraction
-    /// A radical operator e.g. sqrt(2)
+    /// A radical (root) symbol, e.g. `\sqrt{2}` or `\sqrt[3]{x}`.
+    /// Contains a radicand (the expression under the root) and an optional degree.
     case radical
-    /// Punctuation such as , - Punct in TeX
+    /// Punctuation such as commas and semicolons. TeX's *Punct* class.
+    /// Thin spacing is inserted after punctuation.
     case punctuation
-    /// A placeholder square for future input. Does not exist in TeX
+    /// A placeholder square (`■`) for interactive editing — marks where the user can type.
+    /// Does not exist in TeX.
     case placeholder
-    /// An inner atom, i.e. an embedded math list - Inner in TeX
+    /// An inner atom containing a nested ``MathList``, with optional left and right
+    /// boundary delimiters. TeX's *Inner* class. Produced by `\left...\right` grouping.
     case inner
-    /// An underlined atom - Under in TeX
+    /// An atom with a horizontal line drawn under the contained math list.
+    /// Produced by `\underline{...}`. TeX's *Under* class.
     case underline
-    /// An overlined atom - Over in TeX
+    /// An atom with a horizontal line drawn over the contained math list.
+    /// Produced by `\overline{...}`. TeX's *Over* class.
     case overline
-    /// An accented atom - Accent in TeX
+    /// An accented atom — a combining accent mark placed above or below the base.
+    /// Produced by commands like `\hat`, `\bar`, `\vec`, `\tilde`. TeX's *Accent* class.
     case accent
 
     // Atoms after this point do not support subscripts or superscripts
 
-    /// A left atom - Left & Right in TeX. We don't need two since we track boundaries separately.
+    /// A boundary delimiter used internally by ``Inner`` atoms.
+    /// Represents the `\left` and `\right` delimiters. Not rendered independently.
     case boundary = 101
 
     // Atoms after this are non-math TeX nodes that are still useful in math mode. They do not have
     // the usual structure.
 
-    /// Spacing between math atoms. This denotes both glue and kern for TeX. We do not
-    /// distinguish between glue and kern.
+    /// Explicit spacing between atoms, measured in mu units (1 mu = 1/18 em).
+    /// Produced by commands like `\quad` (18 mu), `\,` (3 mu), `\!` (−3 mu).
+    /// Represents both TeX *glue* and *kern* — MathViews does not distinguish between them.
     case space = 201
 
-    /// Denotes style changes during rendering.
+    /// A style-change command that switches the math style for subsequent atoms.
+    /// Produced by `\displaystyle`, `\textstyle`, `\scriptstyle`, `\scriptscriptstyle`.
     case style
+    /// A color command that sets both text and background color for its inner list.
     case color
+    /// A text-color command (`\textcolor{color}{content}`) that colors only the text.
     case textColor
+    /// A background-color command (`\colorbox{color}{content}`) that fills behind the text.
     case colorBox
 
     // Atoms after this point are not part of TeX and do not have the usual structure.
 
-    /// An table atom. This atom does not exist in TeX. It is equivalent to the TeX command
-    /// halign which is handled outside of the TeX math rendering engine. We bring it into our
-    /// math typesetting to handle matrices and other tables.
+    /// A table (matrix or alignment environment). Not a native TeX atom — in TeX, tables
+    /// are handled by `\halign` outside the math engine. MathViews brings them into the
+    /// typesetting pipeline to support `matrix`, `pmatrix`, `eqalign`, `cases`, etc.
     case table = 1001
 
     func isBinaryOperator() -> Bool {
@@ -109,44 +137,56 @@ public enum MathAtomType: Int, CustomStringConvertible, Comparable, Sendable {
     }
 }
 
-/// The font style of a character.
+/// The font style applied to a character when rendering.
 ///
-/// The font style of the atom determines what style the character is rendered in. This only applies to atoms
-/// of type MathAtomType.variable and MathAtomType.number. None of the other atom types change their font style.
+/// Font style only affects atoms of type ``MathAtomType/variable`` and ``MathAtomType/number``.
+/// Other atom types ignore this property. The typesetter maps each style to a Unicode
+/// Mathematical Alphanumeric Symbols block offset (see ``UnicodeSymbol``) to select the
+/// correct glyph from the font.
 public enum FontStyle: Int, Sendable {
-    /// The default latex rendering style. i.e. variables are italic and numbers are roman.
+    /// The default LaTeX rendering style: variables are italic, numbers are roman (upright).
     case defaultStyle = 0
-    case
-        /// Roman font style i.e. \mathrm
-        roman,
-        /// Bold font style i.e. \mathbf
-        bold,
-        /// Caligraphic font style i.e. \mathcal
-        calligraphic,
-        /// Typewriter (monospace) style i.e. \mathtt
-        typewriter,
-        /// Italic style i.e. \mathit
-        italic,
-        /// San-serif font i.e. \mathss
-        sansSerif,
-        /// Fractur font i.e \mathfrak
-        fraktur,
-        /// Blackboard font i.e. \mathbb
-        blackboard,
-        /// Bold italic
-        boldItalic
+    /// Upright (roman) style. LaTeX: `\mathrm{x}` renders *x* upright.
+    case roman
+    /// Bold style. LaTeX: `\mathbf{x}` renders **x** in bold upright.
+    case bold
+    /// Calligraphic (script) style. LaTeX: `\mathcal{A}` renders 𝒜.
+    /// Only available for uppercase Latin letters in most fonts.
+    case calligraphic
+    /// Typewriter (monospace) style. LaTeX: `\mathtt{x}` renders x in monospace.
+    case typewriter
+    /// Explicit italic style. LaTeX: `\mathit{x}`. Unlike ``defaultStyle``, this applies
+    /// italic to all characters including digits and multi-letter sequences.
+    case italic
+    /// Sans-serif style. LaTeX: `\mathsf{x}` renders x in sans-serif.
+    case sansSerif
+    /// Fraktur (blackletter) style. LaTeX: `\mathfrak{x}` renders 𝔵.
+    case fraktur
+    /// Blackboard bold (double-struck) style. LaTeX: `\mathbb{R}` renders ℝ.
+    case blackboard
+    /// Bold italic style. LaTeX: `\boldsymbol{x}` or `\bm{x}` renders ***x***.
+    case boldItalic
 }
 
 // MARK: - MathAtom
 
-/// A `MathAtom` is the basic unit of a math list. Each atom represents a single character
-/// or mathematical operator in a list. However certain atoms can represent more complex structures
-/// such as fractions and radicals. Each atom has a type which determines how the atom is rendered and
-/// a nucleus. The nucleus contains the character(s) that need to be rendered. However the nucleus may
-/// be empty for certain types of atoms. An atom has an optional subscript or superscript which represents
-/// the subscript or superscript that is to be rendered.
+/// The basic unit of a ``MathList``.
 ///
-/// Certain types of atoms inherit from `MathAtom` and may have additional fields.
+/// Each atom represents one mathematical element — a character, operator, delimiter, or
+/// structural construct (fraction, radical, etc.). The atom's ``type`` determines how it
+/// is rendered and what inter-element spacing the typesetter inserts around it.
+///
+/// - ``nucleus`` contains the character(s) to render. For simple atoms this is a single
+///   character like `"x"` or `"+"`. For large operators it can be a multi-character name
+///   like `"sin"`. For structural atoms (fractions, radicals) the nucleus is empty.
+/// - ``subScript`` and ``superScript`` are optional nested ``MathList``s for subscript
+///   and superscript content. Not all atom types allow scripts (e.g. ``MathAtomType/boundary``
+///   does not).
+/// - ``indexRange`` tracks this atom's position in the original list, used during
+///   finalization when atoms are fused.
+///
+/// Subclasses like ``Fraction``, ``Radical``, ``Accent``, and ``MathTable`` add fields
+/// for their specific structure (numerator/denominator, radicand/degree, inner lists, etc.).
 public class MathAtom: CustomStringConvertible, Equatable {
     public static func == (lhs: MathAtom, rhs: MathAtom) -> Bool { lhs === rhs }
     /// The type of the atom.
@@ -214,8 +254,8 @@ public class MathAtom: CustomStringConvertible, Equatable {
             case .radical: return Radical(self as? Radical)
             case .style: return MathStyle(self as? MathStyle)
             case .inner: return Inner(self as? Inner)
-            case .underline: return UnderLine(self as? UnderLine)
-            case .overline: return OverLine(self as? OverLine)
+            case .underline: return Underline(self as? Underline)
+            case .overline: return Overline(self as? Overline)
             case .accent: return Accent(self as? Accent)
             case .space: return MathSpace(self as? MathSpace)
             case .color: return MathColorAtom(self as? MathColorAtom)
@@ -260,7 +300,7 @@ public class MathAtom: CustomStringConvertible, Equatable {
         return str
     }
 
-    // Fuse the given atom with this one by combining their nucleii.
+    // Fuse the given atom with this one by combining their nuclei.
     func fuse(with atom: MathAtom) {
         assert(subScript == nil, "Cannot fuse into an atom which has a subscript: \(self)")
         assert(superScript == nil, "Cannot fuse into an atom which has a superscript: \(self)")
@@ -303,16 +343,33 @@ func isBinaryOperator(_ prevNode: MathAtom?) -> Bool {
 
 // MARK: - Fraction
 
+/// A fraction atom representing `\frac{numerator}{denominator}` and related constructs.
+///
+/// - ``hasRule`` controls whether a horizontal line separates numerator and denominator.
+///   `\frac` sets this to `true`; `\atop` and `\choose` set it to `false`.
+/// - ``leftDelimiter`` and ``rightDelimiter`` add enclosing delimiters.
+///   `\choose` sets these to `(` and `)`, `\binom` does the same.
+///   `\brack` uses `[` and `]`, `\brace` uses `{` and `}`.
+/// - ``isContinuedFraction`` marks `\cfrac` fractions which render with
+///   display-style numerators and adjusted alignment.
 public final class Fraction: MathAtom {
+    /// Whether to draw the fraction rule line between numerator and denominator.
+    /// `true` for `\frac` and `\over`; `false` for `\atop`, `\choose`, `\binom`.
     public var hasRule: Bool = true
+    /// Optional left delimiter string (e.g. `"("` for `\choose`).
     public var leftDelimiter = ""
+    /// Optional right delimiter string (e.g. `")"` for `\choose`).
     public var rightDelimiter = ""
+    /// The math list above the fraction line (or above the gap for no-rule fractions).
     public var numerator: MathList?
+    /// The math list below the fraction line.
     public var denominator: MathList?
 
-    // Continued fraction properties
+    /// Whether this is a continued fraction (`\cfrac`), which renders the numerator
+    /// in display style and supports left/right/center alignment.
     public var isContinuedFraction: Bool = false
-    public var alignment: String = "c" // "l", "r", "c" for left, right, center
+    /// Alignment for continued fractions: `"l"` (left), `"r"` (right), or `"c"` (center).
+    public var alignment: String = "c"
 
     init(_ frac: Fraction?) {
         super.init(frac)
@@ -503,19 +560,19 @@ public final class Inner: MathAtom {
     }
 }
 
-// MARK: - OverLine
+// MARK: - Overline
 
 /// An atom with a line over the contained math list.
-public final class OverLine: MathAtom {
+public final class Overline: MathAtom {
     public var innerList: MathList?
 
     override public var finalized: MathAtom {
-        let newOverline = OverLine(self)
+        let newOverline = Overline(self)
         newOverline.innerList = newOverline.innerList?.finalized
         return newOverline
     }
 
-    init(_ over: OverLine?) {
+    init(_ over: Overline?) {
         super.init(over)
         type = .overline
         innerList = MathList(over!.innerList)
@@ -527,19 +584,19 @@ public final class OverLine: MathAtom {
     }
 }
 
-// MARK: - UnderLine
+// MARK: - Underline
 
 /// An atom with a line under the contained math list.
-public final class UnderLine: MathAtom {
+public final class Underline: MathAtom {
     public var innerList: MathList?
 
     override public var finalized: MathAtom {
-        guard let newUnderline = super.finalized as? UnderLine else { return super.finalized }
+        guard let newUnderline = super.finalized as? Underline else { return super.finalized }
         newUnderline.innerList = newUnderline.innerList?.finalized
         return newUnderline
     }
 
-    init(_ under: UnderLine?) {
+    init(_ under: Underline?) {
         super.init(under)
         type = .underline
         innerList = MathList(under?.innerList)
@@ -587,12 +644,21 @@ public final class Accent: MathAtom {
 
 // MARK: - MathSpace
 
-/// An atom representing space.
-/// Note: None of the usual fields of the `MathAtom` apply even though this
-/// class inherits from `MathAtom`. i.e. it is meaningless to have a value
-/// in the nucleus, subscript or superscript fields.
+/// Explicit horizontal spacing between atoms, measured in mu units.
+///
+/// One mu ("math unit") equals 1/18 of an em, so spacing scales automatically with
+/// font size. Common LaTeX spacing commands and their mu values:
+/// - `\!` = −3 mu (negative thin space)
+/// - `\,` = 3 mu (thin space)
+/// - `\:` or `\>` = 4 mu (medium space)
+/// - `\;` = 5 mu (thick space)
+/// - `\quad` = 18 mu (1 em)
+/// - `\qquad` = 36 mu (2 em)
+///
+/// > Note: The usual ``MathAtom`` fields (nucleus, subscript, superscript) are
+/// > meaningless on this subclass — only ``space`` is used.
 public final class MathSpace: MathAtom {
-    /// The amount of space represented by this object in mu units.
+    /// The amount of space in mu units (1 mu = 1/18 em). Negative values pull atoms closer.
     public var space: CGFloat = 0
 
     /// Creates a new `MathSpace` with the given spacing.
@@ -610,15 +676,24 @@ public final class MathSpace: MathAtom {
     }
 }
 
-/// Styling of a line of math
+/// The TeX math style that controls sizing and layout of math content.
+///
+/// Despite the name, this is *not* about visual line styling (solid, dashed, etc.) — it's
+/// TeX's concept of "math style" which determines how large atoms render. Each level
+/// renders progressively smaller. The typesetter automatically steps down one level for
+/// fraction numerators/denominators and for sub/superscripts.
 public enum LineStyle: Int, Comparable, Sendable {
-    /// Display style
+    /// Display style — the largest, used for standalone equations (`$$...$$`).
+    /// Large operators render at full size with limits above/below.
     case display
-    /// Text style (inline)
+    /// Text style — used for inline math (`$...$`).
+    /// Large operators render smaller with limits as sub/superscripts.
     case text
-    /// Script style (for sub/super scripts)
+    /// Script style — used for first-level sub/superscripts.
+    /// Content renders at roughly 70% of text size.
     case script
-    /// Script script style (for scripts of scripts)
+    /// Script-of-script style — used for nested scripts (e.g. superscript of a superscript).
+    /// The smallest level, roughly 50% of text size.
     case scriptOfScript
 
     public func incremented() -> LineStyle {
@@ -761,27 +836,29 @@ public enum ColumnAlignment {
 
 // MARK: - MathTable
 
-/// An atom representing an table element. This atom is not like other
-/// atoms and is not present in TeX. We use it to represent the `\halign` command
-/// in TeX with some simplifications. This is used for matrices, equation
-/// alignments and other uses of multiline environments.
+/// A table or matrix environment such as `matrix`, `pmatrix`, `eqalign`, `cases`, or `split`.
 ///
-/// The cells in the table are represented as a two dimensional array of
-/// `MathList` objects. The `MathList`s could be empty to denote a missing
-/// value in the cell. Additionally an array of alignments indicates how each
-/// column will be aligned.
+/// Not a native TeX atom — in TeX, tables are handled by `\halign` outside the math engine.
+/// MathViews brings them into the typesetting pipeline for convenience.
+///
+/// Cells are stored as a two-dimensional array of ``MathList`` objects. Empty lists represent
+/// missing values. Column alignment defaults to center if not explicitly set.
+///
+/// The ``environment`` property records which LaTeX environment created this table,
+/// controlling its visual style (e.g. `matrix` environments add `\textstyle` to each cell;
+/// `pmatrix` wraps the table in parentheses via an ``Inner`` atom).
 public final class MathTable: MathAtom {
-    /// The alignment for each column (left, right, center). The default alignment
-    /// for a column (if not set) is center.
+    /// Per-column alignment (left, right, center). Defaults to center for unset columns.
     public var alignments = [ColumnAlignment]()
-    /// The cells in the table as a two dimensional array.
+    /// The cells as a two-dimensional array indexed `[row][column]`.
     public var cells = [[MathList]]()
-    /// The name of the environment that this table denotes.
+    /// The LaTeX environment name (e.g. `"matrix"`, `"eqalign"`, `"cases"`).
     public var environment = ""
-    /// Spacing between each column in mu units.
+    /// Horizontal spacing between columns in mu units (1 mu = 1/18 em).
+    /// `matrix` environments use 18 mu (= 1 em); alignment environments use 0.
     public var interColumnSpacing: CGFloat = 0
-    /// Additional spacing between rows in jots (one jot is 0.3 times font size).
-    /// If the additional spacing is 0, then normal row spacing is used are used.
+    /// Extra vertical spacing between rows in jots (1 jot = 0.3 × font size).
+    /// Zero means only the natural row height is used; `eqalign` environments use 1 jot.
     public var interRowAdditionalSpacing: CGFloat = 0
 
     override public var finalized: MathAtom {
@@ -876,14 +953,15 @@ extension MathList: CustomStringConvertible {
     public var latexString: String { description }
 }
 
-/// A representation of a list of math objects.
+/// An ordered list of ``MathAtom`` objects representing a mathematical expression.
 ///
-///    This list can be constructed directly or built with
-///    the help of the MathListBuilder. It is not required that the mathematics represented make sense
-///    (i.e. this can represent something like "x 2 = +". This list can be used for display using MathListDisplay
-///    or can be a list of tokens to be used by a parser after finalizedMathList is called.
+/// A `MathList` is the abstract syntax tree (AST) produced by ``MathListBuilder`` from
+/// a LaTeX string. It does not need to represent valid mathematics — it can hold any
+/// sequence of atoms.
 ///
-///    Note: This class is for **advanced** usage only.
+/// Before typesetting, call ``finalized`` to produce a copy with adjacent digits fused
+/// and binary operators reclassified where appropriate. The typesetter requires a
+/// finalized list.
 public final class MathList: Equatable {
     public static func == (lhs: MathList, rhs: MathList) -> Bool { lhs === rhs }
 

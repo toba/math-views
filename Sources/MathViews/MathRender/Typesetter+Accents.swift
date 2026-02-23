@@ -5,7 +5,7 @@ import Foundation
 extension Typesetter {
     // MARK: - Underline/Overline
 
-    func makeUnderline(_ under: UnderLine?) -> Display? {
+    func makeUnderline(_ under: Underline?) -> Display? {
         let innerListDisplay = Typesetter.makeLineDisplay(
             for: under!.innerList, font: font, style: style, cramped: cramped,
         )
@@ -25,7 +25,7 @@ extension Typesetter {
         return underDisplay
     }
 
-    func makeOverline(_ over: OverLine?) -> Display? {
+    func makeOverline(_ over: Overline?) -> Display? {
         let innerListDisplay = Typesetter.makeLineDisplay(
             for: over!.innerList, font: font, style: style, cramped: true,
         )
@@ -108,13 +108,13 @@ extension Typesetter {
         var advances = [CGSize](repeating: CGSize.zero, count: numVariants)
         // Get the bounds for these glyphs
         CTFontGetBoundingRectsForGlyphs(
-            styleFont.ctFont,
+            styleFont.coreTextFont,
             .horizontal,
             &glyphs,
             &bboxes,
             numVariants,
         )
-        CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyphs, &advances, numVariants)
+        CTFontGetAdvancesForGlyphs(styleFont.coreTextFont, .horizontal, &glyphs, &advances, numVariants)
         for i in 0 ..< numVariants {
             let bounds = bboxes[i]
             var ascent = CGFloat(0)
@@ -317,12 +317,12 @@ extension Typesetter {
                 accentGlyph = variants[1]
                 var glyph = accentGlyph
                 var advances = CGSize.zero
-                CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyph, &advances, 1)
+                CTFontGetAdvancesForGlyphs(styleFont.coreTextFont, .horizontal, &glyph, &advances, 1)
                 glyphWidth = advances.width
                 // Recalculate ascent and descent for the variant glyph
                 var boundingRects = CGRect.zero
                 CTFontGetBoundingRectsForGlyphs(
-                    styleFont.ctFont,
+                    styleFont.coreTextFont,
                     .horizontal,
                     &glyph,
                     &boundingRects,

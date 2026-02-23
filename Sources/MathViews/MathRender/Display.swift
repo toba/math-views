@@ -15,7 +15,14 @@ protocol Shiftable {
 
 // MARK: - Display
 
-/// The base class for rendering a math equation.
+/// The base class for a rendered math element, analogous to a `CALayer` in a view hierarchy.
+///
+/// Each `Display` node knows how to draw itself into a `CGContext` via Core Graphics.
+/// The typesetter builds a tree of `Display` objects from a ``MathList``, positioning each
+/// node relative to its parent. The tree is then drawn in a single pass.
+///
+/// Subclasses include ``CTLineDisplay`` (character sequences), ``MathListDisplay``
+/// (container of sub-displays), and ``FractionDisplay`` (numerator + denominator + rule line).
 public class Display {
     init() {}
 
@@ -66,16 +73,18 @@ class ShiftableDisplay: Display, Shiftable {
 
 // MARK: - CTLineDisplay
 
-/// A rendering of a single CTLine as an Display
+/// A display that renders a single `CTLine` — a Core Text object representing one line of styled text.
+///
+/// Core Text's `CTLine` is created from an `NSAttributedString` and handles glyph selection,
+/// shaping, and drawing. `CTLineDisplay` uses it to render sequences of characters
+/// (variables, numbers, operators) as a single run of text.
 public final class CTLineDisplay: Display {
     /// The CTLine being displayed
     public var line: CTLine!
     /// The attributed string used to generate the CTLineRef. Note setting this does not reset the dimensions of
     /// the display. So set only when
     var attributedString: NSAttributedString? {
-        didSet {
-            line = CTLineCreateWithAttributedString(attributedString!)
-        }
+        didSet { line = CTLineCreateWithAttributedString(attributedString!) }
     }
 
     /// An array of MathAtoms that this CTLine displays. Used for indexing back into the MathList
@@ -140,8 +149,10 @@ public final class CTLineDisplay: Display {
 
 // MARK: - MathListDisplay
 
-/// A MathListDisplay is a rendered form of MathList in one line.
-/// It can render itself using the draw method.
+/// A container display that holds an array of child ``Display`` objects, similar to a view hierarchy.
+///
+/// Each child is positioned relative to this display's origin. The container computes its
+/// own ascent, descent, and width from the union of its children's bounds.
 public final class MathListDisplay: Display {
     ///     The type of position for a line, i.e. subscript/superscript or regular.
     public enum LinePosition: Int {
@@ -203,42 +214,47 @@ public final class MathListDisplay: Display {
     }
 
     func recomputeDimensions() {
-        var max_ascent: CGFloat = 0
-        var max_descent: CGFloat = 0
-        var max_width: CGFloat = 0
+        var maxAscent: CGFloat = 0
+        var maxDescent: CGFloat = 0
+        var maxWidth: CGFloat = 0
         for atom in subDisplays {
             let ascent = max(0, atom.position.y + atom.ascent)
-            if ascent > max_ascent {
-                max_ascent = ascent
+            if ascent > maxAscent {
+                maxAscent = ascent
             }
 
             let descent = max(0, 0 - (atom.position.y - atom.descent))
-            if descent > max_descent {
-                max_descent = descent
+            if descent > maxDescent {
+                maxDescent = descent
             }
             let width = atom.width + atom.position.x
-            if width > max_width {
-                max_width = width
+            if width > maxWidth {
+                maxWidth = width
             }
         }
-        ascent = max_ascent
-        descent = max_descent
-        width = max_width
+        ascent = maxAscent
+        descent = maxDescent
+        width = maxWidth
     }
 }
 
 // MARK: - FractionDisplay
 
 /// Rendering of an Fraction as an Display
+/// A display for a ``Fraction`` atom, rendering numerator and denominator with an optional rule line.
+///
+/// The positioning uses TeX conventions: `numeratorUp` is the distance from the baseline
+/// to the numerator's baseline (positive = upward), and `denominatorDown` is the distance
+/// from the baseline to the denominator's baseline (positive = downward).
 public final class FractionDisplay: Display {
-    /// A display representing the numerator of the fraction. Its position is relative
-    /// to the parent and is not treated as a sub-display.
+    /// The rendered numerator, positioned above the fraction line.
     public fileprivate(set) var numerator: MathListDisplay?
-    /// A display representing the denominator of the fraction. Its position is relative
-    /// to the parent is not treated as a sub-display.
+    /// The rendered denominator, positioned below the fraction line.
     public fileprivate(set) var denominator: MathListDisplay?
 
+    /// Distance from the fraction's baseline to the numerator's baseline (upward).
     var numeratorUp: CGFloat = 0 { didSet { updateNumeratorPosition() } }
+    /// Distance from the fraction's baseline to the denominator's baseline (downward).
     var denominatorDown: CGFloat = 0 { didSet { updateDenominatorPosition() } }
     var linePosition: CGFloat = 0
     var lineThickness: CGFloat = 0
@@ -503,7 +519,7 @@ final class GlyphDisplay: ShiftableDisplay {
         context.textPosition = CGPoint.zero
 
         var pos = CGPoint.zero
-        CTFontDrawGlyphs(font!.ctFont, &glyph, &pos, 1, context)
+        CTFontDrawGlyphs(font!.coreTextFont, &glyph, &pos, 1, context)
 
         context.restoreGState()
     }
@@ -548,7 +564,7 @@ final class GlyphConstructionDisplay: ShiftableDisplay {
         context.textPosition = CGPoint.zero
 
         // Draw the glyphs.
-        CTFontDrawGlyphs(font!.ctFont, glyphs, positions, numGlyphs, context)
+        CTFontDrawGlyphs(font!.coreTextFont, glyphs, positions, numGlyphs, context)
 
         context.restoreGState()
     }

@@ -1,12 +1,25 @@
 import Foundation
+import CoreGraphics
 
 #if os(iOS) || os(visionOS)
+
 public import UIKit
-#elseif os(macOS)
+
+/// Platform-agnostic color type — `UIColor` on iOS/visionOS, `NSColor` on macOS.
+public typealias PlatformColor = UIColor
+
+#else
+
 public import AppKit
+
+/// Platform-agnostic color type — `UIColor` on iOS/visionOS, `NSColor` on macOS.
+public typealias PlatformColor = NSColor
+
 #endif
 
 extension PlatformColor {
+    /// Creates a color from a hex string like `"#FF8800"`.
+    /// Returns `nil` if the string is empty or doesn't start with `#`.
     public convenience init?(fromHexString hexString: String) {
         if hexString.isEmpty { return nil }
         if !hexString.hasPrefix("#") { return nil }

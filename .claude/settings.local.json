@@ -7,7 +7,8 @@
       "mcp__xc-swift__swift_package_test",
       "Bash(grep:*)",
       "mcp__xc-swift__swift_lint",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "mcp__xc-swift__swift_package_build"
     ]
   }
 }

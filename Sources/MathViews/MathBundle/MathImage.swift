@@ -2,6 +2,19 @@ public import CoreGraphics
 import Foundation
 public import SwiftUI
 
+/// Renders a LaTeX string to a `CGImage` for use outside of a view hierarchy.
+///
+/// Use this when you need a rendered math image for SwiftUI (`Image(cgImage:)`),
+/// image export, or any context where hosting a `MathView` isn't practical.
+///
+/// ```swift
+/// var renderer = MathImage(
+///     latex: "\\frac{1}{2}",
+///     fontSize: 20,
+///     textColor: CGColor(gray: 0, alpha: 1)
+/// )
+/// let (error, image, layout) = renderer.asImage()
+/// ```
 public struct MathImage {
     public var font: MathFont = .latinModern
     public var fontSize: CGFloat
@@ -47,8 +60,12 @@ extension MathImage {
         )
     }
 
+    /// Baseline metrics from the rendered math display, useful for aligning
+    /// the image with surrounding text.
     public struct LayoutInfo {
+        /// Distance from the baseline to the top of the tallest glyph.
         public var ascent: CGFloat = 0
+        /// Distance from the baseline to the bottom of the lowest glyph.
         public var descent: CGFloat = 0
 
         public init(ascent: CGFloat, descent: CGFloat) {

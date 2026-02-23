@@ -63,7 +63,7 @@ struct AccentSpacingComparisonTest {
             var widehatGlyph = widehatGlyphOpt
             var widehatBoundingRect = CGRect.zero
             CTFontGetBoundingRectsForGlyphs(
-                font.ctFont, .horizontal, &widehatGlyph, &widehatBoundingRect, 1,
+                font.coreTextFont, .horizontal, &widehatGlyph, &widehatBoundingRect, 1,
             )
             widehatGlyphMinY = widehatBoundingRect.minY
         } else {
@@ -109,7 +109,7 @@ struct AccentSpacingComparisonTest {
             var arrowGlyph = arrowGlyphOpt
             var arrowBoundingRect = CGRect.zero
             CTFontGetBoundingRectsForGlyphs(
-                font.ctFont,
+                font.coreTextFont,
                 .horizontal,
                 &arrowGlyph,
                 &arrowBoundingRect,

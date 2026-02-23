@@ -25,7 +25,7 @@ final class ElementWidthCalculator {
         let attrString = NSAttributedString(
             string: text,
             attributes: [
-                kCTFontAttributeName as NSAttributedString.Key: font.ctFont as Any,
+                kCTFontAttributeName as NSAttributedString.Key: font.coreTextFont as Any,
             ],
         )
         let line = CTLineCreateWithAttributedString(attrString as CFAttributedString)

@@ -9,15 +9,28 @@ import AppKit
 
 // MARK: - Inter Element Spacing
 
+/// The amount of space to insert between two adjacent atoms.
+///
+/// TeX defines a matrix of spacing rules indexed by left-atom-type × right-atom-type.
+/// Some spacing is suppressed in script styles (sub/superscripts) to keep them compact.
 enum InterElementSpaceType: Int {
     case invalid = -1
     case none = 0
+    /// Thin space (3 mu). Always applied regardless of style.
     case thin
-    case nonScriptThin // Thin but not in script mode
+    /// Thin space (3 mu) but suppressed in script and scriptOfScript styles.
+    case nonScriptThin
+    /// Medium space (4 mu) but suppressed in script styles.
     case nonScriptMedium
+    /// Thick space (5 mu) but suppressed in script styles.
     case nonScriptThick
 }
 
+/// The TeX inter-element spacing matrix.
+///
+/// Rows represent the left atom type, columns the right atom type. The value at
+/// `[left][right]` determines how much horizontal space the typesetter inserts.
+/// This matrix is derived from Appendix G of *The TeXbook* by Donald Knuth.
 let interElementSpaces: [[InterElementSpaceType]] =
     //   ordinary   operator   binary     relation  open       close     punct     fraction
     [
@@ -547,10 +560,10 @@ class Typesetter {
         let spaceType = spaceTypeObj
         assert(spaceType != .invalid, "Invalid space between \(left) and \(right)")
 
-        let spaceMultipler = spacingInMu(spaceType)
-        if spaceMultipler > 0 {
-            // 1 em = size of font in pt. space multipler is in multiples mu or 1/18 em
-            return CGFloat(spaceMultipler) * styleFont.mathTable!.muUnit
+        let spaceMultiplier = spacingInMu(spaceType)
+        if spaceMultiplier > 0 {
+            // 1 em = size of font in pt. space multiplier is in multiples mu or 1/18 em
+            return CGFloat(spaceMultiplier) * styleFont.mathTable!.muUnit
         }
         return 0
     }

@@ -22,12 +22,12 @@ struct GlyphBoundsTest {
         var circumflexRect = CGRect.zero
         var circumflexGlyphCopy = circumflexGlyph
         CTFontGetBoundingRectsForGlyphs(
-            font.ctFont, .horizontal, &circumflexGlyphCopy, &circumflexRect, 1,
+            font.coreTextFont, .horizontal, &circumflexGlyphCopy, &circumflexRect, 1,
         )
 
         var arrowRect = CGRect.zero
         var arrowGlyphCopy = arrowGlyph
-        CTFontGetBoundingRectsForGlyphs(font.ctFont, .horizontal, &arrowGlyphCopy, &arrowRect, 1)
+        CTFontGetBoundingRectsForGlyphs(font.coreTextFont, .horizontal, &arrowGlyphCopy, &arrowRect, 1)
 
         print("Circumflex glyph:")
         print("  Bounding rect: \(circumflexRect)")

@@ -141,7 +141,7 @@ final class AtomTokenizer {
                 )
 
             case .underline:
-                guard let underline = atom as? UnderLine else { return nil }
+                guard let underline = atom as? Underline else { return nil }
                 return tokenizeUnderline(
                     underline,
                     prevAtom: prevAtom,
@@ -149,7 +149,7 @@ final class AtomTokenizer {
                 )
 
             case .overline:
-                guard let overline = atom as? OverLine else { return nil }
+                guard let overline = atom as? Overline else { return nil }
                 return tokenizeOverline(overline, prevAtom: prevAtom, atomIndex: atomIndex)
 
             case .table:
@@ -1042,7 +1042,7 @@ final class AtomTokenizer {
         return false
     }
 
-    private func tokenizeUnderline(_ underline: UnderLine, prevAtom _: MathAtom?, atomIndex _: Int)
+    private func tokenizeUnderline(_ underline: Underline, prevAtom _: MathAtom?, atomIndex _: Int)
         -> BreakableElement?
     {
         let typesetter = Typesetter(withFont: font, style: style, cramped: cramped, spaced: false)
@@ -1050,7 +1050,7 @@ final class AtomTokenizer {
         return makeDisplayElement(display, atom: underline)
     }
 
-    private func tokenizeOverline(_ overline: OverLine, prevAtom _: MathAtom?, atomIndex _: Int)
+    private func tokenizeOverline(_ overline: Overline, prevAtom _: MathAtom?, atomIndex _: Int)
         -> BreakableElement?
     {
         let typesetter = Typesetter(withFont: font, style: style, cramped: cramped, spaced: false)

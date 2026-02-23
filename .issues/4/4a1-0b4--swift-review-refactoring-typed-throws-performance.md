@@ -1,11 +1,11 @@
 ---
 # 4a1-0b4
 title: 'Swift review: refactoring, typed throws, performance fixes'
-status: in-progress
+status: completed
 type: epic
 priority: normal
 created_at: 2026-02-23T01:47:48Z
-updated_at: 2026-02-23T01:54:49Z
+updated_at: 2026-02-23T03:53:33Z
 ---
 
 Comprehensive Swift review findings for the MathViews codebase (9,170 lines across 21 source files). Conducted 2026-02-22.
@@ -249,3 +249,10 @@ Completed 2026-02-22. All 549 tests pass.
 - 19 force_cast lint errors in MathList.swift (9 `finalized` overrides) and AtomTokenizer.swift (8 type dispatch + 2 other) — structurally safe, require deeper refactoring
 - Character style converter consolidation (Typesetter.swift:79-301, 9 functions) — significant but low-risk, deferred
 - Display subclass position/color propagation dedup — needs careful design
+
+
+### Follow-up (2026-02-22)
+
+- **Force casts**: Already eliminated in prior work (all 19 replaced with conditional binding)
+- **Character style converters**: Consolidated 9 functions (italicized, bolded, boldItalic, defaultStyleChar, calligraphic, typewriter, sansSerif, fraktur, blackboard) into data-driven `CharStyleMap` struct + `applyMap` helper + 8 static map constants. Reduced ~200 lines to ~100. All 543 tests pass.
+- **Display subclass textColor/position propagation**: Analyzed and declined. Each subclass propagates to different named children (~5 lines each); a protocol abstraction would add similar line count with more indirection. Net benefit near zero.

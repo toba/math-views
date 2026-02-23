@@ -78,223 +78,131 @@ func interElementSpaceIndex(for type: MathAtomType, row: Bool) -> Int {
     }
 }
 
-// MARK: - Italics
+// MARK: - Character Style Mapping
 
-// mathit
-func italicized(_ ch: Character) -> UTF32Char {
-    var unicode = ch.utf32Char
-
-    // Special cases for italics
-    if ch == "h" { return UnicodeSymbol.planksConstant }
-    // Dotless i (U+0131) → Mathematical Italic Small Dotless I (U+1D6A4)
-    if ch == "\u{0131}" { return 0x1D6A4 }
-    // Dotless j (U+0237) → Mathematical Italic Small Dotless J (U+1D6A5)
-    if ch == "\u{0237}" { return 0x1D6A5 }
-
-    if ch.isUpperEnglish {
-        unicode = UnicodeSymbol.capitalItalicStart + (ch.utf32Char - Character("A").utf32Char)
-    } else if ch.isLowerEnglish {
-        unicode = UnicodeSymbol.lowerItalicStart + (ch.utf32Char - Character("a").utf32Char)
-    } else if ch.isCapitalGreek {
-        // Capital Greek characters
-        unicode =
-            UnicodeSymbol.greekCapitalItalicStart + (ch.utf32Char - UnicodeSymbol.capitalGreekStart)
-    } else if ch.isLowerGreek {
-        // Greek characters
-        unicode = UnicodeSymbol
-            .greekLowerItalicStart + (ch.utf32Char - UnicodeSymbol.lowerGreekStart)
-    } else if ch.isGreekSymbol {
-        return UnicodeSymbol.greekSymbolItalicStart + ch.greekSymbolOrder!
-    }
-    // Note there are no italicized numbers in unicode so we don't support italicizing numbers.
-    return unicode
+/// Unicode block offsets for a single math font style.
+///
+/// Each optional field is the start code point for that character class in this style's
+/// Unicode Mathematical Alphanumeric Symbols block. `nil` means the style doesn't cover
+/// that class (the caller provides a fallback).
+private struct CharStyleMap {
+    var exceptions: [Character: UTF32Char] = [:]
+    var upperEnglish: UTF32Char?
+    var lowerEnglish: UTF32Char?
+    var capitalGreek: UTF32Char?
+    var lowerGreek: UTF32Char?
+    var greekSymbol: UTF32Char?
+    var number: UTF32Char?
 }
 
-// mathbf
-func bolded(_ ch: Character) -> UTF32Char {
-    var unicode = ch.utf32Char
-    if ch.isUpperEnglish {
-        unicode = UnicodeSymbol.mathCapitalBoldStart + (ch.utf32Char - Character("A").utf32Char)
-    } else if ch.isLowerEnglish {
-        unicode = UnicodeSymbol.mathLowerBoldStart + (ch.utf32Char - Character("a").utf32Char)
-    } else if ch.isCapitalGreek {
-        // Capital Greek characters
-        unicode = UnicodeSymbol
-            .greekCapitalBoldStart + (ch.utf32Char - UnicodeSymbol.capitalGreekStart)
-    } else if ch.isLowerGreek {
-        // Greek characters
-        unicode = UnicodeSymbol.greekLowerBoldStart + (ch.utf32Char - UnicodeSymbol.lowerGreekStart)
-    } else if ch.isGreekSymbol {
-        return UnicodeSymbol.greekSymbolBoldStart + ch.greekSymbolOrder!
-    } else if ch.isNumber {
-        unicode = UnicodeSymbol.numberBoldStart + (ch.utf32Char - Character("0").utf32Char)
-    }
-    return unicode
+/// Apply a style map to a character, returning `nil` if no mapping covers it.
+private func applyMap(_ ch: Character, _ map: CharStyleMap) -> UTF32Char? {
+    if let v = map.exceptions[ch] { return v }
+    let u = ch.utf32Char
+    if ch.isUpperEnglish, let s = map.upperEnglish { return s + (u - Character("A").utf32Char) }
+    if ch.isLowerEnglish, let s = map.lowerEnglish { return s + (u - Character("a").utf32Char) }
+    if ch.isCapitalGreek, let s = map.capitalGreek { return s + (u - UnicodeSymbol.capitalGreekStart) }
+    if ch.isLowerGreek, let s = map.lowerGreek { return s + (u - UnicodeSymbol.lowerGreekStart) }
+    if ch.isGreekSymbol, let s = map.greekSymbol { return s + ch.greekSymbolOrder! }
+    if ch.isNumber, let s = map.number { return s + (u - Character("0").utf32Char) }
+    return nil
 }
 
-// mathbfit
-func boldItalic(_ ch: Character) -> UTF32Char {
-    var unicode = ch.utf32Char
-    if ch.isUpperEnglish {
-        unicode = UnicodeSymbol
-            .mathCapitalBoldItalicStart + (ch.utf32Char - Character("A").utf32Char)
-    } else if ch.isLowerEnglish {
-        unicode = UnicodeSymbol.mathLowerBoldItalicStart + (ch.utf32Char - Character("a").utf32Char)
-    } else if ch.isCapitalGreek {
-        // Capital Greek characters
-        unicode =
-            UnicodeSymbol
-                .greekCapitalBoldItalicStart + (ch.utf32Char - UnicodeSymbol.capitalGreekStart)
-    } else if ch.isLowerGreek {
-        // Greek characters
-        unicode =
-            UnicodeSymbol.greekLowerBoldItalicStart + (ch.utf32Char - UnicodeSymbol.lowerGreekStart)
-    } else if ch.isGreekSymbol {
-        return UnicodeSymbol.greekSymbolBoldItalicStart + ch.greekSymbolOrder!
-    } else if ch.isNumber {
-        // No bold italic for numbers so we just bold them.
-        unicode = bolded(ch)
-    }
-    return unicode
-}
+// Style maps — one per font style that uses Unicode block offsets.
 
-// LaTeX default
-func defaultStyleChar(_ ch: Character) -> UTF32Char {
+private let italicMap = CharStyleMap(
+    exceptions: ["h": UnicodeSymbol.planksConstant, "\u{0131}": 0x1D6A4, "\u{0237}": 0x1D6A5],
+    upperEnglish: UnicodeSymbol.capitalItalicStart,
+    lowerEnglish: UnicodeSymbol.lowerItalicStart,
+    capitalGreek: UnicodeSymbol.greekCapitalItalicStart,
+    lowerGreek: UnicodeSymbol.greekLowerItalicStart,
+    greekSymbol: UnicodeSymbol.greekSymbolItalicStart
+)
+
+private let boldMap = CharStyleMap(
+    upperEnglish: UnicodeSymbol.mathCapitalBoldStart,
+    lowerEnglish: UnicodeSymbol.mathLowerBoldStart,
+    capitalGreek: UnicodeSymbol.greekCapitalBoldStart,
+    lowerGreek: UnicodeSymbol.greekLowerBoldStart,
+    greekSymbol: UnicodeSymbol.greekSymbolBoldStart,
+    number: UnicodeSymbol.numberBoldStart
+)
+
+private let boldItalicMap = CharStyleMap(
+    upperEnglish: UnicodeSymbol.mathCapitalBoldItalicStart,
+    lowerEnglish: UnicodeSymbol.mathLowerBoldItalicStart,
+    capitalGreek: UnicodeSymbol.greekCapitalBoldItalicStart,
+    lowerGreek: UnicodeSymbol.greekLowerBoldItalicStart,
+    greekSymbol: UnicodeSymbol.greekSymbolBoldItalicStart
+    // No bold italic numbers in Unicode — falls back to bold in styleCharacter
+)
+
+private let calligraphicMap = CharStyleMap(
+    exceptions: [
+        "B": 0x212C, "E": 0x2130, "F": 0x2131, "H": 0x210B, "I": 0x2110,
+        "L": 0x2112, "M": 0x2133, "R": 0x211B,
+        "e": 0x212F, "g": 0x210A, "o": 0x2134,
+    ],
+    upperEnglish: UnicodeSymbol.mathCapitalScriptStart
+    // Lower English and non-Latin fall back to defaultStyleChar
+)
+
+private let typewriterMap = CharStyleMap(
+    upperEnglish: UnicodeSymbol.mathCapitalTTStart,
+    lowerEnglish: UnicodeSymbol.mathLowerTTStart,
+    number: UnicodeSymbol.numberTTStart
+)
+
+private let sansSerifMap = CharStyleMap(
+    upperEnglish: UnicodeSymbol.mathCapitalSansSerifStart,
+    lowerEnglish: UnicodeSymbol.mathLowerSansSerifStart,
+    number: UnicodeSymbol.numberSansSerifStart
+)
+
+private let frakturMap = CharStyleMap(
+    exceptions: ["C": 0x212D, "H": 0x210C, "I": 0x2111, "R": 0x211C, "Z": 0x2128],
+    upperEnglish: UnicodeSymbol.mathCapitalFrakturStart,
+    lowerEnglish: UnicodeSymbol.mathLowerFrakturStart
+)
+
+private let blackboardMap = CharStyleMap(
+    exceptions: [
+        "C": 0x2102, "H": 0x210D, "N": 0x2115, "P": 0x2119,
+        "Q": 0x211A, "R": 0x211D, "Z": 0x2124,
+    ],
+    upperEnglish: UnicodeSymbol.mathCapitalBlackboardStart,
+    lowerEnglish: UnicodeSymbol.mathLowerBlackboardStart,
+    number: UnicodeSymbol.numberBlackboardStart
+)
+
+/// LaTeX default style: italic for letters/Greek symbols, roman for numbers/capital Greek.
+private func defaultStyleChar(_ ch: Character) -> UTF32Char {
     if ch.isLowerEnglish || ch.isUpperEnglish || ch.isLowerGreek || ch.isGreekSymbol {
-        return italicized(ch)
+        return applyMap(ch, italicMap) ?? ch.utf32Char
     } else if ch == "\u{0131}" || ch == "\u{0237}" {
-        // Dotless i (U+0131) and dotless j (U+0237) should be italicized in default style
-        return italicized(ch)
-    } else if ch.isNumber || ch.isCapitalGreek {
-        // In the default style numbers and capital greek is roman
-        return ch.utf32Char
-    } else if ch == "." {
-        // . is treated as a number in our code, but it doesn't change fonts.
+        return applyMap(ch, italicMap) ?? ch.utf32Char
+    } else if ch.isNumber || ch.isCapitalGreek || ch == "." {
         return ch.utf32Char
     } else {
         preconditionFailure("Unknown character \(ch) for default style.")
     }
 }
 
-// mathcal/mathscr (calligraphic or script)
-func calligraphic(_ ch: Character) -> UTF32Char {
-    // Calligraphic has lots of exceptions:
-    switch ch {
-        case "B": return 0x212C // Script B (Bernoulli)
-        case "E": return 0x2130 // Script E (emf)
-        case "F": return 0x2131 // Script F (Fourier)
-        case "H": return 0x210B // Script H (hamiltonian)
-        case "I": return 0x2110 // Script I
-        case "L": return 0x2112 // Script L (Laplace)
-        case "M": return 0x2133 // Script M (M-matrix)
-        case "R": return 0x211B // Script R (Riemann integral)
-        case "e": return 0x212F // Script e (Natural exponent)
-        case "g": return 0x210A // Script g (real number)
-        case "o": return 0x2134 // Script o (order)
-        default: break
-    }
-    var unicode: UTF32Char
-    if ch.isUpperEnglish {
-        unicode = UnicodeSymbol.mathCapitalScriptStart + (ch.utf32Char - Character("A").utf32Char)
-    } else if ch.isLowerEnglish {
-        // Latin Modern Math does not have lower case calligraphic characters, so we use
-        // the default style instead of showing a ?
-        unicode = defaultStyleChar(ch)
-    } else {
-        // Calligraphic characters don't exist for greek or numbers, we give them the
-        // default treatment.
-        unicode = defaultStyleChar(ch)
-    }
-    return unicode
-}
-
-// mathtt (monospace)
-func typewriter(_ ch: Character) -> UTF32Char {
-    if ch.isUpperEnglish {
-        return UnicodeSymbol.mathCapitalTTStart + (ch.utf32Char - Character("A").utf32Char)
-    } else if ch.isLowerEnglish {
-        return UnicodeSymbol.mathLowerTTStart + (ch.utf32Char - Character("a").utf32Char)
-    } else if ch.isNumber {
-        return UnicodeSymbol.numberTTStart + (ch.utf32Char - Character("0").utf32Char)
-    }
-    // Monospace characters don't exist for greek, we give them the
-    // default treatment.
-    return defaultStyleChar(ch)
-}
-
-// mathsf
-func sansSerif(_ ch: Character) -> UTF32Char {
-    if ch.isUpperEnglish {
-        UnicodeSymbol.mathCapitalSansSerifStart + (ch.utf32Char - Character("A").utf32Char)
-    } else if ch.isLowerEnglish {
-        UnicodeSymbol.mathLowerSansSerifStart + (ch.utf32Char - Character("a").utf32Char)
-    } else if ch.isNumber {
-        UnicodeSymbol.numberSansSerifStart + (ch.utf32Char - Character("0").utf32Char)
-    } else {
-        // Sans-serif characters don't exist for greek, we give them the
-        // default treatment.
-        defaultStyleChar(ch)
-    }
-}
-
-// mathfrak
-func fraktur(_ ch: Character) -> UTF32Char {
-    // Fraktur has exceptions:
-    switch ch {
-        case "C": return 0x212D // C Fraktur
-        case "H": return 0x210C // Hilbert space
-        case "I": return 0x2111 // Imaginary
-        case "R": return 0x211C // Real
-        case "Z": return 0x2128 // Z Fraktur
-        default: break
-    }
-    if ch.isUpperEnglish {
-        return UnicodeSymbol.mathCapitalFrakturStart + (ch.utf32Char - Character("A").utf32Char)
-    } else if ch.isLowerEnglish {
-        return UnicodeSymbol.mathLowerFrakturStart + (ch.utf32Char - Character("a").utf32Char)
-    }
-    // Fraktur characters don't exist for greek & numbers, we give them the
-    // default treatment.
-    return defaultStyleChar(ch)
-}
-
-// mathbb (double struck)
-func blackboard(_ ch: Character) -> UTF32Char {
-    // Blackboard has lots of exceptions:
-    switch ch {
-        case "C": return 0x2102 // Complex numbers
-        case "H": return 0x210D // Quaternions
-        case "N": return 0x2115 // Natural numbers
-        case "P": return 0x2119 // Primes
-        case "Q": return 0x211A // Rationals
-        case "R": return 0x211D // Reals
-        case "Z": return 0x2124 // Integers
-        default: break
-    }
-    if ch.isUpperEnglish {
-        return UnicodeSymbol.mathCapitalBlackboardStart + (ch.utf32Char - Character("A").utf32Char)
-    } else if ch.isLowerEnglish {
-        return UnicodeSymbol.mathLowerBlackboardStart + (ch.utf32Char - Character("a").utf32Char)
-    } else if ch.isNumber {
-        return UnicodeSymbol.numberBlackboardStart + (ch.utf32Char - Character("0").utf32Char)
-    }
-    // Blackboard characters don't exist for greek, we give them the
-    // default treatment.
-    return defaultStyleChar(ch)
-}
-
 func styleCharacter(_ ch: Character, fontStyle: FontStyle) -> UTF32Char {
     switch fontStyle {
         case .defaultStyle: return defaultStyleChar(ch)
         case .roman: return ch.utf32Char
-        case .bold: return bolded(ch)
-        case .italic: return italicized(ch)
-        case .boldItalic: return boldItalic(ch)
-        case .calligraphic: return calligraphic(ch)
-        case .typewriter: return typewriter(ch)
-        case .sansSerif: return sansSerif(ch)
-        case .fraktur: return fraktur(ch)
-        case .blackboard: return blackboard(ch)
+        case .italic: return applyMap(ch, italicMap) ?? ch.utf32Char
+        case .bold: return applyMap(ch, boldMap) ?? ch.utf32Char
+        case .boldItalic:
+            // Bold italic numbers fall back to bold since Unicode has no bold-italic digits.
+            return applyMap(ch, boldItalicMap)
+                ?? (ch.isNumber ? applyMap(ch, boldMap) ?? ch.utf32Char : ch.utf32Char)
+        case .calligraphic: return applyMap(ch, calligraphicMap) ?? defaultStyleChar(ch)
+        case .typewriter: return applyMap(ch, typewriterMap) ?? defaultStyleChar(ch)
+        case .sansSerif: return applyMap(ch, sansSerifMap) ?? defaultStyleChar(ch)
+        case .fraktur: return applyMap(ch, frakturMap) ?? defaultStyleChar(ch)
+        case .blackboard: return applyMap(ch, blackboardMap) ?? defaultStyleChar(ch)
     }
 }
 

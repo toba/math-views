@@ -1032,7 +1032,7 @@ public struct MathListBuilder {
             return mathColor
         } else if command == "colorbox" {
             // A color command has 2 arguments
-            let mathColorbox = MathColorbox()
+            let mathColorbox = MathColorBox()
             let color = readColor()
             if color == nil {
                 return nil
@@ -1463,7 +1463,7 @@ public struct MathListBuilder {
             return mathColor
         } else if command == "colorbox" {
             // A color command has 2 arguments
-            let mathColorbox = MathColorbox()
+            let mathColorbox = MathColorBox()
             mathColorbox.colorString = readColor()!
             mathColorbox.innerList = buildInternal(true)
             return mathColorbox

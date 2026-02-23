@@ -161,7 +161,6 @@ func defaultStyleChar(_ ch: Character) -> UTF32Char {
     } else {
         preconditionFailure("Unknown character \(ch) for default style.")
     }
-    return ch.utf32Char
 }
 
 // mathcal/mathscr (calligraphic or script)
@@ -1638,7 +1637,7 @@ class Typesetter {
     func makeAccent(_ accent: Accent?) -> Display? {
         guard let accent else { return nil }
 
-        var accentee = Typesetter.makeLineDisplay(
+        let accentee = Typesetter.makeLineDisplay(
             for: accent.innerList, font: font, style: style, cramped: true,
         )
         if accent.nucleus.isEmpty {

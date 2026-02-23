@@ -111,7 +111,7 @@ public enum MathAtomType: Int, CustomStringConvertible, Comparable, Sendable {
 
 /// The font style of a character.
 ///
-/// The fontstyle of the atom determines what style the character is rendered in. This only applies to atoms
+/// The font style of the atom determines what style the character is rendered in. This only applies to atoms
 /// of type MathAtomType.variable and MathAtomType.number. None of the other atom types change their font style.
 public enum FontStyle: Int, Sendable {
     /// The default latex rendering style. i.e. variables are italic and numbers are roman.
@@ -209,30 +209,18 @@ public class MathAtom: CustomStringConvertible, Equatable, @unchecked Sendable {
     /// Returns a copy of `self`.
     public func copy() -> MathAtom {
         switch type {
-            case .largeOperator:
-                return LargeOperator(self as? LargeOperator)
-            case .fraction:
-                return Fraction(self as? Fraction)
-            case .radical:
-                return Radical(self as? Radical)
-            case .style:
-                return MathStyle(self as? MathStyle)
-            case .inner:
-                return Inner(self as? Inner)
-            case .underline:
-                return UnderLine(self as? UnderLine)
-            case .overline:
-                return OverLine(self as? OverLine)
-            case .accent:
-                return Accent(self as? Accent)
-            case .space:
-                return MathSpace(self as? MathSpace)
-            case .color:
-                return MathColorAtom(self as? MathColorAtom)
-            case .textColor:
-                return MathTextColor(self as? MathTextColor)
-            case .colorBox:
-                return MathColorbox(self as? MathColorbox)
+            case .largeOperator: return LargeOperator(self as? LargeOperator)
+            case .fraction: return Fraction(self as? Fraction)
+            case .radical: return Radical(self as? Radical)
+            case .style: return MathStyle(self as? MathStyle)
+            case .inner: return Inner(self as? Inner)
+            case .underline: return UnderLine(self as? UnderLine)
+            case .overline: return OverLine(self as? OverLine)
+            case .accent: return Accent(self as? Accent)
+            case .space: return MathSpace(self as? MathSpace)
+            case .color: return MathColorAtom(self as? MathColorAtom)
+            case .textColor: return MathTextColor(self as? MathTextColor)
+            case .colorBox: return MathColorBox(self as? MathColorBox)
             case .table:
                 guard let table = self as? MathTable else { return MathAtom(self) }
                 return MathTable(table)
@@ -315,7 +303,7 @@ func isBinaryOperator(_ prevNode: MathAtom?) -> Bool {
 
 // MARK: - Fraction
 
-public final class Fraction: MathAtom {
+public final class Fraction: MathAtom, @unchecked Sendable {
     public var hasRule: Bool = true
     public var leftDelimiter = ""
     public var rightDelimiter = ""
@@ -376,7 +364,7 @@ public final class Fraction: MathAtom {
 // MARK: - Radical
 
 /// An atom of type radical (square root).
-public final class Radical: MathAtom {
+public final class Radical: MathAtom, @unchecked Sendable {
     /// Denotes the term under the square root sign
     public var radicand: MathList?
 
@@ -426,7 +414,7 @@ public final class Radical: MathAtom {
 // MARK: - LargeOperator
 
 /// A `MathAtom` of type `MathAtomType.largeOperator`.
-public final class LargeOperator: MathAtom {
+public final class LargeOperator: MathAtom, @unchecked Sendable {
     /// Indicates whether the limits (if present) should be displayed
     /// above and below the operator in display mode. If limits is false
     /// then the limits (if present) are displayed like a regular subscript/superscript.
@@ -449,7 +437,7 @@ public final class LargeOperator: MathAtom {
 /// An inner atom. This denotes an atom which contains a math list inside it. An inner atom
 /// has optional boundaries. Note: Only one boundary may be present, it is not required to have
 /// both.
-public final class Inner: MathAtom {
+public final class Inner: MathAtom, @unchecked Sendable {
     /// The inner math list
     public var innerList: MathList?
     /// The left boundary atom. This must be a node of type MathAtomType.boundary
@@ -518,7 +506,7 @@ public final class Inner: MathAtom {
 // MARK: - OverLine
 
 /// An atom with a line over the contained math list.
-public final class OverLine: MathAtom {
+public final class OverLine: MathAtom, @unchecked Sendable {
     public var innerList: MathList?
 
     override public var finalized: MathAtom {
@@ -542,7 +530,7 @@ public final class OverLine: MathAtom {
 // MARK: - UnderLine
 
 /// An atom with a line under the contained math list.
-public final class UnderLine: MathAtom {
+public final class UnderLine: MathAtom, @unchecked Sendable {
     public var innerList: MathList?
 
     override public var finalized: MathAtom {
@@ -565,7 +553,7 @@ public final class UnderLine: MathAtom {
 
 // MARK: - Accent
 
-public final class Accent: MathAtom {
+public final class Accent: MathAtom, @unchecked Sendable {
     public var innerList: MathList?
     /// Indicates if this accent should use stretchy arrow behavior (for \overrightarrow, etc.)
     /// vs short accent behavior (for \vec). Only applies to arrow accents.
@@ -603,7 +591,7 @@ public final class Accent: MathAtom {
 /// Note: None of the usual fields of the `MathAtom` apply even though this
 /// class inherits from `MathAtom`. i.e. it is meaningless to have a value
 /// in the nucleus, subscript or superscript fields.
-public final class MathSpace: MathAtom {
+public final class MathSpace: MathAtom, @unchecked Sendable {
     /// The amount of space represented by this object in mu units.
     public var space: CGFloat = 0
 
@@ -649,7 +637,7 @@ public enum LineStyle: Int, Comparable, Sendable {
 /// Note: None of the usual fields of the `MathAtom` apply even though this
 /// class inherits from `MathAtom`. i.e. it is meaningless to have a value
 /// in the nucleus, subscript or superscript fields.
-public final class MathStyle: MathAtom {
+public final class MathStyle: MathAtom, @unchecked Sendable {
     public var style: LineStyle = .display
 
     init(_ style: MathStyle?) {
@@ -671,7 +659,7 @@ public final class MathStyle: MathAtom {
 /// Note: None of the usual fields of the `MathAtom` apply even though this
 /// class inherits from `MathAtom`. i.e. it is meaningless to have a value
 /// in the nucleus, subscript or superscript fields.
-public final class MathColorAtom: MathAtom {
+public final class MathColorAtom: MathAtom, @unchecked Sendable {
     public var colorString: String = ""
     public var innerList: MathList?
 
@@ -704,7 +692,7 @@ public final class MathColorAtom: MathAtom {
 /// Note: None of the usual fields of the `MathAtom` apply even though this
 /// class inherits from `MathAtom`. i.e. it is meaningless to have a value
 /// in the nucleus, subscript or superscript fields.
-public final class MathTextColor: MathAtom {
+public final class MathTextColor: MathAtom, @unchecked Sendable {
     public var colorString: String = ""
     public var innerList: MathList?
 
@@ -737,15 +725,15 @@ public final class MathTextColor: MathAtom {
 /// Note: None of the usual fields of the `MathAtom` apply even though this
 /// class inherits from `MathAtom`. i.e. it is meaningless to have a value
 /// in the nucleus, subscript or superscript fields.
-public final class MathColorbox: MathAtom {
+public final class MathColorBox: MathAtom, @unchecked Sendable {
     public var colorString = ""
     public var innerList: MathList?
 
-    init(_ cbox: MathColorbox?) {
-        super.init(cbox)
+    init(_ colorBox: MathColorBox?) {
+        super.init(colorBox)
         type = .colorBox
-        colorString = cbox?.colorString ?? ""
-        innerList = MathList(cbox?.innerList)
+        colorString = colorBox?.colorString ?? ""
+        innerList = MathList(colorBox?.innerList)
     }
 
     override init() {
@@ -758,7 +746,7 @@ public final class MathColorbox: MathAtom {
     }
 
     override public var finalized: MathAtom {
-        guard let newColor = super.finalized as? MathColorbox else { return super.finalized }
+        guard let newColor = super.finalized as? MathColorBox else { return super.finalized }
         newColor.innerList = newColor.innerList?.finalized
         return newColor
     }
@@ -782,7 +770,7 @@ public enum ColumnAlignment {
 /// `MathList` objects. The `MathList`s could be empty to denote a missing
 /// value in the cell. Additionally an array of alignments indicates how each
 /// column will be aligned.
-public final class MathTable: MathAtom {
+public final class MathTable: MathAtom, @unchecked Sendable {
     /// The alignment for each column (left, right, center). The default alignment
     /// for a column (if not set) is center.
     public var alignments = [ColumnAlignment]()
@@ -838,15 +826,11 @@ public final class MathTable: MathAtom {
     /// Set the value of a given cell. The table is automatically resized to contain this cell.
     public func setCell(_ list: MathList, row: Int, column: Int) {
         if cells.count <= row {
-            for _ in cells.count ... row {
-                cells.append([])
-            }
+            for _ in cells.count ... row { cells.append([]) }
         }
         let rows = cells[row].count
         if rows <= column {
-            for _ in rows ... column {
-                cells[row].append(MathList())
-            }
+            for _ in rows ... column { cells[row].append(MathList()) }
         }
         cells[row][column] = list
     }

@@ -116,7 +116,7 @@ final class DisplayGenerator {
 
                     case let .display(preRenderedDisplay):
                         // Use pre-rendered display (fraction, radical, etc.)
-                        var mutableDisplay = preRenderedDisplay
+                        let mutableDisplay = preRenderedDisplay
                         mutableDisplay.position = elementPosition
                         displays.append(mutableDisplay)
 
@@ -178,7 +178,7 @@ final class DisplayGenerator {
                             )
                             displays.append(display)
                         case let .display(preRenderedDisplay):
-                            var mutableDisplay = preRenderedDisplay
+                            let mutableDisplay = preRenderedDisplay
                             mutableDisplay.position = basePosition
                             displays.append(mutableDisplay)
                         case let .operator(op, _):
@@ -325,7 +325,7 @@ final class DisplayGenerator {
                 )
 
                 // Reset the scriptDisplay's position to (0, 0) since it will be positioned by the wrapper
-                var mutableScript = scriptDisplay
+                let mutableScript = scriptDisplay
                 mutableScript.position = CGPoint.zero
 
                 let wrappedScript = MathListDisplay(
@@ -365,11 +365,10 @@ final class DisplayGenerator {
 
             // Update the first base display's dimensions to reflect the full extent
             // Width should be base + script, without the spaceAfterScript (that's for cursor advancement)
-            var baseDisplay = displays[baseDisplayStartIndex]
+            let baseDisplay = displays[baseDisplayStartIndex]
             baseDisplay.ascent = maxAscent
             baseDisplay.descent = maxDescent
             baseDisplay.width = baseWidth + scriptWidth
-            displays[baseDisplayStartIndex] = baseDisplay
         }
 
         return totalWidth

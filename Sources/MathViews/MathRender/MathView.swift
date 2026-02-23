@@ -132,7 +132,7 @@ public struct MathView: View {
         }
     }
 
-    private func render() -> Result<RenderInfo, Error> {
+    private func render() -> Result<RenderInfo, any Error> {
         let mathList: MathList
         do {
             mathList = try MathListBuilder.buildChecked(fromString: latex)

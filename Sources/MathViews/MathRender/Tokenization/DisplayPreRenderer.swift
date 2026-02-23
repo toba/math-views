@@ -41,10 +41,8 @@ final class DisplayPreRenderer {
 
         // If the result is a MathListDisplay with a single subdisplay, unwrap it
         // This matches the behavior of the legacy typesetter
-        if let mathListDisplay = display as? MathListDisplay,
-           mathListDisplay.subDisplays.count == 1
-        {
-            return mathListDisplay.subDisplays[0]
+        if display.subDisplays.count == 1 {
+            return display.subDisplays[0]
         }
 
         return display

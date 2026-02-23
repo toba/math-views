@@ -1,6 +1,6 @@
 public import CoreGraphics
 public import CoreText
-public import Foundation
+import Foundation
 import Synchronization
 
 public final class FontInstance: @unchecked Sendable {

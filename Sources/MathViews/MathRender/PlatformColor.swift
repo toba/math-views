@@ -1,4 +1,4 @@
-public import Foundation
+import Foundation
 
 #if os(iOS) || os(visionOS)
 public import UIKit

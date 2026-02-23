@@ -1,3 +1,5 @@
+import Synchronization
+
 #if os(iOS) || os(visionOS)
 public import UIKit
 #elseif os(macOS)
@@ -6,66 +8,69 @@ public import AppKit
 
 /// Now available for everyone to use
 public enum MathFont: String, CaseIterable, Identifiable, Sendable {
-    
-    public var id: Self { self }  // Makes things simpler for SwiftUI
+    public var id: Self { self } // Makes things simpler for SwiftUI
 
     case latinModernFont = "latinmodern-math"
-    case xitsFont        = "xits-math"
-    case termesFont      = "texgyretermes-math"
-    case notoSansFont    = "NotoSansMath-Regular"
-    case libertinusFont  = "LibertinusMath-Regular"
-    case garamondFont    = "Garamond-Math"
-    
+    case xitsFont = "xits-math"
+    case termesFont = "texgyretermes-math"
+    case notoSansFont = "NotoSansMath-Regular"
+    case libertinusFont = "LibertinusMath-Regular"
+    case garamondFont = "Garamond-Math"
+
     var fontFamilyName: String {
         switch self {
-            case .latinModernFont:  "Latin Modern Math"
-            case .xitsFont:         "XITS Math"
-            case .termesFont:       "TeX Gyre Termes Math"
-            case .notoSansFont:     "Noto Sans Math"
-            case .libertinusFont:   "Libertinus Math"
-            case .garamondFont:     "Garamond-Math"
+            case .latinModernFont: "Latin Modern Math"
+            case .xitsFont: "XITS Math"
+            case .termesFont: "TeX Gyre Termes Math"
+            case .notoSansFont: "Noto Sans Math"
+            case .libertinusFont: "Libertinus Math"
+            case .garamondFont: "Garamond-Math"
         }
     }
 
     var postScriptName: String {
         switch self {
-            case .latinModernFont:  "LatinModernMath-Regular"
-            case .xitsFont:         "XITSMath"
-            case .termesFont:       "TeXGyreTermesMath-Regular"
-            case .notoSansFont:     "NotoSansMath-Regular"
-            case .libertinusFont:   "LibertinusMath-Regular"
-            case .garamondFont:     "Garamond-Math"
+            case .latinModernFont: "LatinModernMath-Regular"
+            case .xitsFont: "XITSMath"
+            case .termesFont: "TeXGyreTermesMath-Regular"
+            case .notoSansFont: "NotoSansMath-Regular"
+            case .libertinusFont: "LibertinusMath-Regular"
+            case .garamondFont: "Garamond-Math"
         }
     }
 
-    var fontName: String { self.rawValue }
-	
+    var fontName: String { rawValue }
+
     public func cgFont() -> CGFont {
         BundleManager.manager.obtainCGFont(font: self)
     }
+
     public func ctFont(withSize size: CGFloat) -> CTFont {
         BundleManager.manager.obtainCTFont(font: self, withSize: size)
     }
-    internal func rawMathTable() -> [String: Any] {
+
+    func rawMathTable() -> [String: Any] {
         BundleManager.manager.obtainRawMathTable(font: self)
     }
-    
+
     public func fontInstance(size: CGFloat) -> FontInstance {
         FontInstance(font: self, size: size)
     }
 }
-internal extension CTFont {
-    /** The size of this font in points. */
+
+extension CTFont {
+    /// The size of this font in points.
     var fontSize: CGFloat {
         CTFontGetSize(self)
     }
+
     var unitsPerEm: UInt {
-        return UInt(CTFontGetUnitsPerEm(self))
+        UInt(CTFontGetUnitsPerEm(self))
     }
 }
-import Synchronization
 
 // MARK: - Retroactive Sendable for CoreText/CoreGraphics types
+
 // These CF types are immutable after creation and thread-safe,
 // but Apple hasn't annotated them yet.
 extension CGFont: @retroactive @unchecked Sendable {}
@@ -82,7 +87,7 @@ private struct SendableCTFont: @unchecked Sendable {
     let font: CTFont
 }
 
-private class BundleManager: @unchecked Sendable {
+private final class BundleManager: @unchecked Sendable {
     static let manager = BundleManager()
 
     private struct CacheState: Sendable {
@@ -93,42 +98,66 @@ private class BundleManager: @unchecked Sendable {
 
     private let cache = Mutex(CacheState())
 
-    private static func loadCGFont(mathFont: MathFont) throws -> CGFont {
-        guard let frameworkBundleURL = Bundle.module.url(forResource: "mathFonts", withExtension: "bundle"),
-              let resourceBundleURL = Bundle(url: frameworkBundleURL)?.path(forResource: mathFont.rawValue, ofType: "otf") else {
+    private static func loadCGFont(mathFont: MathFont) throws(FontError) -> CGFont {
+        guard
+            let frameworkBundleURL = Bundle.module.url(
+                forResource: "mathFonts",
+                withExtension: "bundle",
+            ),
+            let resourceBundleURL = Bundle(url: frameworkBundleURL)?.path(
+                forResource: mathFont.rawValue, ofType: "otf",
+            )
+        else {
             throw FontError.fontPathNotFound
         }
-        guard let fontData = NSData(contentsOfFile: resourceBundleURL), let dataProvider = CGDataProvider(data: fontData) else {
+        guard let fontData = try? Data(contentsOf: URL(fileURLWithPath: resourceBundleURL)),
+              let dataProvider = CGDataProvider(data: fontData as CFData)
+        else {
             throw FontError.invalidFontFile
         }
         guard let defaultCGFont = CGFont(dataProvider) else {
             throw FontError.initFontError
         }
 
-        var errorRef: Unmanaged<CFError>? = nil
+        var errorRef: Unmanaged<CFError>?
         guard CTFontManagerRegisterGraphicsFont(defaultCGFont, &errorRef) else {
             throw FontError.registerFailed
         }
-        let postsript  = (defaultCGFont.postScriptName as? String) ?? ""
-        let cgfontName = (defaultCGFont.fullName as? String) ?? ""
+        let postscript = (defaultCGFont.postScriptName as? String) ?? ""
+        let cgFontName = (defaultCGFont.fullName as? String) ?? ""
         let threadName = Thread.isMainThread ? "main" : "global"
-        debugPrint("mathFonts bundle resource: \(mathFont.rawValue), font: \(cgfontName), ps: \(postsript) registered on \(threadName).")
+        debugPrint(
+            "mathFonts bundle resource: \(mathFont.rawValue), font: \(cgFontName), ps: \(postscript) registered on \(threadName).",
+        )
         return defaultCGFont
     }
 
-    private static func loadMathTable(mathFont: MathFont) throws -> [String: Any] {
-        guard let frameworkBundleURL = Bundle.module.url(forResource: "mathFonts", withExtension: "bundle"),
-              let mathTablePlist = Bundle(url: frameworkBundleURL)?.url(forResource: mathFont.rawValue, withExtension:"plist") else {
+    private static func loadMathTable(mathFont: MathFont) throws(FontError) -> [String: Any] {
+        guard
+            let frameworkBundleURL = Bundle.module.url(
+                forResource: "mathFonts",
+                withExtension: "bundle",
+            ),
+            let mathTablePlist = Bundle(url: frameworkBundleURL)?.url(
+                forResource: mathFont.rawValue, withExtension: "plist",
+            )
+        else {
             throw FontError.fontPathNotFound
         }
-        guard let plist = NSDictionary(contentsOf: mathTablePlist) as? [String: Any],
-                let version = plist["version"] as? String,
-                version == "1.3" else {
+        guard let plistData = try? Data(contentsOf: mathTablePlist),
+              let plist = (try? PropertyListSerialization.propertyList(
+                  from: plistData, format: nil,
+              )) as? [String: Any],
+              let version = plist["version"] as? String,
+              version == "1.3"
+        else {
             throw FontError.invalidMathTable
         }
 
         let threadName = Thread.isMainThread ? "main" : "global"
-        debugPrint("mathFonts bundle resource: \(mathFont.rawValue).plist registered on \(threadName).")
+        debugPrint(
+            "mathFonts bundle resource: \(mathFont.rawValue).plist registered on \(threadName).",
+        )
         return plist
     }
 
@@ -147,7 +176,9 @@ private class BundleManager: @unchecked Sendable {
                 }
             }
         } catch {
-            fatalError("MathFonts:\(#function) ondemand loading failed, mathFont \(mathFont.rawValue), reason \(error)")
+            fatalError(
+                "MathFonts:\(#function) ondemand loading failed, mathFont \(mathFont.rawValue), reason \(error)",
+            )
         }
     }
 
@@ -193,7 +224,7 @@ private class BundleManager: @unchecked Sendable {
     deinit {
         cache.withLock { state in
             state.ctFonts.removeAll()
-            var errorRef: Unmanaged<CFError>? = nil
+            var errorRef: Unmanaged<CFError>?
             for cgFont in state.cgFonts.values {
                 CTFontManagerUnregisterGraphicsFont(cgFont, &errorRef)
             }

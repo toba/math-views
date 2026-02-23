@@ -1,25 +1,22 @@
 public import Foundation
 
-/** `MathListBuilder` is a class for parsing LaTeX into an `MathList` that
- can be rendered and processed mathematically.
- */
+/// `MathListBuilder` is a class for parsing LaTeX into an `MathList` that
+/// can be rendered and processed mathematically.
 struct EnvProperties {
     var envName: String?
     var ended: Bool
     var numRows: Int
-    var alignment: ColumnAlignment?  // Optional alignment for starred matrix environments
+    var alignment: ColumnAlignment? // Optional alignment for starred matrix environments
 
     init(name: String?, alignment: ColumnAlignment? = nil) {
-        self.envName = name
-        self.numRows = 0
-        self.ended = false
+        envName = name
+        numRows = 0
+        ended = false
         self.alignment = alignment
     }
 }
 
-/**
- The error encountered when parsing a LaTeX string.
- */
+/// The error encountered when parsing a LaTeX string.
 public enum ParseError: Error, Equatable {
     /// The braces { } do not match.
     case mismatchBraces(String)
@@ -52,24 +49,26 @@ public enum ParseError: Error, Equatable {
 
     public var localizedDescription: String {
         switch self {
-        case .mismatchBraces(let m), .invalidCommand(let m), .characterNotFound(let m),
-             .missingDelimiter(let m), .invalidDelimiter(let m), .missingRight(let m),
-             .missingLeft(let m), .invalidEnv(let m), .missingEnv(let m),
-             .missingBegin(let m), .missingEnd(let m), .invalidNumColumns(let m),
-             .internalError(let m), .invalidLimits(let m):
-            return m
+            case let .mismatchBraces(m), let .invalidCommand(m), let .characterNotFound(m),
+                 let .missingDelimiter(m), let .invalidDelimiter(m), let .missingRight(m),
+                 let .missingLeft(m), let .invalidEnv(m), let .missingEnv(m),
+                 let .missingBegin(m), let .missingEnd(m), let .invalidNumColumns(m),
+                 let .internalError(m), let .invalidLimits(m):
+                return m
         }
     }
 
     /// Bridge to NSError for backward compatibility.
     func asNSError() -> NSError {
-        NSError(domain: "ParseError", code: 0, userInfo: [NSLocalizedDescriptionKey: localizedDescription])
+        NSError(
+            domain: "ParseError", code: 0,
+            userInfo: [NSLocalizedDescriptionKey: localizedDescription],
+        )
     }
 }
 
-/** `MathListBuilder` is a class for parsing LaTeX into an `MathList` that
- can be rendered and processed mathematically.
- */
+/// `MathListBuilder` is a class for parsing LaTeX into an `MathList` that
+/// can be rendered and processed mathematically.
 public struct MathListBuilder {
     /// The math mode determines rendering style (inline vs display)
     enum MathMode {
@@ -81,10 +80,10 @@ public struct MathListBuilder {
         /// Convert MathMode to LineStyle for rendering
         func toLineStyle() -> LineStyle {
             switch self {
-            case .display:
-                return .display
-            case .inline:
-                return .text
+                case .display:
+                    return .display
+                case .inline:
+                    return .text
             }
         }
     }
@@ -93,25 +92,28 @@ public struct MathListBuilder {
     var currentCharIndex: String.Index
     var currentInnerAtom: Inner?
     var currentEnv: EnvProperties?
-    var currentFontStyle:FontStyle
-    var spacesAllowed:Bool
+    var currentFontStyle: FontStyle
+    var spacesAllowed: Bool
     var mathMode: MathMode = .display
 
-    /** Contains any error that occurred during parsing. */
-    var error:ParseError?
-    
+    /// Contains any error that occurred during parsing.
+    var error: ParseError?
+
     // MARK: - Character-handling routines
-    
+
     var hasCharacters: Bool { currentCharIndex < string.endIndex }
-    
+
     // gets the next character and increments the index
     mutating func getNextCharacter() -> Character {
-        assert(self.hasCharacters, "Retrieving character at index \(self.currentCharIndex) beyond length \(self.string.count)")
+        assert(
+            hasCharacters,
+            "Retrieving character at index \(currentCharIndex) beyond length \(string.count)",
+        )
         let ch = string[currentCharIndex]
         currentCharIndex = string.index(after: currentCharIndex)
         return ch
     }
-    
+
     mutating func unlookCharacter() {
         assert(currentCharIndex > string.startIndex, "Unlooking when at the first character.")
         if currentCharIndex > string.startIndex {
@@ -155,57 +157,55 @@ public struct MathListBuilder {
         }
     }
 
-
-    
     mutating func expectCharacter(_ ch: Character) -> Bool {
         assertNotSpace(ch)
-        self.skipSpaces()
-        
-        if self.hasCharacters {
-            let nextChar = self.getNextCharacter()
+        skipSpaces()
+
+        if hasCharacters {
+            let nextChar = getNextCharacter()
             assertNotSpace(nextChar)
             if nextChar == ch {
                 return true
             } else {
-                self.unlookCharacter()
+                unlookCharacter()
                 return false
             }
         }
         return false
     }
-    
+
     public static let spaceToCommands: [CGFloat: String] = [
-        3 : ",",
-        4 : ">",
-        5 : ";",
-        (-3) : "!",
-        18 : "quad",
-        36 : "qquad",
+        3: ",",
+        4: ">",
+        5: ";",
+        -3: "!",
+        18: "quad",
+        36: "qquad",
     ]
-    
+
     public static let styleToCommands: [LineStyle: String] = [
         .display: "displaystyle",
         .text: "textstyle",
         .script: "scriptstyle",
-        .scriptOfScript: "scriptscriptstyle"
+        .scriptOfScript: "scriptscriptstyle",
     ]
 
     // Comprehensive mapping of \not command combinations to Unicode negated symbols
     public static let notCombinations: [String: String] = [
         // Primary targets (user requested)
-        "equiv": "\u{2262}",    // ≢ Not equivalent
-        "subset": "\u{2284}",   // ⊄ Not subset
-        "in": "\u{2209}",       // ∉ Not element of
+        "equiv": "\u{2262}", // ≢ Not equivalent
+        "subset": "\u{2284}", // ⊄ Not subset
+        "in": "\u{2209}", // ∉ Not element of
 
         // Additional standard negations
-        "sim": "\u{2241}",      // ≁ Not similar
-        "approx": "\u{2249}",   // ≉ Not approximately equal
-        "cong": "\u{2247}",     // ≇ Not congruent
+        "sim": "\u{2241}", // ≁ Not similar
+        "approx": "\u{2249}", // ≉ Not approximately equal
+        "cong": "\u{2247}", // ≇ Not congruent
         "parallel": "\u{2226}", // ∦ Not parallel
         "subseteq": "\u{2288}", // ⊈ Not subset or equal
-        "supset": "\u{2285}",   // ⊅ Not superset
+        "supset": "\u{2285}", // ⊅ Not superset
         "supseteq": "\u{2289}", // ⊉ Not superset or equal
-        "=": "\u{2260}",        // ≠ Not equal (alternative to \neq)
+        "=": "\u{2260}", // ≠ Not equal (alternative to \neq)
     ]
 
     /// Delimiter sizing commands with their size multipliers (relative to font size).
@@ -238,9 +238,9 @@ public struct MathListBuilder {
     init(string: String) {
         self.error = nil
         self.string = string
-        self.currentCharIndex = string.startIndex
-        self.currentFontStyle = .defaultStyle
-        self.spacesAllowed = false
+        currentCharIndex = string.startIndex
+        currentFontStyle = .defaultStyle
+        spacesAllowed = false
     }
 
     // MARK: - Delimiter Detection
@@ -254,29 +254,35 @@ public struct MathListBuilder {
         // Check display delimiters first (more specific patterns)
 
         // \[...\] - LaTeX display math
-        if trimmed.hasPrefix("\\[") && trimmed.hasSuffix("\\]") && trimmed.count > 4 {
-            let content = String(trimmed.dropFirst(2).dropLast(2))
-            return (content, .display)
+        if trimmed.hasPrefix("\\["), trimmed.hasSuffix("\\]"), trimmed.count > 4 {
+            let start = trimmed.index(trimmed.startIndex, offsetBy: 2)
+            let end = trimmed.index(trimmed.endIndex, offsetBy: -2)
+            return (String(trimmed[start ..< end]), .display)
         }
 
         // $$...$$ - TeX display math (check before single $)
-        if trimmed.hasPrefix("$$") && trimmed.hasSuffix("$$") && trimmed.count > 4 {
-            let content = String(trimmed.dropFirst(2).dropLast(2))
-            return (content, .display)
+        if trimmed.hasPrefix("$$"), trimmed.hasSuffix("$$"), trimmed.count > 4 {
+            let start = trimmed.index(trimmed.startIndex, offsetBy: 2)
+            let end = trimmed.index(trimmed.endIndex, offsetBy: -2)
+            return (String(trimmed[start ..< end]), .display)
         }
 
         // Check inline delimiters
 
         // \(...\) - LaTeX inline math
-        if trimmed.hasPrefix("\\(") && trimmed.hasSuffix("\\)") && trimmed.count > 4 {
-            let content = String(trimmed.dropFirst(2).dropLast(2))
-            return (content, .inline)
+        if trimmed.hasPrefix("\\("), trimmed.hasSuffix("\\)"), trimmed.count > 4 {
+            let start = trimmed.index(trimmed.startIndex, offsetBy: 2)
+            let end = trimmed.index(trimmed.endIndex, offsetBy: -2)
+            return (String(trimmed[start ..< end]), .inline)
         }
 
         // $...$ - TeX inline math (must check after $$)
-        if trimmed.hasPrefix("$") && trimmed.hasSuffix("$") && trimmed.count > 2 && !trimmed.hasPrefix("$$") {
-            let content = String(trimmed.dropFirst(1).dropLast(1))
-            return (content, .inline)
+        if trimmed.hasPrefix("$"), trimmed.hasSuffix("$"), trimmed.count > 2,
+           !trimmed.hasPrefix("$$")
+        {
+            let start = trimmed.index(after: trimmed.startIndex)
+            let end = trimmed.index(before: trimmed.endIndex)
+            return (String(trimmed[start ..< end]), .inline)
         }
 
         // Check if it's an environment (\begin{...}\end{...})
@@ -294,17 +300,17 @@ public struct MathListBuilder {
     /// Builds a mathlist from the internal `string`. Returns nil if there is an error.
     public mutating func build() -> MathList? {
         // Detect and strip delimiters, updating the string and mode
-        let (cleanedString, mode) = detectAndStripDelimiters(from: self.string)
-        self.string = cleanedString
-        self.currentCharIndex = cleanedString.startIndex
-        self.mathMode = mode
+        let (cleanedString, mode) = detectAndStripDelimiters(from: string)
+        string = cleanedString
+        currentCharIndex = cleanedString.startIndex
+        mathMode = mode
 
         // If inline mode, we could optionally prepend a \textstyle command
         // to force inline rendering of operators. For now, just track the mode.
 
-        let list = self.buildInternal(false)
-        if self.hasCharacters && error == nil {
-            self.setError(.mismatchBraces("Mismatched braces: \(self.string)"))
+        let list = buildInternal(false)
+        if hasCharacters, error == nil {
+            setError(.mismatchBraces("Mismatched braces: \(string)"))
             return nil
         }
         if error != nil {
@@ -316,7 +322,7 @@ public struct MathListBuilder {
         // same font size in both display and text modes (not one level smaller).
         // Large operators show limits above/below in text style due to the updated
         // condition in makeLargeOp() that checks both .display and .text styles.
-        if mode == .inline && list != nil && !list!.atoms.isEmpty {
+        if mode == .inline, list != nil, !list!.atoms.isEmpty {
             // Prepend \textstyle to force inline rendering
             let styleAtom = MathStyle(style: .text)
             list!.atoms.insert(styleAtom, at: 0)
@@ -324,10 +330,9 @@ public struct MathListBuilder {
 
         return list
     }
-    
-    /** Construct a math list from a given string. If there is parse error, returns
-     nil. To retrieve the error use the function `MathListBuilder.build(fromString:error:)`.
-     */
+
+    /// Construct a math list from a given string. If there is parse error, returns
+    /// nil. To retrieve the error use the function `MathListBuilder.build(fromString:error:)`.
     public static func build(fromString string: String) -> MathList? {
         var builder = MathListBuilder(string: string)
         return builder.build()
@@ -341,12 +346,13 @@ public struct MathListBuilder {
         return output ?? MathList()
     }
 
-    /** Construct a math list from a given string. If there is an error while
-     constructing the string, this returns nil. The error is returned in the
-     `error` parameter.
-     */
-    @available(*, deprecated, message: "Use the throwing variant: build(fromString:) throws(ParseError)")
-    public static func build(fromString string: String, error:inout NSError?) -> MathList? {
+    /// Construct a math list from a given string. If there is an error while
+    /// constructing the string, this returns nil. The error is returned in the
+    /// `error` parameter.
+    @available(
+        *, deprecated, message: "Use the throwing variant: build(fromString:) throws(ParseError)"
+    )
+    public static func build(fromString string: String, error: inout NSError?) -> MathList? {
         var builder = MathListBuilder(string: string)
         let output = builder.build()
         if let parseError = builder.error {
@@ -356,16 +362,17 @@ public struct MathListBuilder {
         return output
     }
 
-    /** Construct a math list from a given string and return the detected style.
-     This method detects LaTeX delimiters like \[...\], $$...$$, $...$, \(...\)
-     and returns the appropriate rendering style (.display or .text).
-
-     If there is a parse error, returns nil for the MathList.
-
-     - Parameter string: The LaTeX string to parse
-     - Returns: A tuple containing the parsed MathList and the detected LineStyle
-     */
-    public static func buildWithStyle(fromString string: String) -> (mathList: MathList?, style: LineStyle) {
+    /// Construct a math list from a given string and return the detected style.
+    /// This method detects LaTeX delimiters like \[...\], $$...$$, $...$, \(...\)
+    /// and returns the appropriate rendering style (.display or .text).
+    ///
+    /// If there is a parse error, returns nil for the MathList.
+    ///
+    /// - Parameter string: The LaTeX string to parse
+    /// - Returns: A tuple containing the parsed MathList and the detected LineStyle
+    public static func buildWithStyle(fromString string: String) -> (
+        mathList: MathList?, style: LineStyle,
+    ) {
         var builder = MathListBuilder(string: string)
         let mathList = builder.build()
         let style = builder.mathMode.toLineStyle()
@@ -373,7 +380,9 @@ public struct MathListBuilder {
     }
 
     /// Construct a math list and detect style, throwing on parse errors.
-    public static func buildWithStyleChecked(fromString string: String) throws(ParseError) -> (mathList: MathList, style: LineStyle) {
+    public static func buildWithStyleChecked(fromString string: String) throws(ParseError) -> (
+        mathList: MathList, style: LineStyle,
+    ) {
         var builder = MathListBuilder(string: string)
         let output = builder.build()
         let style = builder.mathMode.toLineStyle()
@@ -381,8 +390,13 @@ public struct MathListBuilder {
         return (output ?? MathList(), style)
     }
 
-    @available(*, deprecated, message: "Use the throwing variant: buildWithStyle(fromString:) throws(ParseError)")
-    public static func buildWithStyle(fromString string: String, error: inout NSError?) -> (mathList: MathList?, style: LineStyle) {
+    @available(
+        *, deprecated,
+        message: "Use the throwing variant: buildWithStyle(fromString:) throws(ParseError)"
+    )
+    public static func buildWithStyle(fromString string: String, error: inout NSError?) -> (
+        mathList: MathList?, style: LineStyle,
+    ) {
         var builder = MathListBuilder(string: string)
         let output = builder.build()
         let style = builder.mathMode.toLineStyle()
@@ -392,37 +406,39 @@ public struct MathListBuilder {
         }
         return (output, style)
     }
-    
+
     public mutating func buildInternal(_ oneCharOnly: Bool) -> MathList? {
-        self.buildInternal(oneCharOnly, stopChar: nil)
+        buildInternal(oneCharOnly, stopChar: nil)
     }
-    
-    public mutating func buildInternal(_ oneCharOnly: Bool, stopChar stop: Character?) -> MathList? {
+
+    public mutating func buildInternal(_ oneCharOnly: Bool,
+                                       stopChar stop: Character?) -> MathList?
+    {
         let list = MathList()
         assert(!(oneCharOnly && stop != nil), "Cannot set both oneCharOnly and stopChar.")
-        var prevAtom: MathAtom? = nil
-        while self.hasCharacters {
+        var prevAtom: MathAtom?
+        while hasCharacters {
             if error != nil { return nil } // If there is an error thus far then bail out.
-            
-            var atom: MathAtom? = nil
-            let char = self.getNextCharacter()
-            
+
+            var atom: MathAtom?
+            let char = getNextCharacter()
+
             if oneCharOnly {
                 if char == "^" || char == "}" || char == "_" || char == "&" {
                     // this is not the character we are looking for.
                     // They are meant for the caller to look at.
-                    self.unlookCharacter()
+                    unlookCharacter()
                     return list
                 }
             }
             // If there is a stop character, keep scanning 'til we find it
-            if stop != nil && char == stop! {
+            if stop != nil, char == stop! {
                 return list
             }
-            
+
             if char == "^" {
                 assert(!oneCharOnly, "This should have been handled before")
-                if (prevAtom == nil || prevAtom!.superScript != nil || !prevAtom!.isScriptAllowed()) {
+                if prevAtom == nil || prevAtom!.superScript != nil || !prevAtom!.isScriptAllowed() {
                     // If there is no previous atom, or if it already has a superscript
                     // or if scripts are not allowed for it, then add an empty node.
                     prevAtom = MathAtom(type: .ordinary, value: "")
@@ -430,11 +446,11 @@ public struct MathListBuilder {
                 }
                 // this is a superscript for the previous atom
                 // note: if the next char is the stopChar it will be consumed by the ^ and so it doesn't count as stop
-                prevAtom!.superScript = self.buildInternal(true)
+                prevAtom!.superScript = buildInternal(true)
                 continue
             } else if char == "_" {
                 assert(!oneCharOnly, "This should have been handled before")
-                if (prevAtom == nil || prevAtom!.subScript != nil || !prevAtom!.isScriptAllowed()) {
+                if prevAtom == nil || prevAtom!.subScript != nil || !prevAtom!.isScriptAllowed() {
                     // If there is no previous atom, or if it already has a subcript
                     // or if scripts are not allowed for it, then add an empty node.
                     prevAtom = MathAtom(type: .ordinary, value: "")
@@ -442,11 +458,11 @@ public struct MathListBuilder {
                 }
                 // this is a subscript for the previous atom
                 // note: if the next char is the stopChar it will be consumed by the _ and so it doesn't count as stop
-                prevAtom!.subScript = self.buildInternal(true)
+                prevAtom!.subScript = buildInternal(true)
                 continue
             } else if char == "{" {
                 // this puts us in a recursive routine, and sets oneCharOnly to false and no stop character
-                if let subList = self.buildInternal(false, stopChar: "}") {
+                if let subList = buildInternal(false, stopChar: "}") {
                     prevAtom = subList.atoms.last
                     list.append(subList)
                     if oneCharOnly {
@@ -460,38 +476,38 @@ public struct MathListBuilder {
                 assert(stop == nil, "This should have been handled before")
                 // Special case: } terminates implicit table (envName == nil) created by \\
                 // This happens when \\ is used inside braces: \substack{a \\ b}
-                if self.currentEnv != nil && self.currentEnv!.envName == nil {
+                if currentEnv != nil, currentEnv!.envName == nil {
                     // Mark environment as ended, don't consume the }
-                    self.currentEnv!.ended = true
+                    currentEnv!.ended = true
                     return list
                 }
                 // We encountered a closing brace when there is no stop set, that means there was no
                 // corresponding opening brace.
-                self.setError(.mismatchBraces("Mismatched braces."))
+                setError(.mismatchBraces("Mismatched braces."))
                 return nil
             } else if char == "\\" {
                 let command = readCommand()
-                let done = stopCommand(command, list:list, stopChar:stop)
+                let done = stopCommand(command, list: list, stopChar: stop)
                 if done != nil {
                     return done
                 } else if error != nil {
                     return nil
                 }
-                if self.applyModifier(command, atom:prevAtom) {
+                if applyModifier(command, atom: prevAtom) {
                     continue
                 }
-                
+
                 if let fontStyle = MathAtomFactory.fontStyleWithName(command) {
                     let oldSpacesAllowed = spacesAllowed
                     // Text has special consideration where it allows spaces without escaping.
                     spacesAllowed = command == "text"
                     let oldFontStyle = currentFontStyle
                     currentFontStyle = fontStyle
-                    if let sublist = self.buildInternal(true) {
+                    if let sublist = buildInternal(true) {
                         // Restore the font style.
                         currentFontStyle = oldFontStyle
                         spacesAllowed = oldSpacesAllowed
-                        
+
                         prevAtom = sublist.atoms.last
                         list.append(sublist)
                         if oneCharOnly {
@@ -500,29 +516,29 @@ public struct MathListBuilder {
                     }
                     continue
                 }
-                atom = self.atomForCommand(command)
+                atom = atomForCommand(command)
                 if atom == nil {
                     // this was an unknown command,
                     // we flag an error and return
                     // (note setError will not set the error if there is already one, so we flag internal error
                     // in the odd case that an _error is not set.
-                    self.setError(.internalError("Internal error"))
+                    setError(.internalError("Internal error"))
                     return nil
                 }
             } else if char == "&" {
                 // used for column separation in tables
                 assert(!oneCharOnly, "This should have been handled before")
-                if self.currentEnv != nil {
+                if currentEnv != nil {
                     return list
                 } else {
                     // Create a new table with the current list and a default env
-                    if let table = self.buildTable(env: nil, firstList: list, isRow: false) {
+                    if let table = buildTable(env: nil, firstList: list, isRow: false) {
                         return MathList(atom: table)
                     } else {
                         return nil
                     }
                 }
-            } else if spacesAllowed && char == " " {
+            } else if spacesAllowed, char == " " {
                 // If spaces are allowed then spaces do not need escaping with a \ before being used.
                 atom = MathAtomFactory.atom(forLatexSymbol: " ")
             } else {
@@ -531,7 +547,7 @@ public struct MathListBuilder {
                     // Not a recognized character in standard math mode
                     // In text mode (spacesAllowed && roman style), accept any Unicode character for fallback font support
                     // This enables Chinese, Japanese, Korean, emoji, etc. in \text{} commands
-                    if spacesAllowed && currentFontStyle == .roman {
+                    if spacesAllowed, currentFontStyle == .roman {
                         atom = MathAtom(type: .ordinary, value: String(char))
                     } else {
                         // In math mode or non-text commands, skip unrecognized characters
@@ -539,7 +555,7 @@ public struct MathListBuilder {
                     }
                 }
             }
-            
+
             assert(atom != nil, "Atom shouldn't be nil")
             atom?.fontStyle = currentFontStyle
             // If this is an accent atom (e.g., from an accented character like "é"),
@@ -549,15 +565,13 @@ public struct MathListBuilder {
             // We only set font style on atoms with .defaultStyle to avoid overriding
             // explicit font style commands like \textbf inside accents.
             if let accent = atom as? Accent, let innerList = accent.innerList {
-                for innerAtom in innerList.atoms {
-                    if innerAtom.fontStyle == .defaultStyle {
-                        innerAtom.fontStyle = currentFontStyle
-                    }
+                for innerAtom in innerList.atoms where innerAtom.fontStyle == .defaultStyle {
+                    innerAtom.fontStyle = currentFontStyle
                 }
             }
             list.add(atom)
             prevAtom = atom
-            
+
             if oneCharOnly {
                 return list
             }
@@ -565,19 +579,18 @@ public struct MathListBuilder {
         if stop != nil {
             if stop == "}" {
                 // We did not find a corresponding closing brace.
-                self.setError(.mismatchBraces("Missing closing brace"))
+                setError(.mismatchBraces("Missing closing brace"))
             } else {
                 // we never found our stop character
                 let errorMessage = "Expected character not found: \(stop!)"
-                self.setError(.characterNotFound(errorMessage))
+                setError(.characterNotFound(errorMessage))
             }
         }
         return list
     }
-    
-    
+
     // MARK: - MathList to LaTeX conversion
-    
+
     /// This converts the MathList to LaTeX.
     public static func mathListToString(_ ml: MathList?) -> String {
         var str = ""
@@ -599,26 +612,30 @@ public struct MathListBuilder {
                         if frac.isContinuedFraction {
                             // Generate \cfrac with optional alignment
                             if frac.alignment != "c" {
-                                str += "\\cfrac[\(frac.alignment)]{\(mathListToString(frac.numerator!))}{\(mathListToString(frac.denominator!))}"
+                                str +=
+                                    "\\cfrac[\(frac.alignment)]{\(mathListToString(frac.numerator!))}{\(mathListToString(frac.denominator!))}"
                             } else {
-                                str += "\\cfrac{\(mathListToString(frac.numerator!))}{\(mathListToString(frac.denominator!))}"
+                                str +=
+                                    "\\cfrac{\(mathListToString(frac.numerator!))}{\(mathListToString(frac.denominator!))}"
                             }
                         } else if frac.hasRule {
-                            str += "\\frac{\(mathListToString(frac.numerator!))}{\(mathListToString(frac.denominator!))}"
+                            str +=
+                                "\\frac{\(mathListToString(frac.numerator!))}{\(mathListToString(frac.denominator!))}"
                         } else {
                             let command: String
-                            if frac.leftDelimiter.isEmpty && frac.rightDelimiter.isEmpty {
+                            if frac.leftDelimiter.isEmpty, frac.rightDelimiter.isEmpty {
                                 command = "atop"
-                            } else if frac.leftDelimiter == "(" && frac.rightDelimiter == ")" {
+                            } else if frac.leftDelimiter == "(", frac.rightDelimiter == ")" {
                                 command = "choose"
-                            } else if frac.leftDelimiter == "{" && frac.rightDelimiter == "}" {
+                            } else if frac.leftDelimiter == "{", frac.rightDelimiter == "}" {
                                 command = "brace"
-                            } else if frac.leftDelimiter == "[" && frac.rightDelimiter == "]" {
+                            } else if frac.leftDelimiter == "[", frac.rightDelimiter == "]" {
                                 command = "brack"
                             } else {
                                 command = "atopwithdelims\(frac.leftDelimiter)\(frac.rightDelimiter)"
                             }
-                            str += "{\(mathListToString(frac.numerator!)) \\\(command) \(mathListToString(frac.denominator!))}"
+                            str +=
+                                "{\(mathListToString(frac.numerator!)) \\\(command) \(mathListToString(frac.denominator!))}"
                         }
                     }
                 } else if atom.type == .radical {
@@ -637,9 +654,9 @@ public struct MathListBuilder {
                             } else {
                                 str += "\\left. "
                             }
-                            
+
                             str += mathListToString(inner.innerList!)
-                            
+
                             if inner.rightBoundary != nil {
                                 str += "\\right\(delimToString(delim: inner.rightBoundary!)) "
                             } else {
@@ -654,19 +671,24 @@ public struct MathListBuilder {
                         if !table.environment.isEmpty {
                             str += "\\begin{\(table.environment)}"
                         }
-                        
-                        for i in 0..<table.numRows {
+
+                        for i in 0 ..< table.numRows {
                             let row = table.cells[i]
-                            for j in 0..<row.count {
+                            for j in 0 ..< row.count {
                                 let cell = row[j]
                                 if table.environment == "matrix" {
-                                    if cell.atoms.count >= 1 && cell.atoms[0].type == .style {
+                                    if cell.atoms.count >= 1, cell.atoms[0].type == .style {
                                         // remove first atom
                                         cell.atoms.removeFirst()
                                     }
                                 }
-                                if table.environment == "eqalign" || table.environment == "aligned" || table.environment == "split" {
-                                    if j == 1 && cell.atoms.count >= 1 && cell.atoms[0].type == .ordinary && cell.atoms[0].nucleus.count == 0 {
+                                if table.environment == "eqalign" || table.environment == "aligned"
+                                    || table.environment == "split"
+                                {
+                                    if j == 1, cell.atoms.count >= 1,
+                                       cell.atoms[0].type == .ordinary,
+                                       cell.atoms[0].nucleus.isEmpty
+                                    {
                                         // remove empty nucleus added for spacing
                                         cell.atoms.removeFirst()
                                     }
@@ -696,18 +718,22 @@ public struct MathListBuilder {
                     }
                 } else if atom.type == .accent {
                     if let accent = atom as? Accent {
-                        str += "\\\(MathAtomFactory.accentName(accent)!){\(mathListToString(accent.innerList!))}"
+                        str +=
+                            "\\\(MathAtomFactory.accentName(accent)!){\(mathListToString(accent.innerList!))}"
                     }
                 } else if atom.type == .largeOperator {
-                    let op = atom as! LargeOperator
-                    let command = MathAtomFactory.latexSymbolName(for: atom)
-                    let originalOp = MathAtomFactory.atom(forLatexSymbol: command!) as! LargeOperator
-                    str += "\\\(command!) "
-                    if originalOp.limits != op.limits {
-                        if op.limits {
-                            str += "\\limits "
-                        } else {
-                            str += "\\nolimits "
+                    if let op = atom as? LargeOperator,
+                       let command = MathAtomFactory.latexSymbolName(for: atom),
+                       let originalOp = MathAtomFactory
+                       .atom(forLatexSymbol: command) as? LargeOperator
+                    {
+                        str += "\\\(command) "
+                        if originalOp.limits != op.limits {
+                            if op.limits {
+                                str += "\\limits "
+                            } else {
+                                str += "\\nolimits "
+                            }
                         }
                     }
                 } else if atom.type == .space {
@@ -739,11 +765,11 @@ public struct MathListBuilder {
                         str += "\(atom.nucleus)"
                     }
                 }
-                
+
                 if atom.superScript != nil {
                     str += "^{\(mathListToString(atom.superScript!))}"
                 }
-                
+
                 if atom.subScript != nil {
                     str += "_{\(mathListToString(atom.subScript!))}"
                 }
@@ -754,10 +780,10 @@ public struct MathListBuilder {
         }
         return str
     }
-    
+
     public static func delimToString(delim: MathAtom) -> String {
         if let command = MathAtomFactory.getDelimiterName(of: delim) {
-            let singleChars = [ "(", ")", "[", "]", "<", ">", "|", ".", "/"]
+            let singleChars = ["(", ")", "[", "]", "<", ">", "|", ".", "/"]
             if singleChars.contains(command) {
                 return command
             } else if command == "||" {
@@ -768,21 +794,21 @@ public struct MathListBuilder {
         }
         return ""
     }
-    
-    mutating func atomForCommand(_ command:String) -> MathAtom? {
+
+    mutating func atomForCommand(_ command: String) -> MathAtom? {
         if let atom = MathAtomFactory.atom(forLatexSymbol: command) {
             return atom
         }
         if let accent = MathAtomFactory.accent(withName: command) {
             // The command is an accent
-            accent.innerList = self.buildInternal(true)
-            return accent;
+            accent.innerList = buildInternal(true)
+            return accent
         } else if command == "frac" {
             // A fraction command has 2 arguments
             let frac = Fraction()
-            frac.numerator = self.buildInternal(true)
-            frac.denominator = self.buildInternal(true)
-            return frac;
+            frac.numerator = buildInternal(true)
+            frac.denominator = buildInternal(true)
+            return frac
         } else if command == "cfrac" {
             // A continued fraction command with optional alignment and 2 arguments
             let frac = Fraction()
@@ -790,7 +816,7 @@ public struct MathListBuilder {
 
             // Parse optional alignment parameter [l], [r], [c]
             skipSpaces()
-            if hasCharacters && string[currentCharIndex] == "[" {
+            if hasCharacters, string[currentCharIndex] == "[" {
                 _ = getNextCharacter() // consume '['
                 if hasCharacters {
                     let alignmentChar = getNextCharacter()
@@ -799,19 +825,19 @@ public struct MathListBuilder {
                     }
                 }
                 // Consume closing ']'
-                if hasCharacters && string[currentCharIndex] == "]" {
+                if hasCharacters, string[currentCharIndex] == "]" {
                     _ = getNextCharacter()
                 }
             }
 
-            frac.numerator = self.buildInternal(true)
-            frac.denominator = self.buildInternal(true)
-            return frac;
+            frac.numerator = buildInternal(true)
+            frac.denominator = buildInternal(true)
+            return frac
         } else if command == "dfrac" {
             // Display-style fraction command has 2 arguments
             let frac = Fraction()
-            let numerator = self.buildInternal(true)
-            let denominator = self.buildInternal(true)
+            let numerator = buildInternal(true)
+            let denominator = buildInternal(true)
 
             // Prepend \displaystyle to force display mode rendering
             let displayStyle = MathStyle(style: .display)
@@ -820,12 +846,12 @@ public struct MathListBuilder {
 
             frac.numerator = numerator
             frac.denominator = denominator
-            return frac;
+            return frac
         } else if command == "tfrac" {
             // Text-style fraction command has 2 arguments
             let frac = Fraction()
-            let numerator = self.buildInternal(true)
-            let denominator = self.buildInternal(true)
+            let numerator = buildInternal(true)
+            let denominator = buildInternal(true)
 
             // Prepend \textstyle to force text mode rendering
             let textStyle = MathStyle(style: .text)
@@ -834,28 +860,28 @@ public struct MathListBuilder {
 
             frac.numerator = numerator
             frac.denominator = denominator
-            return frac;
+            return frac
         } else if command == "binom" {
             // A binom command has 2 arguments
             let frac = Fraction(hasRule: false)
-            frac.numerator = self.buildInternal(true)
-            frac.denominator = self.buildInternal(true)
-            frac.leftDelimiter = "(";
-            frac.rightDelimiter = ")";
-            return frac;
+            frac.numerator = buildInternal(true)
+            frac.denominator = buildInternal(true)
+            frac.leftDelimiter = "("
+            frac.rightDelimiter = ")"
+            return frac
         } else if command == "bra" {
             // Dirac bra notation: \bra{psi} -> ⟨psi|
             let inner = Inner()
             inner.leftBoundary = MathAtomFactory.boundary(forDelimiter: "langle")
             inner.rightBoundary = MathAtomFactory.boundary(forDelimiter: "|")
-            inner.innerList = self.buildInternal(true)
+            inner.innerList = buildInternal(true)
             return inner
         } else if command == "ket" {
             // Dirac ket notation: \ket{psi} -> |psi⟩
             let inner = Inner()
             inner.leftBoundary = MathAtomFactory.boundary(forDelimiter: "|")
             inner.rightBoundary = MathAtomFactory.boundary(forDelimiter: "rangle")
-            inner.innerList = self.buildInternal(true)
+            inner.innerList = buildInternal(true)
             return inner
         } else if command == "braket" {
             // Dirac braket notation: \braket{phi}{psi} -> ⟨phi|psi⟩
@@ -863,8 +889,8 @@ public struct MathListBuilder {
             inner.leftBoundary = MathAtomFactory.boundary(forDelimiter: "langle")
             inner.rightBoundary = MathAtomFactory.boundary(forDelimiter: "rangle")
             // Build the inner content: phi | psi
-            let phi = self.buildInternal(true)
-            let psi = self.buildInternal(true)
+            let phi = buildInternal(true)
+            let psi = buildInternal(true)
             let content = MathList()
             if let phiList = phi {
                 for atom in phiList.atoms {
@@ -886,7 +912,7 @@ public struct MathListBuilder {
             let hasLimits = command.hasSuffix("*")
 
             // Parse the operator name
-            let content = self.buildInternal(true)
+            let content = buildInternal(true)
 
             // Convert the parsed content to a string
             var operatorName = ""
@@ -898,7 +924,7 @@ public struct MathListBuilder {
 
             if operatorName.isEmpty {
                 let errorMessage = "Missing operator name for \\operatorname"
-                self.setError(.invalidCommand(errorMessage))
+                setError(.invalidCommand(errorMessage))
                 return nil
             }
 
@@ -906,55 +932,55 @@ public struct MathListBuilder {
         } else if command == "sqrt" {
             // A sqrt command with one argument
             let rad = Radical()
-            guard self.hasCharacters else {
-                rad.radicand = self.buildInternal(true)
+            guard hasCharacters else {
+                rad.radicand = buildInternal(true)
                 return rad
             }
-            let ch = self.getNextCharacter()
-            if (ch == "[") {
+            let ch = getNextCharacter()
+            if ch == "[" {
                 // special handling for sqrt[degree]{radicand}
-                rad.degree = self.buildInternal(false, stopChar:"]")
-                rad.radicand = self.buildInternal(true)
+                rad.degree = buildInternal(false, stopChar: "]")
+                rad.radicand = buildInternal(true)
             } else {
-                self.unlookCharacter()
-                rad.radicand = self.buildInternal(true)
+                unlookCharacter()
+                rad.radicand = buildInternal(true)
             }
-            return rad;
+            return rad
         } else if command == "left" {
             // Save the current inner while a new one gets built.
             let oldInner = currentInnerAtom
             currentInnerAtom = Inner()
-            currentInnerAtom!.leftBoundary = self.getBoundaryAtom("left")
+            currentInnerAtom!.leftBoundary = getBoundaryAtom("left")
             if currentInnerAtom!.leftBoundary == nil {
-                return nil;
+                return nil
             }
-            currentInnerAtom!.innerList = self.buildInternal(false)
+            currentInnerAtom!.innerList = buildInternal(false)
             if currentInnerAtom!.rightBoundary == nil {
                 // A right node would have set the right boundary so we must be missing the right node.
                 let errorMessage = "Missing \\right"
-                self.setError(.missingRight(errorMessage))
+                setError(.missingRight(errorMessage))
                 return nil
             }
             // reinstate the old inner atom.
-            let newInner = currentInnerAtom;
-            currentInnerAtom = oldInner;
-            return newInner;
+            let newInner = currentInnerAtom
+            currentInnerAtom = oldInner
+            return newInner
         } else if command == "overline" {
             // The overline command has 1 arguments
             let over = OverLine()
-            over.innerList = self.buildInternal(true)
+            over.innerList = buildInternal(true)
             return over
         } else if command == "underline" {
             // The underline command has 1 arguments
             let under = UnderLine()
-            under.innerList = self.buildInternal(true)
+            under.innerList = buildInternal(true)
             return under
         } else if command == "substack" {
             // \substack reads ONE braced argument containing rows separated by \\
             // Similar to how \frac reads {numerator}{denominator}
 
             // Read the braced content using standard pattern
-            let content = self.buildInternal(true)
+            let content = buildInternal(true)
 
             if content == nil {
                 return nil
@@ -979,41 +1005,40 @@ public struct MathListBuilder {
                 return nil
             }
         } else if command == "begin" {
-            let env = self.readEnvironment()
+            let env = readEnvironment()
             if env == nil {
-                return nil;
+                return nil
             }
-            let table = self.buildTable(env: env, firstList:nil, isRow:false)
-            return table
+            return buildTable(env: env, firstList: nil, isRow: false)
         } else if command == "color" {
             // A color command has 2 arguments
             let mathColor = MathColorAtom()
-            let color = self.readColor()
+            let color = readColor()
             if color == nil {
-                return nil;
+                return nil
             }
             mathColor.colorString = color!
-            mathColor.innerList = self.buildInternal(true)
+            mathColor.innerList = buildInternal(true)
             return mathColor
         } else if command == "textcolor" {
             // A textcolor command has 2 arguments
             let mathColor = MathTextColor()
-            let color = self.readColor()
+            let color = readColor()
             if color == nil {
-                return nil;
+                return nil
             }
             mathColor.colorString = color!
-            mathColor.innerList = self.buildInternal(true)
+            mathColor.innerList = buildInternal(true)
             return mathColor
         } else if command == "colorbox" {
             // A color command has 2 arguments
             let mathColorbox = MathColorbox()
-            let color = self.readColor()
+            let color = readColor()
             if color == nil {
-                return nil;
+                return nil
             }
             mathColorbox.colorString = color!
-            mathColorbox.innerList = self.buildInternal(true)
+            mathColorbox.innerList = buildInternal(true)
             return mathColorbox
         } else if command == "pmod" {
             // A pmod command has 1 argument - creates (mod n)
@@ -1032,7 +1057,7 @@ public struct MathListBuilder {
             innerList.add(space)
 
             // Parse the argument from braces
-            let argument = self.buildInternal(true)
+            let argument = buildInternal(true)
             if let argList = argument {
                 innerList.append(argList)
             }
@@ -1041,28 +1066,28 @@ public struct MathListBuilder {
             return inner
         } else if command == "not" {
             // Handle \not command with lookahead for comprehensive negation support
-            let nextCommand = self.peekNextCommand()
+            let nextCommand = peekNextCommand()
 
             if let negatedUnicode = Self.notCombinations[nextCommand] {
-                self.consumeNextCommand() // Remove base symbol from stream
+                consumeNextCommand() // Remove base symbol from stream
                 return MathAtom(type: .relation, value: negatedUnicode)
             } else {
                 let errorMessage = "Unsupported \\not\\\(nextCommand) combination"
-                self.setError(.invalidCommand(errorMessage))
+                setError(.invalidCommand(errorMessage))
                 return nil
             }
         } else if let sizeMultiplier = Self.delimiterSizeCommands[command] {
             // Handle \big, \Big, \bigg, \Bigg and their variants
-            let delim = self.readDelimiter()
+            let delim = readDelimiter()
             if delim == nil {
                 let errorMessage = "Missing delimiter for \\\(command)"
-                self.setError(.missingDelimiter(errorMessage))
+                setError(.missingDelimiter(errorMessage))
                 return nil
             }
             let boundary = MathAtomFactory.boundary(forDelimiter: delim!)
             if boundary == nil {
                 let errorMessage = "Invalid delimiter for \\\(command): \(delim!)"
-                self.setError(.invalidDelimiter(errorMessage))
+                setError(.invalidDelimiter(errorMessage))
                 return nil
             }
 
@@ -1088,85 +1113,93 @@ public struct MathListBuilder {
             }
 
             inner.innerList = MathList()
-            inner.delimiterHeight = sizeMultiplier  // Store multiplier, typesetter will compute actual height
+            inner
+                .delimiterHeight =
+                sizeMultiplier // Store multiplier, typesetter will compute actual height
 
             return inner
         } else {
             let errorMessage = "Invalid command \\\(command)"
-            self.setError(.invalidCommand(errorMessage))
-            return nil;
+            setError(.invalidCommand(errorMessage))
+            return nil
         }
     }
 
     mutating func readColor() -> String? {
-        if !self.expectCharacter("{") {
+        if !expectCharacter("{") {
             // We didn't find an opening brace, so no env found.
-            self.setError(.characterNotFound("Missing {"))
-            return nil;
+            setError(.characterNotFound("Missing {"))
+            return nil
         }
 
         // Ignore spaces and nonascii.
-        self.skipSpaces()
-        
+        skipSpaces()
+
         // a string of all upper and lower case characters.
         var mutable = ""
-        while self.hasCharacters {
-            let ch = self.getNextCharacter()
-            if ch == "#" || (ch >= "A" && ch <= "Z") || (ch >= "a" && ch <= "z") || (ch >= "0" && ch <= "9") {
-                mutable.append(ch)  // appendString:[NSString stringWithCharacters:&ch length:1]];
+        while hasCharacters {
+            let ch = getNextCharacter()
+            if ch == "#" || (ch >= "A" && ch <= "Z") || (ch >= "a" && ch <= "z")
+                || (ch >= "0" && ch <= "9")
+            {
+                mutable.append(ch) // appendString:[NSString stringWithCharacters:&ch length:1]];
             } else {
                 // we went too far
-                self.unlookCharacter()
-                break;
+                unlookCharacter()
+                break
             }
         }
-        
-        if !self.expectCharacter("}") {
+
+        if !expectCharacter("}") {
             // We didn't find an closing brace, so invalid format.
-            self.setError(.characterNotFound("Missing }"))
-            return nil;
+            setError(.characterNotFound("Missing }"))
+            return nil
         }
-        return mutable;
+        return mutable
     }
 
     mutating func skipSpaces() {
-        while self.hasCharacters {
-            let ch = self.getNextCharacter().utf32Char
+        while hasCharacters {
+            let ch = getNextCharacter().utf32Char
             if ch < 0x21 || ch > 0x7E {
                 // skip non ascii characters and spaces
-                continue;
+                continue
             } else {
-                self.unlookCharacter()
-                return;
+                unlookCharacter()
+                return
             }
         }
     }
-    
-    static var fractionCommands: [String:[Character]] {
+
+    static var fractionCommands: [String: [Character]] {
         [
             "over": [],
-            "atop" : [],
-            "choose" : [ "(", ")"],
-            "brack" : [ "[", "]"],
-            "brace" : [ "{", "}"]
+            "atop": [],
+            "choose": ["(", ")"],
+            "brack": ["[", "]"],
+            "brace": ["{", "}"],
         ]
     }
-    
-    mutating func stopCommand(_ command: String, list:MathList, stopChar:Character?) -> MathList? {
+
+    mutating func stopCommand(
+        _ command: String,
+        list: MathList,
+        stopChar: Character?,
+    ) -> MathList? {
         if command == "right" {
             if currentInnerAtom == nil {
-                let errorMessage = "Missing \\left";
-                self.setError(.missingLeft(errorMessage))
-                return nil;
+                let errorMessage = "Missing \\left"
+                setError(.missingLeft(errorMessage))
+                return nil
             }
-            currentInnerAtom!.rightBoundary = self.getBoundaryAtom("right")
+            currentInnerAtom!.rightBoundary = getBoundaryAtom("right")
             if currentInnerAtom!.rightBoundary == nil {
-                return nil;
+                return nil
             }
             // return the list read so far.
             return list
         } else if let delims = Self.fractionCommands[command] {
-            var frac:Fraction! = nil;
+            var frac: Fraction! = nil
             if command == "over" {
                 frac = Fraction()
             } else {
@@ -1176,10 +1209,10 @@ public struct MathListBuilder {
                 frac.leftDelimiter = String(delims[0])
                 frac.rightDelimiter = String(delims[1])
             }
-            frac.numerator = list;
-            frac.denominator = self.buildInternal(false, stopChar: stopChar)
+            frac.numerator = list
+            frac.denominator = buildInternal(false, stopChar: stopChar)
             if error != nil {
-                return nil;
+                return nil
             }
             let fracList = MathList()
             fracList.add(frac)
@@ -1187,27 +1220,28 @@ public struct MathListBuilder {
         } else if command == "\\" || command == "cr" {
             if currentEnv != nil {
                 // Stop the current list and increment the row count
-                currentEnv!.numRows+=1
+                currentEnv!.numRows += 1
                 return list
             } else {
                 // Create a new table with the current list and a default env
-                if let table = self.buildTable(env: nil, firstList:list, isRow:true) {
+                if let table = buildTable(env: nil, firstList: list, isRow: true) {
                     return MathList(atom: table)
                 }
             }
         } else if command == "end" {
             if currentEnv == nil {
-                let errorMessage = "Missing \\begin";
-                self.setError(.missingBegin(errorMessage))
+                let errorMessage = "Missing \\begin"
+                setError(.missingBegin(errorMessage))
                 return nil
             }
-            let env = self.readEnvironment()
+            let env = readEnvironment()
             if env == nil {
                 return nil
             }
             if env! != currentEnv!.envName {
-                let errorMessage = "Begin environment name \(currentEnv!.envName ?? "(none)") does not match end name: \(env!)"
-                self.setError(.invalidEnv(errorMessage))
+                let errorMessage =
+                    "Begin environment name \(currentEnv!.envName ?? "(none)") does not match end name: \(env!)"
+                setError(.invalidEnv(errorMessage))
                 return nil
             }
             // Finish the current environment.
@@ -1218,47 +1252,43 @@ public struct MathListBuilder {
     }
 
     // Applies the modifier to the atom. Returns true if modifier applied.
-    mutating func applyModifier(_ modifier:String, atom:MathAtom?) -> Bool {
+    mutating func applyModifier(_ modifier: String, atom: MathAtom?) -> Bool {
         if modifier == "limits" {
-            if atom?.type != .largeOperator {
-                let errorMessage = "Limits can only be applied to an operator."
-                self.setError(.invalidLimits(errorMessage))
-            } else {
-                let op = atom as! LargeOperator
+            if let op = atom as? LargeOperator {
                 op.limits = true
+            } else {
+                setError(.invalidLimits("Limits can only be applied to an operator."))
             }
             return true
         } else if modifier == "nolimits" {
-            if atom?.type != .largeOperator {
-                let errorMessage = "No limits can only be applied to an operator."
-                self.setError(.invalidLimits(errorMessage))
-            } else {
-                let op = atom as! LargeOperator
+            if let op = atom as? LargeOperator {
                 op.limits = false
+            } else {
+                setError(.invalidLimits("No limits can only be applied to an operator."))
             }
             return true
         }
         return false
     }
 
-    mutating func setError(_ newError:ParseError) {
+    mutating func setError(_ newError: ParseError) {
         // Only record the first error.
         if error == nil {
             error = newError
         }
     }
-    
+
     mutating func atom(forCommand command: String) -> MathAtom? {
         if let atom = MathAtomFactory.atom(forLatexSymbol: command) {
             return atom
         }
         if let accent = MathAtomFactory.accent(withName: command) {
-            accent.innerList = self.buildInternal(true)
+            accent.innerList = buildInternal(true)
             return accent
         } else if command == "frac" {
             let frac = Fraction()
-            frac.numerator = self.buildInternal(true)
-            frac.denominator = self.buildInternal(true)
+            frac.numerator = buildInternal(true)
+            frac.denominator = buildInternal(true)
             return frac
         } else if command == "cfrac" {
             let frac = Fraction()
@@ -1266,7 +1296,7 @@ public struct MathListBuilder {
 
             // Parse optional alignment parameter [l], [r], [c]
             skipSpaces()
-            if hasCharacters && string[currentCharIndex] == "[" {
+            if hasCharacters, string[currentCharIndex] == "[" {
                 _ = getNextCharacter() // consume '['
                 if hasCharacters {
                     let alignmentChar = getNextCharacter()
@@ -1275,19 +1305,19 @@ public struct MathListBuilder {
                     }
                 }
                 // Consume closing ']'
-                if hasCharacters && string[currentCharIndex] == "]" {
+                if hasCharacters, string[currentCharIndex] == "]" {
                     _ = getNextCharacter()
                 }
             }
 
-            frac.numerator = self.buildInternal(true)
-            frac.denominator = self.buildInternal(true)
+            frac.numerator = buildInternal(true)
+            frac.denominator = buildInternal(true)
             return frac
         } else if command == "dfrac" {
             // Display-style fraction command has 2 arguments
             let frac = Fraction()
-            let numerator = self.buildInternal(true)
-            let denominator = self.buildInternal(true)
+            let numerator = buildInternal(true)
+            let denominator = buildInternal(true)
 
             // Prepend \displaystyle to force display mode rendering
             let displayStyle = MathStyle(style: .display)
@@ -1300,8 +1330,8 @@ public struct MathListBuilder {
         } else if command == "tfrac" {
             // Text-style fraction command has 2 arguments
             let frac = Fraction()
-            let numerator = self.buildInternal(true)
-            let denominator = self.buildInternal(true)
+            let numerator = buildInternal(true)
+            let denominator = buildInternal(true)
 
             // Prepend \textstyle to force text mode rendering
             let textStyle = MathStyle(style: .text)
@@ -1313,8 +1343,8 @@ public struct MathListBuilder {
             return frac
         } else if command == "binom" {
             let frac = Fraction(hasRule: false)
-            frac.numerator = self.buildInternal(true)
-            frac.denominator = self.buildInternal(true)
+            frac.numerator = buildInternal(true)
+            frac.denominator = buildInternal(true)
             frac.leftDelimiter = "("
             frac.rightDelimiter = ")"
             return frac
@@ -1323,22 +1353,22 @@ public struct MathListBuilder {
             let inner = Inner()
             inner.leftBoundary = MathAtomFactory.boundary(forDelimiter: "langle")
             inner.rightBoundary = MathAtomFactory.boundary(forDelimiter: "|")
-            inner.innerList = self.buildInternal(true)
+            inner.innerList = buildInternal(true)
             return inner
         } else if command == "ket" {
             // Dirac ket notation: \ket{psi} -> |psi⟩
             let inner = Inner()
             inner.leftBoundary = MathAtomFactory.boundary(forDelimiter: "|")
             inner.rightBoundary = MathAtomFactory.boundary(forDelimiter: "rangle")
-            inner.innerList = self.buildInternal(true)
+            inner.innerList = buildInternal(true)
             return inner
         } else if command == "braket" {
             // Dirac braket notation: \braket{phi}{psi} -> ⟨phi|psi⟩
             let inner = Inner()
             inner.leftBoundary = MathAtomFactory.boundary(forDelimiter: "langle")
             inner.rightBoundary = MathAtomFactory.boundary(forDelimiter: "rangle")
-            let phi = self.buildInternal(true)
-            let psi = self.buildInternal(true)
+            let phi = buildInternal(true)
+            let psi = buildInternal(true)
             let content = MathList()
             if let phiList = phi {
                 for atom in phiList.atoms {
@@ -1358,7 +1388,7 @@ public struct MathListBuilder {
             // \operatorname*{name} creates an operator with limits above/below
             let hasLimits = command.hasSuffix("*")
 
-            let content = self.buildInternal(true)
+            let content = buildInternal(true)
             var operatorName = ""
             if let atoms = content?.atoms {
                 for atom in atoms {
@@ -1366,116 +1396,115 @@ public struct MathListBuilder {
                 }
             }
             if operatorName.isEmpty {
-                self.setError(.invalidCommand("Missing operator name for \\operatorname"))
+                setError(.invalidCommand("Missing operator name for \\operatorname"))
                 return nil
             }
             return LargeOperator(value: operatorName, limits: hasLimits)
         } else if command == "sqrt" {
             let rad = Radical()
-            guard self.hasCharacters else {
-                rad.radicand = self.buildInternal(true)
+            guard hasCharacters else {
+                rad.radicand = buildInternal(true)
                 return rad
             }
-            let char = self.getNextCharacter()
+            let char = getNextCharacter()
             if char == "[" {
-                rad.degree = self.buildInternal(false, stopChar: "]")
-                rad.radicand = self.buildInternal(true)
+                rad.degree = buildInternal(false, stopChar: "]")
+                rad.radicand = buildInternal(true)
             } else {
-                self.unlookCharacter()
-                rad.radicand = self.buildInternal(true)
+                unlookCharacter()
+                rad.radicand = buildInternal(true)
             }
             return rad
         } else if command == "left" {
-            let oldInner = self.currentInnerAtom
-            self.currentInnerAtom = Inner()
-            self.currentInnerAtom?.leftBoundary = self.getBoundaryAtom("left")
-            if self.currentInnerAtom?.leftBoundary == nil {
+            let oldInner = currentInnerAtom
+            currentInnerAtom = Inner()
+            currentInnerAtom?.leftBoundary = getBoundaryAtom("left")
+            if currentInnerAtom?.leftBoundary == nil {
                 return nil
             }
-            self.currentInnerAtom!.innerList = self.buildInternal(false)
-            if self.currentInnerAtom?.rightBoundary == nil {
-                self.setError(.missingRight("Missing \\right"))
+            currentInnerAtom!.innerList = buildInternal(false)
+            if currentInnerAtom?.rightBoundary == nil {
+                setError(.missingRight("Missing \\right"))
                 return nil
             }
-            let newInner = self.currentInnerAtom
+            let newInner = currentInnerAtom
             currentInnerAtom = oldInner
             return newInner
         } else if command == "overline" {
             let over = OverLine()
-            over.innerList = self.buildInternal(true)
-            
+            over.innerList = buildInternal(true)
+
             return over
         } else if command == "underline" {
             let under = UnderLine()
-            under.innerList = self.buildInternal(true)
-            
+            under.innerList = buildInternal(true)
+
             return under
         } else if command == "begin" {
-            if let env = self.readEnvironment() {
+            if let env = readEnvironment() {
                 // Check if this is a starred matrix environment and read optional alignment
-                var alignment: ColumnAlignment? = nil
+                var alignment: ColumnAlignment?
                 if env.hasSuffix("*") {
-                    alignment = self.readOptionalAlignment()
+                    alignment = readOptionalAlignment()
                     if self.error != nil {
                         return nil
                     }
                 }
 
-                let table = self.buildTable(env: env, alignment: alignment, firstList: nil, isRow: false)
-                return table
+                return buildTable(env: env, alignment: alignment, firstList: nil, isRow: false)
             } else {
                 return nil
             }
         } else if command == "color" {
             // A color command has 2 arguments
             let mathColor = MathColorAtom()
-            mathColor.colorString = self.readColor()!
-            mathColor.innerList = self.buildInternal(true)
+            mathColor.colorString = readColor()!
+            mathColor.innerList = buildInternal(true)
             return mathColor
         } else if command == "colorbox" {
             // A color command has 2 arguments
             let mathColorbox = MathColorbox()
-            mathColorbox.colorString = self.readColor()!
-            mathColorbox.innerList = self.buildInternal(true)
+            mathColorbox.colorString = readColor()!
+            mathColorbox.innerList = buildInternal(true)
             return mathColorbox
         } else {
-            self.setError(.invalidCommand("Invalid command \\\(command)"))
+            setError(.invalidCommand("Invalid command \\\(command)"))
             return nil
         }
     }
-    
+
     mutating func readEnvironment() -> String? {
-        if !self.expectCharacter("{") {
+        if !expectCharacter("{") {
             // We didn't find an opening brace, so no env found.
-            self.setError(.characterNotFound("Missing {"))
+            setError(.characterNotFound("Missing {"))
             return nil
         }
 
-        self.skipSpaces()
-        let env = self.readString()
+        skipSpaces()
+        let env = readString()
 
-        if !self.expectCharacter("}") {
+        if !expectCharacter("}") {
             // We didn"t find an closing brace, so invalid format.
-            self.setError(.characterNotFound("Missing }"))
-            return nil;
+            setError(.characterNotFound("Missing }"))
+            return nil
         }
         return env
     }
 
     /// Reads optional alignment parameter for starred matrix environments: [r], [l], or [c]
     mutating func readOptionalAlignment() -> ColumnAlignment? {
-        self.skipSpaces()
+        skipSpaces()
 
         // Check if there's an opening bracket
-        guard hasCharacters && string[currentCharIndex] == "[" else {
+        guard hasCharacters, string[currentCharIndex] == "[" else {
             return nil
         }
 
-        _ = getNextCharacter()  // consume '['
-        self.skipSpaces()
+        _ = getNextCharacter() // consume '['
+        skipSpaces()
 
         guard hasCharacters else {
-            self.setError(.characterNotFound("Missing alignment specifier after ["))
+            setError(.characterNotFound("Missing alignment specifier after ["))
             return nil
         }
 
@@ -1483,75 +1512,81 @@ public struct MathListBuilder {
         let alignment: ColumnAlignment?
 
         switch alignChar {
-        case "l":
-            alignment = .left
-        case "c":
-            alignment = .center
-        case "r":
-            alignment = .right
-        default:
-            self.setError(.invalidEnv("Invalid alignment specifier: \(alignChar). Must be l, c, or r"))
-            return nil
+            case "l":
+                alignment = .left
+            case "c":
+                alignment = .center
+            case "r":
+                alignment = .right
+            default:
+                setError(
+                    .invalidEnv("Invalid alignment specifier: \(alignChar). Must be l, c, or r"),
+                )
+                return nil
         }
 
-        self.skipSpaces()
+        skipSpaces()
 
-        if !self.expectCharacter("]") {
-            self.setError(.characterNotFound("Missing ] after alignment specifier"))
+        if !expectCharacter("]") {
+            setError(.characterNotFound("Missing ] after alignment specifier"))
             return nil
         }
 
         return alignment
     }
-    
+
     func assertNotSpace(_ ch: Character) {
         assert(ch >= "\u{21}" && ch <= "\u{7E}", "Expected non-space character \(ch)")
     }
-    
-    mutating func buildTable(env: String?, alignment: ColumnAlignment? = nil, firstList: MathList?, isRow: Bool) -> MathAtom? {
+
+    mutating func buildTable(
+        env: String?, alignment: ColumnAlignment? = nil, firstList: MathList?, isRow: Bool,
+    ) -> MathAtom? {
         // Save the current env till an new one gets built.
-        let oldEnv = self.currentEnv
+        let oldEnv = currentEnv
 
         currentEnv = EnvProperties(name: env, alignment: alignment)
-        
+
         var currentRow = 0
         var currentCol = 0
-        
+
         var rows = [[MathList]]()
         rows.append([MathList]())
         if firstList != nil {
             rows[currentRow].append(firstList!)
             if isRow {
-                currentEnv!.numRows+=1
-                currentRow+=1
+                currentEnv!.numRows += 1
+                currentRow += 1
                 rows.append([MathList]())
             } else {
-                currentCol+=1
+                currentCol += 1
             }
         }
-        while !currentEnv!.ended && self.hasCharacters {
-            let list = self.buildInternal(false)
+        while !currentEnv!.ended, hasCharacters {
+            let list = buildInternal(false)
             if list == nil {
                 // If there is an error building the list, bail out early.
                 return nil
             }
             rows[currentRow].append(list!)
-            currentCol+=1
+            currentCol += 1
             if currentEnv!.numRows > currentRow {
                 currentRow = currentEnv!.numRows
                 rows.append([MathList]())
                 currentCol = 0
             }
         }
-        
-        if !currentEnv!.ended && currentEnv!.envName != nil {
-            self.setError(.missingEnd("Missing \\end"))
+
+        if !currentEnv!.ended, currentEnv!.envName != nil {
+            setError(.missingEnd("Missing \\end"))
             return nil
         }
-        
+
         do {
-            let table = try MathAtomFactory.table(withEnvironment: currentEnv?.envName, alignment: currentEnv?.alignment, rows: rows)
-            self.currentEnv = oldEnv
+            let table = try MathAtomFactory.table(
+                withEnvironment: currentEnv?.envName, alignment: currentEnv?.alignment, rows: rows,
+            )
+            currentEnv = oldEnv
             return table
         } catch {
             if self.error == nil {
@@ -1560,30 +1595,30 @@ public struct MathListBuilder {
             return nil
         }
     }
-    
+
     mutating func getBoundaryAtom(_ delimiterType: String) -> MathAtom? {
-        let delim = self.readDelimiter()
+        let delim = readDelimiter()
         if delim == nil {
             let errorMessage = "Missing delimiter for \\\(delimiterType)"
-            self.setError(.missingDelimiter(errorMessage))
+            setError(.missingDelimiter(errorMessage))
             return nil
         }
         let boundary = MathAtomFactory.boundary(forDelimiter: delim!)
         if boundary == nil {
             let errorMessage = "Invalid delimiter for \(delimiterType): \(delim!)"
-            self.setError(.invalidDelimiter(errorMessage))
+            setError(.invalidDelimiter(errorMessage))
             return nil
         }
         return boundary
     }
-    
+
     mutating func readDelimiter() -> String? {
-        self.skipSpaces()
-        while self.hasCharacters {
-            let char = self.getNextCharacter()
+        skipSpaces()
+        while hasCharacters {
+            let char = getNextCharacter()
             assertNotSpace(char)
             if char == "\\" {
-                let command = self.readCommand()
+                let command = readCommand()
                 if command == "|" {
                     return "||"
                 }
@@ -1594,29 +1629,29 @@ public struct MathListBuilder {
         }
         return nil
     }
-    
+
     mutating func readCommand() -> String {
         let singleChars = "{}$#%_| ,>;!\\"
-        if self.hasCharacters {
-            let char = self.getNextCharacter()
-            if let _ = singleChars.firstIndex(of: char)  {
+        if hasCharacters {
+            let char = getNextCharacter()
+            if singleChars.contains(char) {
                 return String(char)
             } else {
-                self.unlookCharacter()
+                unlookCharacter()
             }
         }
-        return self.readString()
+        return readString()
     }
-    
+
     mutating func readString() -> String {
         // a string of all upper and lower case characters (and asterisks for starred environments)
         var output = ""
-        while self.hasCharacters {
-            let char = self.getNextCharacter()
+        while hasCharacters {
+            let char = getNextCharacter()
             if char.isLowercase || char.isUppercase || char == "*" {
                 output.append(char)
             } else {
-                self.unlookCharacter()
+                unlookCharacter()
                 break
             }
         }

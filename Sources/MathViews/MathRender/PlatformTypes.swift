@@ -1,14 +1,16 @@
-public import Foundation
-public import CoreGraphics
+import Foundation
+import CoreGraphics
 
 #if os(iOS) || os(visionOS)
 
 public import UIKit
-public typealias MathColor = UIColor
+
+public typealias PlatformColor = UIColor
 
 #else
 
 public import AppKit
-public typealias MathColor = NSColor
+
+public typealias PlatformColor = NSColor
 
 #endif

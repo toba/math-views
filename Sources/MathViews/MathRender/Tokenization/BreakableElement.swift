@@ -71,10 +71,10 @@ struct BreakableElement {
     // MARK: Optional attributes
 
     /// Text color for this element
-    let color: MathColor?
+    let color: PlatformColor?
 
     /// Background color for this element
-    let backgroundColor: MathColor?
+    let backgroundColor: PlatformColor?
 
     // MARK: Atomicity flag
 

@@ -2,8 +2,7 @@ import Foundation
 import CoreGraphics
 
 /// Tokenizes MathAtom lists into breakable elements
-class AtomTokenizer {
-
+final class AtomTokenizer {
     // MARK: - Properties
 
     let font: FontInstance
@@ -20,8 +19,8 @@ class AtomTokenizer {
         self.style = style
         self.cramped = cramped
         self.maxWidth = maxWidth
-        self.widthCalculator = ElementWidthCalculator(font: font, style: style)
-        self.displayRenderer = DisplayPreRenderer(font: font, style: style, cramped: cramped)
+        widthCalculator = ElementWidthCalculator(font: font, style: style)
+        displayRenderer = DisplayPreRenderer(font: font, style: style, cramped: cramped)
     }
 
     // MARK: - Main Tokenization
@@ -30,7 +29,7 @@ class AtomTokenizer {
     func tokenize(_ atoms: [MathAtom]) -> [BreakableElement] {
         var elements: [BreakableElement] = []
         var index = 0
-        var currentStyle = self.style
+        var currentStyle = style
 
         while index < atoms.count {
             let atom = atoms[index]
@@ -46,28 +45,36 @@ class AtomTokenizer {
 
             // Create a tokenizer with the current style for this atom
             let atomTokenizer: AtomTokenizer
-            if currentStyle != self.style {
-                atomTokenizer = AtomTokenizer(font: font, style: currentStyle, cramped: cramped, maxWidth: maxWidth)
+            if currentStyle != style {
+                atomTokenizer = AtomTokenizer(
+                    font: font, style: currentStyle, cramped: cramped, maxWidth: maxWidth,
+                )
             } else {
                 atomTokenizer = self
             }
 
             // Handle scripts (subscript/superscript) - these must be grouped with their base
             if atom.superScript != nil || atom.subScript != nil {
-                let baseElements = atomTokenizer.tokenizeAtomWithScripts(atom, prevAtom: prevAtom, atomIndex: index, allAtoms: atoms)
+                let baseElements = atomTokenizer.tokenizeAtomWithScripts(
+                    atom, prevAtom: prevAtom, atomIndex: index, allAtoms: atoms,
+                )
                 elements.append(contentsOf: baseElements)
             } else {
                 // Check if this is a multi-character text atom that needs character-level tokenization
                 let isTextAtom = atom.fontStyle == .roman
                 let isMultiChar = atom.nucleus.count > 1
 
-                if isTextAtom && isMultiChar {
+                if isTextAtom, isMultiChar {
                     // Break down multi-character text into individual characters for punctuation rules
-                    let charElements = atomTokenizer.tokenizeMultiCharText(atom, prevElements: elements, atomIndex: index, allAtoms: atoms)
+                    let charElements = atomTokenizer.tokenizeMultiCharText(
+                        atom, prevElements: elements, atomIndex: index, allAtoms: atoms,
+                    )
                     elements.append(contentsOf: charElements)
                 } else {
                     // Regular atom without scripts
-                    if let element = atomTokenizer.tokenizeAtom(atom, prevAtom: prevAtom, atomIndex: index, allAtoms: atoms) {
+                    if let element = atomTokenizer.tokenizeAtom(
+                        atom, prevAtom: prevAtom, atomIndex: index, allAtoms: atoms,
+                    ) {
                         elements.append(element)
                     }
                 }
@@ -82,74 +89,111 @@ class AtomTokenizer {
     // MARK: - Atom Tokenization
 
     /// Tokenize a single atom (without scripts)
-    private func tokenizeAtom(_ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int, allAtoms: [MathAtom]) -> BreakableElement? {
+    private func tokenizeAtom(
+        _ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int, allAtoms: [MathAtom],
+    ) -> BreakableElement? {
         switch atom.type {
-        // Simple text and variables
-        case .ordinary, .variable, .number:
-            return tokenizeTextAtom(atom, prevAtom: prevAtom, atomIndex: atomIndex, allAtoms: allAtoms)
+            // Simple text and variables
+            case .ordinary, .variable, .number:
+                return tokenizeTextAtom(
+                    atom,
+                    prevAtom: prevAtom,
+                    atomIndex: atomIndex,
+                    allAtoms: allAtoms,
+                )
 
-        // Operators
-        case .binaryOperator, .relation, .unaryOperator:
-            return tokenizeOperator(atom, prevAtom: prevAtom, atomIndex: atomIndex)
+            // Operators
+            case .binaryOperator, .relation, .unaryOperator:
+                return tokenizeOperator(atom, prevAtom: prevAtom, atomIndex: atomIndex)
 
-        // Delimiters
-        case .open:
-            return tokenizeOpenDelimiter(atom, prevAtom: prevAtom, atomIndex: atomIndex)
+            // Delimiters
+            case .open:
+                return tokenizeOpenDelimiter(atom, prevAtom: prevAtom, atomIndex: atomIndex)
 
-        case .close:
-            return tokenizeCloseDelimiter(atom, prevAtom: prevAtom, atomIndex: atomIndex)
+            case .close:
+                return tokenizeCloseDelimiter(atom, prevAtom: prevAtom, atomIndex: atomIndex)
 
-        // Punctuation
-        case .punctuation:
-            return tokenizePunctuation(atom, prevAtom: prevAtom, atomIndex: atomIndex)
+            // Punctuation
+            case .punctuation:
+                return tokenizePunctuation(atom, prevAtom: prevAtom, atomIndex: atomIndex)
 
-        // Complex structures (atomic)
-        case .fraction:
-            return tokenizeFraction(atom as! Fraction, prevAtom: prevAtom, atomIndex: atomIndex)
+            // Complex structures (atomic)
+            case .fraction:
+                guard let fraction = atom as? Fraction else { return nil }
+                return tokenizeFraction(fraction, prevAtom: prevAtom, atomIndex: atomIndex)
 
-        case .radical:
-            return tokenizeRadical(atom as! Radical, prevAtom: prevAtom, atomIndex: atomIndex)
+            case .radical:
+                guard let radical = atom as? Radical else { return nil }
+                return tokenizeRadical(radical, prevAtom: prevAtom, atomIndex: atomIndex)
 
-        case .largeOperator:
-            return tokenizeLargeOperator(atom as! LargeOperator, prevAtom: prevAtom, atomIndex: atomIndex)
+            case .largeOperator:
+                guard let largeOp = atom as? LargeOperator else { return nil }
+                return tokenizeLargeOperator(
+                    largeOp,
+                    prevAtom: prevAtom,
+                    atomIndex: atomIndex,
+                )
 
-        case .accent:
-            return tokenizeAccent(atom as! Accent, prevAtom: prevAtom, atomIndex: atomIndex, allAtoms: allAtoms)
+            case .accent:
+                guard let accent = atom as? Accent else { return nil }
+                return tokenizeAccent(
+                    accent, prevAtom: prevAtom, atomIndex: atomIndex, allAtoms: allAtoms,
+                )
 
-        case .underline:
-            return tokenizeUnderline(atom as! UnderLine, prevAtom: prevAtom, atomIndex: atomIndex)
+            case .underline:
+                guard let underline = atom as? UnderLine else { return nil }
+                return tokenizeUnderline(
+                    underline,
+                    prevAtom: prevAtom,
+                    atomIndex: atomIndex,
+                )
 
-        case .overline:
-            return tokenizeOverline(atom as! OverLine, prevAtom: prevAtom, atomIndex: atomIndex)
+            case .overline:
+                guard let overline = atom as? OverLine else { return nil }
+                return tokenizeOverline(overline, prevAtom: prevAtom, atomIndex: atomIndex)
 
-        case .table:
-            return tokenizeTable(atom as! MathTable, prevAtom: prevAtom, atomIndex: atomIndex)
+            case .table:
+                guard let table = atom as? MathTable else { return nil }
+                return tokenizeTable(table, prevAtom: prevAtom, atomIndex: atomIndex)
 
-        case .inner:
-            return tokenizeInner(atom as! Inner, prevAtom: prevAtom, atomIndex: atomIndex)
+            case .inner:
+                guard let inner = atom as? Inner else { return nil }
+                return tokenizeInner(inner, prevAtom: prevAtom, atomIndex: atomIndex)
 
-        // Spacing
-        case .space:
-            return tokenizeSpace(atom, prevAtom: prevAtom, atomIndex: atomIndex)
+            // Spacing
+            case .space:
+                return tokenizeSpace(atom, prevAtom: prevAtom, atomIndex: atomIndex)
 
-        // Style changes - these don't create elements
-        case .style:
-            return nil
+            // Style changes - these don't create elements
+            case .style:
+                return nil
 
-        // Color - extract inner content with color attribute
-        case .color, .colorBox, .textcolor:
-            // For now, treat as ordinary (color will be handled in display generation)
-            return tokenizeTextAtom(atom, prevAtom: prevAtom, atomIndex: atomIndex, allAtoms: allAtoms)
+            // Color - extract inner content with color attribute
+            case .color, .colorBox, .textColor:
+                // For now, treat as ordinary (color will be handled in display generation)
+                return tokenizeTextAtom(
+                    atom,
+                    prevAtom: prevAtom,
+                    atomIndex: atomIndex,
+                    allAtoms: allAtoms,
+                )
 
-        default:
-            // Treat unknown types as ordinary
-            return tokenizeTextAtom(atom, prevAtom: prevAtom, atomIndex: atomIndex, allAtoms: allAtoms)
+            default:
+                // Treat unknown types as ordinary
+                return tokenizeTextAtom(
+                    atom,
+                    prevAtom: prevAtom,
+                    atomIndex: atomIndex,
+                    allAtoms: allAtoms,
+                )
         }
     }
 
     // MARK: - Text Atom Tokenization
 
-    private func tokenizeTextAtom(_ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int, allAtoms: [MathAtom]) -> BreakableElement? {
+    private func tokenizeTextAtom(
+        _ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int, allAtoms: [MathAtom],
+    ) -> BreakableElement? {
         let text = atom.nucleus
         guard !text.isEmpty else { return nil }
 
@@ -174,7 +218,8 @@ class AtomTokenizer {
             // First apply punctuation rules for single-character text
             // This handles cases where punctuation appears in roman text rather than as separate punctuation atoms
             if text.count == 1, let char = text.first {
-                let (punctBreakBefore, punctBreakAfter, punctPenaltyBefore, punctPenaltyAfter) = punctuationBreakRules(char)
+                let (punctBreakBefore, punctBreakAfter, punctPenaltyBefore, punctPenaltyAfter) =
+                    punctuationBreakRules(char)
 
                 // Apply punctuation rules
                 isBreakBefore = punctBreakBefore
@@ -187,9 +232,9 @@ class AtomTokenizer {
             // Both rules must allow breaking for a break to be permitted
 
             // Check if we should break BEFORE this atom
-            if let prevAtom = prevAtom {
+            if let prevAtom {
                 // Handle previous accent atoms (e.g., "é" before "r" in "bactéries")
-                if prevAtom.type == .accent && isTextLetterAtom(prevAtom) {
+                if prevAtom.type == .accent, isTextLetterAtom(prevAtom) {
                     // Previous is a text accent - don't break if current is a letter
                     if text.first?.isLetter == true {
                         isBreakBefore = false
@@ -197,7 +242,7 @@ class AtomTokenizer {
                     }
                 } else if prevAtom.fontStyle == .roman {
                     let prevText = prevAtom.nucleus
-                    if !prevText.isEmpty && !text.isEmpty {
+                    if !prevText.isEmpty, !text.isEmpty {
                         // Use Unicode word boundary detection
                         if !hasWordBoundaryBetween(prevText, and: text) {
                             // No word boundary = we're in the middle of a word
@@ -212,7 +257,7 @@ class AtomTokenizer {
             if atomIndex + 1 < allAtoms.count {
                 let nextAtom = allAtoms[atomIndex + 1]
                 // Handle next accent atoms (e.g., "t" before "é" in "bactéries")
-                if nextAtom.type == .accent && isTextLetterAtom(nextAtom) {
+                if nextAtom.type == .accent, isTextLetterAtom(nextAtom) {
                     // Next is a text accent - don't break if current is a letter
                     if text.last?.isLetter == true {
                         isBreakAfter = false
@@ -220,7 +265,7 @@ class AtomTokenizer {
                     }
                 } else if nextAtom.fontStyle == .roman {
                     let nextText = nextAtom.nucleus
-                    if !text.isEmpty && !nextText.isEmpty {
+                    if !text.isEmpty, !nextText.isEmpty {
                         // Use Unicode word boundary detection
                         if !hasWordBoundaryBetween(text, and: nextText) {
                             // No word boundary = next atom is part of same word
@@ -248,17 +293,19 @@ class AtomTokenizer {
             indexRange: atom.indexRange,
             color: nil,
             backgroundColor: nil,
-            indivisible: false
+            indivisible: false,
         )
     }
 
     /// Tokenize a multi-character text atom into individual character elements
     /// This enables character-level line breaking with proper punctuation rules
-    private func tokenizeMultiCharText(_ atom: MathAtom, prevElements: [BreakableElement], atomIndex: Int, allAtoms: [MathAtom]) -> [BreakableElement] {
+    private func tokenizeMultiCharText(
+        _ atom: MathAtom, prevElements: [BreakableElement], atomIndex: Int, allAtoms: [MathAtom],
+    ) -> [BreakableElement] {
         let text = atom.nucleus
         guard text.count > 1 else { return [] }
 
-        let debugTokenization = false  // Enable to debug text tokenization
+        let debugTokenization = false // Enable to debug text tokenization
         if debugTokenization {
             print("\n=== Tokenizing multi-char text: '\(text)' ===")
         }
@@ -285,7 +332,7 @@ class AtomTokenizer {
                 isFirstInAtom: charIndex == 0,
                 isLastInAtom: charIndex == characters.count - 1,
                 prevElements: prevElements,
-                nextAtom: atomIndex + 1 < allAtoms.count ? allAtoms[atomIndex + 1] : nil
+                nextAtom: atomIndex + 1 < allAtoms.count ? allAtoms[atomIndex + 1] : nil,
             )
 
             let element = BreakableElement(
@@ -304,11 +351,13 @@ class AtomTokenizer {
                 indexRange: atom.indexRange,
                 color: nil,
                 backgroundColor: nil,
-                indivisible: false
+                indivisible: false,
             )
 
             if debugTokenization {
-                print("  [\(charIndex)] '\(charString)' breakBefore=\(isBreakBefore) breakAfter=\(isBreakAfter) penaltyBefore=\(penaltyBefore) penaltyAfter=\(penaltyAfter) width=\(width)")
+                print(
+                    "  [\(charIndex)] '\(charString)' breakBefore=\(isBreakBefore) breakAfter=\(isBreakAfter) penaltyBefore=\(penaltyBefore) penaltyAfter=\(penaltyAfter) width=\(width)",
+                )
             }
 
             charElements.append(element)
@@ -325,11 +374,11 @@ class AtomTokenizer {
         isFirstInAtom: Bool,
         isLastInAtom: Bool,
         prevElements: [BreakableElement],
-        nextAtom: MathAtom?
+        nextAtom: MathAtom?,
     ) -> (isBreakBefore: Bool, isBreakAfter: Bool, penaltyBefore: Int, penaltyAfter: Int) {
-
         // Apply punctuation rules
-        let (punctBreakBefore, punctBreakAfter, punctPenaltyBefore, punctPenaltyAfter) = punctuationBreakRules(char)
+        let (punctBreakBefore, punctBreakAfter, punctPenaltyBefore, punctPenaltyAfter) =
+            punctuationBreakRules(char)
 
         var isBreakBefore = punctBreakBefore
         var isBreakAfter = punctBreakAfter
@@ -338,7 +387,7 @@ class AtomTokenizer {
 
         // Apply word boundary logic
         // Don't break in the middle of a word (but CJK characters CAN break between each other)
-        if let prevChar = prevChar {
+        if let prevChar {
             if char.isLetter && prevChar.isLetter {
                 // Check if either character is CJK - CJK allows breaks between characters
                 let isCJKBreak = isCJKCharacter(char) || isCJKCharacter(prevChar)
@@ -358,38 +407,40 @@ class AtomTokenizer {
             // First character - check against previous element
             if let lastElement = prevElements.last {
                 switch lastElement.content {
-                case .text(let prevText):
-                    if let prevLastChar = prevText.last {
-                        if char.isLetter && prevLastChar.isLetter {
-                            // Check if either character is CJK
-                            let isCJKBreak = isCJKCharacter(char) || isCJKCharacter(prevLastChar)
+                    case let .text(prevText):
+                        if let prevLastChar = prevText.last {
+                            if char.isLetter && prevLastChar.isLetter {
+                                // Check if either character is CJK
+                                let isCJKBreak = isCJKCharacter(char) ||
+                                    isCJKCharacter(prevLastChar)
 
-                            if !isCJKBreak {
-                                // Both non-CJK letters - don't break
+                                if !isCJKBreak {
+                                    // Both non-CJK letters - don't break
+                                    isBreakBefore = false
+                                    penaltyBefore = BreakPenalty.never
+                                }
+                            } else if prevLastChar == "'" || prevLastChar == "-" {
                                 isBreakBefore = false
                                 penaltyBefore = BreakPenalty.never
                             }
-                        } else if prevLastChar == "'" || prevLastChar == "-" {
+                        }
+                    case .display:
+                        // Check if previous element is a text-mode accent (e.g., "é")
+                        // Accents in text mode should not allow breaks after them if current is a letter
+                        if lastElement.originalAtom.type == .accent,
+                           isTextLetterAtom(lastElement.originalAtom),
+                           char.isLetter
+                        {
                             isBreakBefore = false
                             penaltyBefore = BreakPenalty.never
                         }
-                    }
-                case .display:
-                    // Check if previous element is a text-mode accent (e.g., "é")
-                    // Accents in text mode should not allow breaks after them if current is a letter
-                    if lastElement.originalAtom.type == .accent,
-                       isTextLetterAtom(lastElement.originalAtom),
-                       char.isLetter {
-                        isBreakBefore = false
-                        penaltyBefore = BreakPenalty.never
-                    }
-                default:
-                    break
+                    default:
+                        break
                 }
             }
         }
 
-        if let nextChar = nextChar {
+        if let nextChar {
             if char.isLetter && nextChar.isLetter {
                 // Check if either character is CJK
                 let isCJKBreak = isCJKCharacter(char) || isCJKCharacter(nextChar)
@@ -406,16 +457,17 @@ class AtomTokenizer {
             }
         } else if isLastInAtom {
             // Last character - check against next atom
-            if let nextAtom = nextAtom {
+            if let nextAtom {
                 // Handle next accent atoms (e.g., "t" before "é" in "bactéries")
-                if nextAtom.type == .accent && isTextLetterAtom(nextAtom) {
+                if nextAtom.type == .accent, isTextLetterAtom(nextAtom) {
                     if char.isLetter {
                         isBreakAfter = false
                         penaltyAfter = BreakPenalty.never
                     }
                 } else if nextAtom.fontStyle == .roman,
-                   let nextFirstChar = nextAtom.nucleus.first {
-                    if char.isLetter && nextFirstChar.isLetter {
+                          let nextFirstChar = nextAtom.nucleus.first
+                {
+                    if char.isLetter, nextFirstChar.isLetter {
                         // Check if either character is CJK
                         let isCJKBreak = isCJKCharacter(char) || isCJKCharacter(nextFirstChar)
 
@@ -441,12 +493,13 @@ class AtomTokenizer {
         let value = scalar.value
 
         // CJK Unified Ideographs and extensions
-        return (value >= 0x4E00 && value <= 0x9FFF) ||   // CJK Unified Ideographs (most common Chinese/Japanese kanji)
-               (value >= 0x3400 && value <= 0x4DBF) ||   // CJK Unified Ideographs Extension A
-               (value >= 0x20000 && value <= 0x2A6DF) || // CJK Unified Ideographs Extension B
-               (value >= 0x3040 && value <= 0x309F) ||   // Hiragana (Japanese)
-               (value >= 0x30A0 && value <= 0x30FF) ||   // Katakana (Japanese)
-               (value >= 0xAC00 && value <= 0xD7AF)      // Hangul Syllables (Korean)
+        return (value >= 0x4E00 && value <=
+            0x9FFF) // CJK Unified Ideographs (most common Chinese/Japanese kanji)
+            || (value >= 0x3400 && value <= 0x4DBF) // CJK Unified Ideographs Extension A
+            || (value >= 0x20000 && value <= 0x2A6DF) // CJK Unified Ideographs Extension B
+            || (value >= 0x3040 && value <= 0x309F) // Hiragana (Japanese)
+            || (value >= 0x30A0 && value <= 0x30FF) // Katakana (Japanese)
+            || (value >= 0xAC00 && value <= 0xD7AF) // Hangul Syllables (Korean)
     }
 
     /// Determines if there's a word boundary between two text fragments
@@ -456,11 +509,11 @@ class AtomTokenizer {
         // These should NOT be treated as word boundaries even though Unicode does
         if let lastChar1 = text1.last, let firstChar2 = text2.first {
             // Pattern: letter + apostrophe|hyphen + letter → NOT a word boundary
-            if lastChar1.isLetter && (firstChar2 == "'" || firstChar2 == "-") {
-                return false  // Don't break before apostrophe/hyphen
+            if lastChar1.isLetter, firstChar2 == "'" || firstChar2 == "-" {
+                return false // Don't break before apostrophe/hyphen
             }
-            if (lastChar1 == "'" || lastChar1 == "-") && firstChar2.isLetter {
-                return false  // Don't break after apostrophe/hyphen
+            if lastChar1 == "'" || lastChar1 == "-", firstChar2.isLetter {
+                return false // Don't break after apostrophe/hyphen
             }
         }
 
@@ -474,7 +527,11 @@ class AtomTokenizer {
         let junctionIndex = text1.endIndex
 
         var wordBoundaries: Set<String.Index> = []
-        combined.enumerateSubstrings(in: combined.startIndex..<combined.endIndex, options: .byWords) { _, substringRange, _, _ in
+        combined.enumerateSubstrings(
+            in: combined.startIndex ..< combined.endIndex,
+            options: .byWords,
+        ) {
+            _, substringRange, _, _ in
             wordBoundaries.insert(substringRange.lowerBound)
             wordBoundaries.insert(substringRange.upperBound)
         }
@@ -486,11 +543,11 @@ class AtomTokenizer {
 
     /// Classification for punctuation line breaking rules
     enum PunctuationClass {
-        case openingPunctuation   // Never break after these: ( [ { " ' « ‹ and CJK 「『（【〔〈《
-        case closingPunctuation   // Never break before these: ) ] } " ' » › and CJK 」』）】〕〉》
-        case sentenceEnding       // Never break before these: . , ; : ! ? and CJK 。、！？：；
-        case cjkSmallKana         // Never break before these: ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮ
-        case neutral              // Normal punctuation with no special rules
+        case openingPunctuation // Never break after these: ( [ { " ' « ‹ and CJK 「『（【〔〈《
+        case closingPunctuation // Never break before these: ) ] } " ' » › and CJK 」』）】〕〉》
+        case sentenceEnding // Never break before these: . , ; : ! ? and CJK 。、！？：；
+        case cjkSmallKana // Never break before these: ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮ
+        case neutral // Normal punctuation with no special rules
     }
 
     /// Classify a character for punctuation line breaking rules
@@ -508,17 +565,19 @@ class AtomTokenizer {
         // U+0022 " QUOTATION MARK, U+0027 ' APOSTROPHE
         // U+2018 ' LEFT SINGLE QUOTATION MARK, U+201C " LEFT DOUBLE QUOTATION MARK
         // U+00AB « LEFT-POINTING DOUBLE ANGLE QUOTATION MARK, U+2039 ‹ SINGLE LEFT-POINTING ANGLE QUOTATION MARK
-        if scalar == 0x0022 || scalar == 0x0027 ||  // Basic quotes
-           scalar == 0x2018 || scalar == 0x201C ||  // Curly left quotes
-           scalar == 0x00AB || scalar == 0x2039 {   // Guillemets
+        if scalar == 0x0022 || scalar == 0x0027 // Basic quotes
+            || scalar == 0x2018 || scalar == 0x201C // Curly left quotes
+            || scalar == 0x00AB || scalar == 0x2039
+        { // Guillemets
             return .openingPunctuation
         }
 
         // Latin quotation marks - closing quotes
         // U+2019 ' RIGHT SINGLE QUOTATION MARK, U+201D " RIGHT DOUBLE QUOTATION MARK
         // U+00BB » RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK, U+203A › SINGLE RIGHT-POINTING ANGLE QUOTATION MARK
-        if scalar == 0x2019 || scalar == 0x201D ||  // Curly right quotes
-           scalar == 0x00BB || scalar == 0x203A {   // Guillemets
+        if scalar == 0x2019 || scalar == 0x201D // Curly right quotes
+            || scalar == 0x00BB || scalar == 0x203A
+        { // Guillemets
             return .closingPunctuation
         }
 
@@ -547,51 +606,55 @@ class AtomTokenizer {
 
         // CJK iteration marks (禁則: line-end prohibited)
         if "ゝゞヽヾ々〻".contains(char) {
-            return .cjkSmallKana  // Same rules as small kana
+            return .cjkSmallKana // Same rules as small kana
         }
 
         // CJK prolonged sound mark (禁則: line-end prohibited)
         if char == "ー" {
-            return .cjkSmallKana  // Same rules as small kana
+            return .cjkSmallKana // Same rules as small kana
         }
 
         return .neutral
     }
 
     /// Determine break rules for punctuation based on its classification
-    private func punctuationBreakRules(_ char: Character) -> (isBreakBefore: Bool, isBreakAfter: Bool, penaltyBefore: Int, penaltyAfter: Int) {
+    private func punctuationBreakRules(_ char: Character) -> (
+        isBreakBefore: Bool, isBreakAfter: Bool, penaltyBefore: Int, penaltyAfter: Int,
+    ) {
         let classification = classifyPunctuation(char)
 
         switch classification {
-        case .openingPunctuation:
-            // Opening punctuation: can break before, NEVER after
-            // Examples: ( [ { " ' « 「『
-            return (true, false, BreakPenalty.good, BreakPenalty.never)
+            case .openingPunctuation:
+                // Opening punctuation: can break before, NEVER after
+                // Examples: ( [ { " ' « 「『
+                return (true, false, BreakPenalty.good, BreakPenalty.never)
 
-        case .closingPunctuation:
-            // Closing punctuation: NEVER before, can break after
-            // Examples: ) ] } " ' » 」』
-            return (false, true, BreakPenalty.never, BreakPenalty.good)
+            case .closingPunctuation:
+                // Closing punctuation: NEVER before, can break after
+                // Examples: ) ] } " ' » 」』
+                return (false, true, BreakPenalty.never, BreakPenalty.good)
 
-        case .sentenceEnding:
-            // Sentence-ending punctuation: NEVER before, good break after
-            // Examples: . , ; : ! ? 。、
-            return (false, true, BreakPenalty.never, BreakPenalty.best)
+            case .sentenceEnding:
+                // Sentence-ending punctuation: NEVER before, good break after
+                // Examples: . , ; : ! ? 。、
+                return (false, true, BreakPenalty.never, BreakPenalty.best)
 
-        case .cjkSmallKana:
-            // CJK small kana and iteration marks: NEVER before, can break after
-            // Examples: っゃゅょゎ ゝゞ ー
-            return (false, true, BreakPenalty.never, BreakPenalty.good)
+            case .cjkSmallKana:
+                // CJK small kana and iteration marks: NEVER before, can break after
+                // Examples: っゃゅょゎ ゝゞ ー
+                return (false, true, BreakPenalty.never, BreakPenalty.good)
 
-        case .neutral:
-            // Other punctuation: use default rules
-            return (true, true, BreakPenalty.good, BreakPenalty.good)
+            case .neutral:
+                // Other punctuation: use default rules
+                return (true, true, BreakPenalty.good, BreakPenalty.good)
         }
     }
 
     // MARK: - Operator Tokenization
 
-    private func tokenizeOperator(_ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
+    private func tokenizeOperator(_ atom: MathAtom, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
         let op = atom.nucleus
         guard !op.isEmpty else { return nil }
 
@@ -610,7 +673,7 @@ class AtomTokenizer {
             descent: descent,
             isBreakBefore: true,
             isBreakAfter: true,
-            penaltyBefore: BreakPenalty.best,  // Operators are best break points
+            penaltyBefore: BreakPenalty.best, // Operators are best break points
             penaltyAfter: BreakPenalty.best,
             groupId: nil,
             parentId: nil,
@@ -618,13 +681,15 @@ class AtomTokenizer {
             indexRange: atom.indexRange,
             color: nil,
             backgroundColor: nil,
-            indivisible: false
+            indivisible: false,
         )
     }
 
     // MARK: - Delimiter Tokenization
 
-    private func tokenizeOpenDelimiter(_ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
+    private func tokenizeOpenDelimiter(_ atom: MathAtom, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
         let delimiter = atom.nucleus
         let width = widthCalculator.measureText(delimiter)
         let ascent = font.fontSize * 0.6
@@ -637,7 +702,7 @@ class AtomTokenizer {
             ascent: ascent,
             descent: descent,
             isBreakBefore: true,
-            isBreakAfter: false,  // NEVER break after open delimiter
+            isBreakAfter: false, // NEVER break after open delimiter
             penaltyBefore: BreakPenalty.acceptable,
             penaltyAfter: BreakPenalty.bad,
             groupId: nil,
@@ -646,11 +711,13 @@ class AtomTokenizer {
             indexRange: atom.indexRange,
             color: nil,
             backgroundColor: nil,
-            indivisible: false
+            indivisible: false,
         )
     }
 
-    private func tokenizeCloseDelimiter(_ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
+    private func tokenizeCloseDelimiter(_ atom: MathAtom, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
         let delimiter = atom.nucleus
         let width = widthCalculator.measureText(delimiter)
         let ascent = font.fontSize * 0.6
@@ -662,7 +729,7 @@ class AtomTokenizer {
             height: ascent + descent,
             ascent: ascent,
             descent: descent,
-            isBreakBefore: false,  // NEVER break before close delimiter
+            isBreakBefore: false, // NEVER break before close delimiter
             isBreakAfter: true,
             penaltyBefore: BreakPenalty.bad,
             penaltyAfter: BreakPenalty.acceptable,
@@ -672,13 +739,15 @@ class AtomTokenizer {
             indexRange: atom.indexRange,
             color: nil,
             backgroundColor: nil,
-            indivisible: false
+            indivisible: false,
         )
     }
 
     // MARK: - Punctuation Tokenization
 
-    private func tokenizePunctuation(_ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
+    private func tokenizePunctuation(_ atom: MathAtom, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
         let punct = atom.nucleus
         let width = widthCalculator.measureText(punct)
         let ascent = font.fontSize * 0.5
@@ -712,18 +781,22 @@ class AtomTokenizer {
             indexRange: atom.indexRange,
             color: nil,
             backgroundColor: nil,
-            indivisible: false
+            indivisible: false,
         )
     }
 
     // MARK: - Script Tokenization
 
-    private func tokenizeAtomWithScripts(_ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int, allAtoms: [MathAtom]) -> [BreakableElement] {
+    private func tokenizeAtomWithScripts(
+        _ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int, allAtoms: [MathAtom],
+    ) -> [BreakableElement] {
         var elements: [BreakableElement] = []
-        let groupId = UUID()  // All elements in this group must stay together
+        let groupId = UUID() // All elements in this group must stay together
 
         // First, create the base element
-        if let baseElement = tokenizeAtom(atom, prevAtom: prevAtom, atomIndex: atomIndex, allAtoms: allAtoms) {
+        if let baseElement = tokenizeAtom(
+            atom, prevAtom: prevAtom, atomIndex: atomIndex, allAtoms: allAtoms,
+        ) {
             var modifiedBase = baseElement
             // Modify to be part of group
             modifiedBase = BreakableElement(
@@ -733,7 +806,7 @@ class AtomTokenizer {
                 ascent: baseElement.ascent,
                 descent: baseElement.descent,
                 isBreakBefore: baseElement.isBreakBefore,
-                isBreakAfter: false,  // Cannot break after base - must include scripts
+                isBreakAfter: false, // Cannot break after base - must include scripts
                 penaltyBefore: baseElement.penaltyBefore,
                 penaltyAfter: BreakPenalty.never,
                 groupId: groupId,
@@ -742,7 +815,7 @@ class AtomTokenizer {
                 indexRange: baseElement.indexRange,
                 color: baseElement.color,
                 backgroundColor: baseElement.backgroundColor,
-                indivisible: baseElement.indivisible
+                indivisible: baseElement.indivisible,
             )
             elements.append(modifiedBase)
         }
@@ -756,8 +829,8 @@ class AtomTokenizer {
                     height: scriptDisplay.ascent + scriptDisplay.descent,
                     ascent: scriptDisplay.ascent,
                     descent: scriptDisplay.descent,
-                    isBreakBefore: false,  // Must stay with base
-                    isBreakAfter: atom.subScript == nil,  // Can break after if last script
+                    isBreakBefore: false, // Must stay with base
+                    isBreakAfter: atom.subScript == nil, // Can break after if last script
                     penaltyBefore: BreakPenalty.never,
                     penaltyAfter: atom.subScript == nil ? BreakPenalty.good : BreakPenalty.never,
                     groupId: groupId,
@@ -766,7 +839,7 @@ class AtomTokenizer {
                     indexRange: atom.indexRange,
                     color: nil,
                     backgroundColor: nil,
-                    indivisible: true
+                    indivisible: true,
                 )
                 elements.append(scriptElement)
             }
@@ -781,8 +854,8 @@ class AtomTokenizer {
                     height: scriptDisplay.ascent + scriptDisplay.descent,
                     ascent: scriptDisplay.ascent,
                     descent: scriptDisplay.descent,
-                    isBreakBefore: false,  // Must stay with base
-                    isBreakAfter: true,  // Can break after subscript (it's always last)
+                    isBreakBefore: false, // Must stay with base
+                    isBreakAfter: true, // Can break after subscript (it's always last)
                     penaltyBefore: BreakPenalty.never,
                     penaltyAfter: BreakPenalty.good,
                     groupId: groupId,
@@ -791,7 +864,7 @@ class AtomTokenizer {
                     indexRange: atom.indexRange,
                     color: nil,
                     backgroundColor: nil,
-                    indivisible: true
+                    indivisible: true,
                 )
                 elements.append(scriptElement)
             }
@@ -802,64 +875,75 @@ class AtomTokenizer {
 
     // MARK: - Complex Structure Tokenization
 
-    private func tokenizeFraction(_ fraction: Fraction, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
-        // Create a temporary typesetter to render the fraction
-        let typesetter = Typesetter(withFont: font, style: style, cramped: cramped, spaced: false)
-        guard let display = typesetter.makeFraction(fraction) else { return nil }
-
-        return BreakableElement(
+    /// Creates a BreakableElement from a pre-rendered display and its source atom.
+    private func makeDisplayElement(
+        _ display: Display,
+        atom: MathAtom,
+        width: CGFloat? = nil,
+        breakBefore: Bool = true,
+        breakAfter: Bool = true,
+        penaltyBefore: Int = BreakPenalty.good,
+        penaltyAfter: Int = BreakPenalty.good,
+        indivisible: Bool = true,
+    ) -> BreakableElement {
+        BreakableElement(
             content: .display(display),
-            width: display.width,
+            width: width ?? display.width,
             height: display.ascent + display.descent,
             ascent: display.ascent,
             descent: display.descent,
-            isBreakBefore: true,
-            isBreakAfter: true,
-            penaltyBefore: BreakPenalty.moderate,
-            penaltyAfter: BreakPenalty.moderate,
+            isBreakBefore: breakBefore,
+            isBreakAfter: breakAfter,
+            penaltyBefore: penaltyBefore,
+            penaltyAfter: penaltyAfter,
             groupId: nil,
             parentId: nil,
-            originalAtom: fraction,
-            indexRange: fraction.indexRange,
+            originalAtom: atom,
+            indexRange: atom.indexRange,
             color: nil,
             backgroundColor: nil,
-            indivisible: true  // Fractions are atomic
+            indivisible: indivisible,
         )
     }
 
-    private func tokenizeRadical(_ radical: Radical, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
+    private func tokenizeFraction(_ fraction: Fraction, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
         let typesetter = Typesetter(withFont: font, style: style, cramped: cramped, spaced: false)
-        guard let display = typesetter.makeRadical(radical.radicand, range: radical.indexRange) else { return nil }
+        guard let display = typesetter.makeFraction(fraction) else { return nil }
+        return makeDisplayElement(
+            display, atom: fraction,
+            penaltyBefore: BreakPenalty.moderate, penaltyAfter: BreakPenalty.moderate,
+        )
+    }
+
+    private func tokenizeRadical(_ radical: Radical, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
+        let typesetter = Typesetter(withFont: font, style: style, cramped: cramped, spaced: false)
+        guard let display = typesetter.makeRadical(radical.radicand, range: radical.indexRange)
+        else {
+            return nil
+        }
 
         // Add degree if present
         if radical.degree != nil {
             // Use .script style (71% size) instead of .scriptOfScript (50% size)
             // This matches TeX standard for radical degrees
-            let degree = Typesetter.createLineForMathList(radical.degree, font: font, style: .script)
+            let degree = Typesetter.createLineForMathList(
+                radical.degree,
+                font: font,
+                style: .script,
+            )
             display.setDegree(degree, fontMetrics: font.mathTable)
         }
 
-        return BreakableElement(
-            content: .display(display),
-            width: display.width,
-            height: display.ascent + display.descent,
-            ascent: display.ascent,
-            descent: display.descent,
-            isBreakBefore: true,
-            isBreakAfter: true,
-            penaltyBefore: BreakPenalty.good,
-            penaltyAfter: BreakPenalty.good,
-            groupId: nil,
-            parentId: nil,
-            originalAtom: radical,
-            indexRange: radical.indexRange,
-            color: nil,
-            backgroundColor: nil,
-            indivisible: true  // Radicals are atomic
-        )
+        return makeDisplayElement(display, atom: radical)
     }
 
-    private func tokenizeLargeOperator(_ op: LargeOperator, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
+    private func tokenizeLargeOperator(_ op: LargeOperator, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
         // CRITICAL DISTINCTION:
         // - If op.limits=true (e.g., \sum, \prod, \lim in text mode): Scripts go ABOVE/BELOW
         //   → makeLargeOp() creates LargeOpLimitsDisplay, which is self-contained
@@ -875,7 +959,7 @@ class AtomTokenizer {
         let originalSubScript = op.subScript
 
         // Only clear scripts for side-script operators (limits=false)
-        if !limits && (originalSuperScript != nil || originalSubScript != nil) {
+        if !limits, originalSuperScript != nil || originalSubScript != nil {
             op.superScript = nil
             op.subScript = nil
         }
@@ -906,210 +990,109 @@ class AtomTokenizer {
         // Since we cleared scripts for side-script operators, makeLargeOp() didn't apply this reduction
         var finalWidth = operatorDisplay.width
 
-        if !limits && (originalSubScript != nil) {
+        if !limits, originalSubScript != nil {
             // Get the italic correction for the operator glyph
             if let glyphDisplay = operatorDisplay as? GlyphDisplay,
-               let mathTable = font.mathTable {
+               let mathTable = font.mathTable
+            {
                 let delta = mathTable.getItalicCorrection(glyphDisplay.glyph)
                 finalWidth -= delta
             }
         }
 
-        let finalDisplay = operatorDisplay
-
-        return BreakableElement(
-            content: .display(finalDisplay),
-            width: finalWidth,
-            height: finalDisplay.ascent + finalDisplay.descent,
-            ascent: finalDisplay.ascent,
-            descent: finalDisplay.descent,
-            isBreakBefore: true,
-            isBreakAfter: true,
-            penaltyBefore: BreakPenalty.good,
-            penaltyAfter: BreakPenalty.good,
-            groupId: nil,
-            parentId: nil,
-            originalAtom: op,
-            indexRange: op.indexRange,
-            color: nil,
-            backgroundColor: nil,
-            indivisible: true
-        )
+        return makeDisplayElement(operatorDisplay, atom: op, width: finalWidth)
     }
 
-    private func tokenizeAccent(_ accent: Accent, prevAtom: MathAtom?, atomIndex: Int, allAtoms: [MathAtom]) -> BreakableElement? {
+    private func tokenizeAccent(
+        _ accent: Accent, prevAtom: MathAtom?, atomIndex: Int, allAtoms: [MathAtom],
+    ) -> BreakableElement? {
         let typesetter = Typesetter(withFont: font, style: style, cramped: cramped, spaced: false)
         guard let display = typesetter.makeAccent(accent) else { return nil }
 
         // Determine break rules - accents in text mode should respect word boundaries
-        var isBreakBefore = true
-        var isBreakAfter = true
-        var penaltyBefore = BreakPenalty.good
-        var penaltyAfter = BreakPenalty.good
+        var breakBefore = true
+        var breakAfter = true
+        var penBefore = BreakPenalty.good
+        var penAfter = BreakPenalty.good
 
         // Check if this accent is in a text context (the accented character is roman text)
-        // An accent's innerList contains the base character(s)
         let isTextAccent = accent.innerList?.atoms.first?.fontStyle == .roman
 
         if isTextAccent {
-            // Check previous atom - if it's a letter in text mode, don't break before
-            if let prevAtom = prevAtom {
-                let prevIsTextLetter = isTextLetterAtom(prevAtom)
-                if prevIsTextLetter {
-                    isBreakBefore = false
-                    penaltyBefore = BreakPenalty.never
-                }
+            if let prevAtom, isTextLetterAtom(prevAtom) {
+                breakBefore = false
+                penBefore = BreakPenalty.never
             }
-
-            // Check next atom - if it's a letter in text mode, don't break after
-            if atomIndex + 1 < allAtoms.count {
-                let nextAtom = allAtoms[atomIndex + 1]
-                let nextIsTextLetter = isTextLetterAtom(nextAtom)
-                if nextIsTextLetter {
-                    isBreakAfter = false
-                    penaltyAfter = BreakPenalty.never
-                }
+            if atomIndex + 1 < allAtoms.count, isTextLetterAtom(allAtoms[atomIndex + 1]) {
+                breakAfter = false
+                penAfter = BreakPenalty.never
             }
         }
 
-        return BreakableElement(
-            content: .display(display),
-            width: display.width,
-            height: display.ascent + display.descent,
-            ascent: display.ascent,
-            descent: display.descent,
-            isBreakBefore: isBreakBefore,
-            isBreakAfter: isBreakAfter,
-            penaltyBefore: penaltyBefore,
-            penaltyAfter: penaltyAfter,
-            groupId: nil,
-            parentId: nil,
-            originalAtom: accent,
-            indexRange: accent.indexRange,
-            color: nil,
-            backgroundColor: nil,
-            indivisible: true
+        return makeDisplayElement(
+            display, atom: accent,
+            breakBefore: breakBefore, breakAfter: breakAfter,
+            penaltyBefore: penBefore, penaltyAfter: penAfter,
         )
     }
 
     /// Helper to check if an atom is a letter in text mode (roman style)
     private func isTextLetterAtom(_ atom: MathAtom) -> Bool {
-        // For accent atoms, check their inner content FIRST
-        // (accent atom's nucleus contains the accent mark, not the letter)
         if let accent = atom as? Accent {
             if let firstInner = accent.innerList?.atoms.first {
                 return isTextLetterAtom(firstInner)
             }
             return false
         }
-        // For regular text atoms with roman style
         if atom.fontStyle == .roman {
-            // Check if the nucleus contains only letters
             let nucleus = atom.nucleus
             if !nucleus.isEmpty {
-                return nucleus.allSatisfy { $0.isLetter }
+                return nucleus.allSatisfy(\.isLetter)
             }
         }
         return false
     }
 
-    private func tokenizeUnderline(_ underline: UnderLine, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
+    private func tokenizeUnderline(_ underline: UnderLine, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
         let typesetter = Typesetter(withFont: font, style: style, cramped: cramped, spaced: false)
         guard let display = typesetter.makeUnderline(underline) else { return nil }
-
-        return BreakableElement(
-            content: .display(display),
-            width: display.width,
-            height: display.ascent + display.descent,
-            ascent: display.ascent,
-            descent: display.descent,
-            isBreakBefore: true,
-            isBreakAfter: true,
-            penaltyBefore: BreakPenalty.good,
-            penaltyAfter: BreakPenalty.good,
-            groupId: nil,
-            parentId: nil,
-            originalAtom: underline,
-            indexRange: underline.indexRange,
-            color: nil,
-            backgroundColor: nil,
-            indivisible: true
-        )
+        return makeDisplayElement(display, atom: underline)
     }
 
-    private func tokenizeOverline(_ overline: OverLine, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
+    private func tokenizeOverline(_ overline: OverLine, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
         let typesetter = Typesetter(withFont: font, style: style, cramped: cramped, spaced: false)
         guard let display = typesetter.makeOverline(overline) else { return nil }
-
-        return BreakableElement(
-            content: .display(display),
-            width: display.width,
-            height: display.ascent + display.descent,
-            ascent: display.ascent,
-            descent: display.descent,
-            isBreakBefore: true,
-            isBreakAfter: true,
-            penaltyBefore: BreakPenalty.good,
-            penaltyAfter: BreakPenalty.good,
-            groupId: nil,
-            parentId: nil,
-            originalAtom: overline,
-            indexRange: overline.indexRange,
-            color: nil,
-            backgroundColor: nil,
-            indivisible: true
-        )
+        return makeDisplayElement(display, atom: overline)
     }
 
-    private func tokenizeTable(_ table: MathTable, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
-        let typesetter = Typesetter(withFont: font, style: style, cramped: cramped, spaced: false, maxWidth: maxWidth)
+    private func tokenizeTable(_ table: MathTable, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
+        let typesetter = Typesetter(
+            withFont: font, style: style, cramped: cramped, spaced: false, maxWidth: maxWidth,
+        )
         guard let display = typesetter.makeTable(table) else { return nil }
-
-        return BreakableElement(
-            content: .display(display),
-            width: display.width,
-            height: display.ascent + display.descent,
-            ascent: display.ascent,
-            descent: display.descent,
-            isBreakBefore: true,
-            isBreakAfter: true,
-            penaltyBefore: BreakPenalty.moderate,
-            penaltyAfter: BreakPenalty.moderate,
-            groupId: nil,
-            parentId: nil,
-            originalAtom: table,
-            indexRange: table.indexRange,
-            color: nil,
-            backgroundColor: nil,
-            indivisible: true
+        return makeDisplayElement(
+            display, atom: table,
+            penaltyBefore: BreakPenalty.moderate, penaltyAfter: BreakPenalty.moderate,
         )
     }
 
-    private func tokenizeInner(_ inner: Inner, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
+    private func tokenizeInner(_ inner: Inner, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
         let typesetter = Typesetter(withFont: font, style: style, cramped: cramped, spaced: false)
         guard let display = typesetter.makeLeftRight(inner) else { return nil }
-
-        return BreakableElement(
-            content: .display(display),
-            width: display.width,
-            height: display.ascent + display.descent,
-            ascent: display.ascent,
-            descent: display.descent,
-            isBreakBefore: true,
-            isBreakAfter: true,
-            penaltyBefore: BreakPenalty.good,
-            penaltyAfter: BreakPenalty.good,
-            groupId: nil,
-            parentId: nil,
-            originalAtom: inner,
-            indexRange: inner.indexRange,
-            color: nil,
-            backgroundColor: nil,
-            indivisible: false
-        )
+        return makeDisplayElement(display, atom: inner, indivisible: false)
     }
 
-    private func tokenizeSpace(_ atom: MathAtom, prevAtom: MathAtom?, atomIndex: Int) -> BreakableElement? {
+    private func tokenizeSpace(_ atom: MathAtom, prevAtom _: MathAtom?, atomIndex _: Int)
+        -> BreakableElement?
+    {
         // Space atoms typically don't participate in breaking
         // They are rendered as-is
         let width = widthCalculator.measureSpace(atom.type)
@@ -1130,7 +1113,7 @@ class AtomTokenizer {
             indexRange: atom.indexRange,
             color: nil,
             backgroundColor: nil,
-            indivisible: true
+            indivisible: true,
         )
     }
 }

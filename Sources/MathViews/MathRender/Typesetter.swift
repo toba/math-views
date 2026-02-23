@@ -1,5 +1,6 @@
-import Foundation
 import CoreText
+import Foundation
+
 #if os(iOS) || os(visionOS)
 import UIKit
 #elseif os(macOS)
@@ -8,73 +9,66 @@ import AppKit
 
 // MARK: - Inter Element Spacing
 
-enum InterElementSpaceType : Int {
+enum InterElementSpaceType: Int {
     case invalid = -1
     case none = 0
     case thin
-    case nsThin    // Thin but not in script mode
+    case nsThin // Thin but not in script mode
     case nsMedium
     case nsThick
 }
 
 let interElementSpaces: [[InterElementSpaceType]] =
     //   ordinary   operator   binary     relation  open       close     punct     fraction
-    [  [.none,     .thin,     .nsMedium, .nsThick, .none,     .none,    .none,    .nsThin],    // ordinary
-       [.thin,     .thin,     .invalid,  .nsThick, .none,     .none,    .none,    .nsThin],    // operator
-       [.nsMedium, .nsMedium, .invalid,  .invalid, .nsMedium, .invalid, .invalid, .nsMedium],  // binary
-       [.nsThick,  .nsThick,  .invalid,  .none,    .nsThick,  .none,    .none,    .nsThick],   // relation
-       [.none,     .none,     .invalid,  .none,    .none,     .none,    .none,    .none],      // open
-       [.none,     .thin,     .nsMedium, .nsThick, .none,     .none,    .none,    .nsThin],    // close
-       [.nsThin,   .nsThin,   .invalid,  .nsThin,  .nsThin,   .nsThin,  .nsThin,  .nsThin],    // punct
-       [.nsThin,   .thin,     .nsMedium, .nsThick, .nsThin,   .none,    .nsThin,  .nsThin],    // fraction
-       [.nsMedium, .nsThin,   .nsMedium, .nsThick, .none,     .none,    .none,    .nsThin]]    // radical
-
+    [
+        [.none, .thin, .nsMedium, .nsThick, .none, .none, .none, .nsThin], // ordinary
+        [.thin, .thin, .invalid, .nsThick, .none, .none, .none, .nsThin], // operator
+        [.nsMedium, .nsMedium, .invalid, .invalid, .nsMedium, .invalid, .invalid,
+         .nsMedium], // binary
+        [.nsThick, .nsThick, .invalid, .none, .nsThick, .none, .none, .nsThick], // relation
+        [.none, .none, .invalid, .none, .none, .none, .none, .none], // open
+        [.none, .thin, .nsMedium, .nsThick, .none, .none, .none, .nsThin], // close
+        [.nsThin, .nsThin, .invalid, .nsThin, .nsThin, .nsThin, .nsThin, .nsThin], // punct
+        [.nsThin, .thin, .nsMedium, .nsThick, .nsThin, .none, .nsThin, .nsThin], // fraction
+        [.nsMedium, .nsThin, .nsMedium, .nsThick, .none, .none, .none, .nsThin],
+    ] // radical
 
 // Get's the index for the given type. If row is true, the index is for the row (i.e. left element) otherwise it is for the column (right element)
-func getInterElementSpaceArrayIndexForType(_ type:MathAtomType, row:Bool) -> Int {
+func getInterElementSpaceArrayIndexForType(_ type: MathAtomType, row: Bool) -> Int {
     switch type {
-        case .color, .textcolor, .colorBox, .ordinary, .placeholder:   // A placeholder is treated as ordinary
-            return 0
-        case .largeOperator:
-            return 1
-        case .binaryOperator:
-            return 2;
-        case .relation:
-            return 3;
-        case .open:
-            return 4;
-        case .close:
-            return 5;
-        case .punctuation:
-            return 6;
-        case .fraction,  // Fraction and inner are treated the same.
-             .inner:
-            return 7;
+        // A placeholder is treated as ordinary
+        case .color, .textColor, .colorBox, .ordinary, .placeholder: return 0
+        case .largeOperator: return 1
+        case .binaryOperator: return 2
+        case .relation: return 3
+        case .open: return 4
+        case .close: return 5
+        case .punctuation: return 6
+        // Fraction and inner are treated the same.
+        case .fraction, .inner: return 7
         case .radical:
             if row {
                 // Radicals have inter element spaces only when on the left side.
                 // Note: This is a departure from latex but we don't want \sqrt{4}4 to look weird so we put a space in between.
                 // They have the same spacing as ordinary except with ordinary.
-                return 8;
+                return 8
             } else {
                 // Treat radical as ordinary on the right side
                 return 0
             }
         // Numbers, variables, and unary operators are treated as ordinary
-        case .number, .variable, .unaryOperator:
-            return 0
+        case .number, .variable, .unaryOperator: return 0
         // Decorative types (accent, underline, overline) are treated as ordinary
-        case .accent, .underline, .overline:
-            return 0
+        case .accent, .underline, .overline: return 0
         // Special types that don't typically participate in spacing are treated as ordinary
-        case .boundary, .space, .style, .table:
-            return 0
+        case .boundary, .space, .style, .table: return 0
     }
 }
 
 // MARK: - Italics
+
 // mathit
-func getItalicized(_ ch:Character) -> UTF32Char  {
+func getItalicized(_ ch: Character) -> UTF32Char {
     var unicode = ch.utf32Char
 
     // Special cases for italics
@@ -90,10 +84,12 @@ func getItalicized(_ ch:Character) -> UTF32Char  {
         unicode = UnicodeSymbol.lowerItalicStart + (ch.utf32Char - Character("a").utf32Char)
     } else if ch.isCapitalGreek {
         // Capital Greek characters
-        unicode = UnicodeSymbol.greekCapitalItalicStart + (ch.utf32Char - UnicodeSymbol.capitalGreekStart)
+        unicode =
+            UnicodeSymbol.greekCapitalItalicStart + (ch.utf32Char - UnicodeSymbol.capitalGreekStart)
     } else if ch.isLowerGreek {
         // Greek characters
-        unicode = UnicodeSymbol.greekLowerItalicStart + (ch.utf32Char - UnicodeSymbol.lowerGreekStart)
+        unicode = UnicodeSymbol
+            .greekLowerItalicStart + (ch.utf32Char - UnicodeSymbol.lowerGreekStart)
     } else if ch.isGreekSymbol {
         return UnicodeSymbol.greekSymbolItalicStart + ch.greekSymbolOrder!
     }
@@ -102,7 +98,7 @@ func getItalicized(_ ch:Character) -> UTF32Char  {
 }
 
 // mathbf
-func getBold(_ ch:Character) -> UTF32Char {
+func getBold(_ ch: Character) -> UTF32Char {
     var unicode = ch.utf32Char
     if ch.isUpperEnglish {
         unicode = UnicodeSymbol.mathCapitalBoldStart + (ch.utf32Char - Character("A").utf32Char)
@@ -110,10 +106,11 @@ func getBold(_ ch:Character) -> UTF32Char {
         unicode = UnicodeSymbol.mathLowerBoldStart + (ch.utf32Char - Character("a").utf32Char)
     } else if ch.isCapitalGreek {
         // Capital Greek characters
-        unicode = UnicodeSymbol.greekCapitalBoldStart + (ch.utf32Char - UnicodeSymbol.capitalGreekStart);
+        unicode = UnicodeSymbol
+            .greekCapitalBoldStart + (ch.utf32Char - UnicodeSymbol.capitalGreekStart)
     } else if ch.isLowerGreek {
         // Greek characters
-        unicode = UnicodeSymbol.greekLowerBoldStart + (ch.utf32Char - UnicodeSymbol.lowerGreekStart);
+        unicode = UnicodeSymbol.greekLowerBoldStart + (ch.utf32Char - UnicodeSymbol.lowerGreekStart)
     } else if ch.isGreekSymbol {
         return UnicodeSymbol.greekSymbolBoldStart + ch.greekSymbolOrder!
     } else if ch.isNumber {
@@ -123,34 +120,38 @@ func getBold(_ ch:Character) -> UTF32Char {
 }
 
 // mathbfit
-func getBoldItalic(_ ch:Character) -> UTF32Char {
+func getBoldItalic(_ ch: Character) -> UTF32Char {
     var unicode = ch.utf32Char
     if ch.isUpperEnglish {
-        unicode = UnicodeSymbol.mathCapitalBoldItalicStart + (ch.utf32Char - Character("A").utf32Char)
+        unicode = UnicodeSymbol
+            .mathCapitalBoldItalicStart + (ch.utf32Char - Character("A").utf32Char)
     } else if ch.isLowerEnglish {
         unicode = UnicodeSymbol.mathLowerBoldItalicStart + (ch.utf32Char - Character("a").utf32Char)
     } else if ch.isCapitalGreek {
         // Capital Greek characters
-        unicode = UnicodeSymbol.greekCapitalBoldItalicStart + (ch.utf32Char - UnicodeSymbol.capitalGreekStart);
+        unicode =
+            UnicodeSymbol
+                .greekCapitalBoldItalicStart + (ch.utf32Char - UnicodeSymbol.capitalGreekStart)
     } else if ch.isLowerGreek {
         // Greek characters
-        unicode = UnicodeSymbol.greekLowerBoldItalicStart + (ch.utf32Char - UnicodeSymbol.lowerGreekStart);
+        unicode =
+            UnicodeSymbol.greekLowerBoldItalicStart + (ch.utf32Char - UnicodeSymbol.lowerGreekStart)
     } else if ch.isGreekSymbol {
         return UnicodeSymbol.greekSymbolBoldItalicStart + ch.greekSymbolOrder!
     } else if ch.isNumber {
         // No bold italic for numbers so we just bold them.
-        unicode = getBold(ch);
+        unicode = getBold(ch)
     }
-    return unicode;
+    return unicode
 }
 
 // LaTeX default
-func getDefaultStyle(_ ch:Character) -> UTF32Char {
+func getDefaultStyle(_ ch: Character) -> UTF32Char {
     if ch.isLowerEnglish || ch.isUpperEnglish || ch.isLowerGreek || ch.isGreekSymbol {
-        return getItalicized(ch);
+        return getItalicized(ch)
     } else if ch == "\u{0131}" || ch == "\u{0237}" {
         // Dotless i (U+0131) and dotless j (U+0237) should be italicized in default style
-        return getItalicized(ch);
+        return getItalicized(ch)
     } else if ch.isNumber || ch.isCapitalGreek {
         // In the default style numbers and capital greek is roman
         return ch.utf32Char
@@ -163,52 +164,40 @@ func getDefaultStyle(_ ch:Character) -> UTF32Char {
     return ch.utf32Char
 }
 
-// mathcal/mathscr (caligraphic or script)
-func getCaligraphic(_ ch:Character) -> UTF32Char {
-    // Caligraphic has lots of exceptions:
+// mathcal/mathscr (calligraphic or script)
+func getCalligraphic(_ ch: Character) -> UTF32Char {
+    // Calligraphic has lots of exceptions:
     switch ch {
-        case "B":
-            return 0x212C;   // Script B (bernoulli)
-        case "E":
-            return 0x2130;   // Script E (emf)
-        case "F":
-            return 0x2131;   // Script F (fourier)
-        case "H":
-            return 0x210B;   // Script H (hamiltonian)
-        case "I":
-            return 0x2110;   // Script I
-        case "L":
-            return 0x2112;   // Script L (laplace)
-        case "M":
-            return 0x2133;   // Script M (M-matrix)
-        case "R":
-            return 0x211B;   // Script R (Riemann integral)
-        case "e":
-            return 0x212F;   // Script e (Natural exponent)
-        case "g":
-            return 0x210A;   // Script g (real number)
-        case "o":
-            return 0x2134;   // Script o (order)
-        default:
-            break;
+        case "B": return 0x212C // Script B (Bernoulli)
+        case "E": return 0x2130 // Script E (emf)
+        case "F": return 0x2131 // Script F (Fourier)
+        case "H": return 0x210B // Script H (hamiltonian)
+        case "I": return 0x2110 // Script I
+        case "L": return 0x2112 // Script L (Laplace)
+        case "M": return 0x2133 // Script M (M-matrix)
+        case "R": return 0x211B // Script R (Riemann integral)
+        case "e": return 0x212F // Script e (Natural exponent)
+        case "g": return 0x210A // Script g (real number)
+        case "o": return 0x2134 // Script o (order)
+        default: break
     }
-    var unicode:UTF32Char
+    var unicode: UTF32Char
     if ch.isUpperEnglish {
         unicode = UnicodeSymbol.mathCapitalScriptStart + (ch.utf32Char - Character("A").utf32Char)
     } else if ch.isLowerEnglish {
-        // Latin Modern Math does not have lower case caligraphic characters, so we use
+        // Latin Modern Math does not have lower case calligraphic characters, so we use
         // the default style instead of showing a ?
         unicode = getDefaultStyle(ch)
     } else {
-        // Caligraphic characters don't exist for greek or numbers, we give them the
+        // Calligraphic characters don't exist for greek or numbers, we give them the
         // default treatment.
         unicode = getDefaultStyle(ch)
     }
-    return unicode;
+    return unicode
 }
 
 // mathtt (monospace)
-func getTypewriter(_ ch:Character) -> UTF32Char {
+func getTypewriter(_ ch: Character) -> UTF32Char {
     if ch.isUpperEnglish {
         return UnicodeSymbol.mathCapitalTTStart + (ch.utf32Char - Character("A").utf32Char)
     } else if ch.isLowerEnglish {
@@ -218,39 +207,34 @@ func getTypewriter(_ ch:Character) -> UTF32Char {
     }
     // Monospace characters don't exist for greek, we give them the
     // default treatment.
-    return getDefaultStyle(ch);
+    return getDefaultStyle(ch)
 }
 
 // mathsf
-func getSansSerif(_ ch:Character) -> UTF32Char {
+func getSansSerif(_ ch: Character) -> UTF32Char {
     if ch.isUpperEnglish {
-        return UnicodeSymbol.mathCapitalSansSerifStart + (ch.utf32Char - Character("A").utf32Char)
+        UnicodeSymbol.mathCapitalSansSerifStart + (ch.utf32Char - Character("A").utf32Char)
     } else if ch.isLowerEnglish {
-        return UnicodeSymbol.mathLowerSansSerifStart + (ch.utf32Char - Character("a").utf32Char)
+        UnicodeSymbol.mathLowerSansSerifStart + (ch.utf32Char - Character("a").utf32Char)
     } else if ch.isNumber {
-        return UnicodeSymbol.numberSansSerifStart + (ch.utf32Char - Character("0").utf32Char)
+        UnicodeSymbol.numberSansSerifStart + (ch.utf32Char - Character("0").utf32Char)
+    } else {
+        // Sans-serif characters don't exist for greek, we give them the
+        // default treatment.
+        getDefaultStyle(ch)
     }
-    // Sans-serif characters don't exist for greek, we give them the
-    // default treatment.
-    return getDefaultStyle(ch);
 }
 
 // mathfrak
-func getFraktur(_ ch:Character) -> UTF32Char {
+func getFraktur(_ ch: Character) -> UTF32Char {
     // Fraktur has exceptions:
     switch ch {
-        case "C":
-            return 0x212D;   // C Fraktur
-        case "H":
-            return 0x210C;   // Hilbert space
-        case "I":
-            return 0x2111;   // Imaginary
-        case "R":
-            return 0x211C;   // Real
-        case "Z":
-            return 0x2128;   // Z Fraktur
-        default:
-            break;
+        case "C": return 0x212D // C Fraktur
+        case "H": return 0x210C // Hilbert space
+        case "I": return 0x2111 // Imaginary
+        case "R": return 0x211C // Real
+        case "Z": return 0x2128 // Z Fraktur
+        default: break
     }
     if ch.isUpperEnglish {
         return UnicodeSymbol.mathCapitalFrakturStart + (ch.utf32Char - Character("A").utf32Char)
@@ -259,29 +243,21 @@ func getFraktur(_ ch:Character) -> UTF32Char {
     }
     // Fraktur characters don't exist for greek & numbers, we give them the
     // default treatment.
-    return getDefaultStyle(ch);
+    return getDefaultStyle(ch)
 }
 
 // mathbb (double struck)
-func getBlackboard(_ ch:Character) -> UTF32Char {
+func getBlackboard(_ ch: Character) -> UTF32Char {
     // Blackboard has lots of exceptions:
-    switch(ch) {
-        case "C":
-            return 0x2102;   // Complex numbers
-        case "H":
-            return 0x210D;   // Quarternions
-        case "N":
-            return 0x2115;   // Natural numbers
-        case "P":
-            return 0x2119;   // Primes
-        case "Q":
-            return 0x211A;   // Rationals
-        case "R":
-            return 0x211D;   // Reals
-        case "Z":
-            return 0x2124;   // Integers
-        default:
-            break;
+    switch ch {
+        case "C": return 0x2102 // Complex numbers
+        case "H": return 0x210D // Quaternions
+        case "N": return 0x2115 // Natural numbers
+        case "P": return 0x2119 // Primes
+        case "Q": return 0x211A // Rationals
+        case "R": return 0x211D // Reals
+        case "Z": return 0x2124 // Integers
+        default: break
     }
     if ch.isUpperEnglish {
         return UnicodeSymbol.mathCapitalBlackboardStart + (ch.utf32Char - Character("A").utf32Char)
@@ -292,40 +268,30 @@ func getBlackboard(_ ch:Character) -> UTF32Char {
     }
     // Blackboard characters don't exist for greek, we give them the
     // default treatment.
-    return getDefaultStyle(ch);
+    return getDefaultStyle(ch)
 }
 
-func styleCharacter(_ ch:Character, fontStyle:FontStyle) -> UTF32Char {
+func styleCharacter(_ ch: Character, fontStyle: FontStyle) -> UTF32Char {
     switch fontStyle {
-        case .defaultStyle:
-            return getDefaultStyle(ch);
-        case .roman:
-            return ch.utf32Char
-        case .bold:
-            return getBold(ch);
-        case .italic:
-            return getItalicized(ch);
-        case .boldItalic:
-            return getBoldItalic(ch);
-        case .caligraphic:
-            return getCaligraphic(ch);
-        case .typewriter:
-            return getTypewriter(ch);
-        case .sansSerif:
-            return getSansSerif(ch);
-        case .fraktur:
-            return getFraktur(ch);
-        case .blackboard:
-            return getBlackboard(ch);
+        case .defaultStyle: return getDefaultStyle(ch)
+        case .roman: return ch.utf32Char
+        case .bold: return getBold(ch)
+        case .italic: return getItalicized(ch)
+        case .boldItalic: return getBoldItalic(ch)
+        case .caligraphic: return getCalligraphic(ch)
+        case .typewriter: return getTypewriter(ch)
+        case .sansSerif: return getSansSerif(ch)
+        case .fraktur: return getFraktur(ch)
+        case .blackboard: return getBlackboard(ch)
     }
 }
 
-func changeFont(_ str:String, fontStyle:FontStyle) -> String {
+func changeFont(_ str: String, fontStyle: FontStyle) -> String {
     var retval = ""
     let codes = Array(str)
-    for i in 0..<str.count {
+    for i in 0 ..< str.count {
         let ch = codes[i]
-        var unicode = styleCharacter(ch, fontStyle: fontStyle);
+        var unicode = styleCharacter(ch, fontStyle: fontStyle)
         unicode = NSSwapHostIntToLittle(unicode)
         let charStr = String(UnicodeScalar(unicode)!)
         retval.append(charStr)
@@ -333,103 +299,117 @@ func changeFont(_ str:String, fontStyle:FontStyle) -> String {
     return retval
 }
 
-func getBboxDetails(_ bbox:CGRect, ascent:inout CGFloat, descent:inout CGFloat) {
-    ascent = max(0, CGRectGetMaxY(bbox) - 0)
-    
+func getBboxDetails(_ bbox: CGRect, ascent: inout CGFloat, descent: inout CGFloat) {
+    ascent = max(0, bbox.maxY - 0)
+
     // Descent is how much the line goes below the origin. However if the line is all above the origin, then descent can't be negative.
-    descent = max(0, 0 - CGRectGetMinY(bbox))
+    descent = max(0, 0 - bbox.minY)
 }
 
 // MARK: - Typesetter
 
-/**
- `Typesetter` is the core rendering engine that converts mathematical atom structures (`MathList`)
- into displayable visual representations (`MathListDisplay`).
-
- ## Overview
-
- This class implements the fundamental typesetting algorithm for mathematical equations, following TeX's
- typesetting rules for spacing, positioning, and layout. It handles:
-
- - **Atom processing**: Converts mathematical atoms into display objects with proper positioning
- - **Inter-element spacing**: Applies TeX spacing rules between different atom types (operators, relations, etc.)
- - **Script positioning**: Places superscripts and subscripts at appropriate positions and sizes
- - **Line breaking**: Supports automatic line wrapping with intelligent breaking points
- - **Complex structures**: Handles fractions, radicals, matrices, delimiters, accents, and large operators
-
- ## Architecture
-
- The typesetter uses a stateful approach where it maintains:
- - Current position (`currentPosition`) for placing elements
- - Display atom array (`displayAtoms`) collecting rendered elements
- - Font and style information for determining sizes and positioning
- - Line breaking state when width constraints are active
-
- ## Line Breaking
-
- MathViews implements sophisticated multiline support with two complementary mechanisms:
-
- ### 1. Interatom Line Breaking (Primary)
- Breaks equations **between atoms** when content exceeds width constraints. This preserves semantic
- structure and respects TeX spacing rules. Supported for:
- - Variables, operators, relations, punctuation
- - Fractions, radicals, large operators (inline when they fit)
- - Delimited expressions, colored sections, matrices
- - Atoms with scripts (superscripts/subscripts)
-
- ### 2. Universal Line Breaking (Fallback)
- Uses Core Text for Unicode-aware breaking within very long text atoms, with number protection
- to prevent splitting numerical values.
-
- ### Advanced Features
- - **Dynamic line height**: Adjusts spacing based on actual content height (tall fractions get more space)
- - **Break quality scoring**: Prefers breaking after operators rather than arbitrary positions
- - **Look-ahead optimization**: Considers upcoming atoms to find better break points
- - **Early exit optimization**: Skips expensive checks when remaining content clearly fits
-
- ## Usage
-
- The main entry point is the static `createLineForMathList` method:
-
- ```swift
- // Basic rendering (no line breaking)
- let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
-
- // With line breaking support
- let display = Typesetter.createLineForMathList(mathList, font: font, style: .display, maxWidth: 300)
- ```
-
- ## Implementation Notes
-
- - Total implementation: ~7,900 lines including helper functions and spacing rules
- - Tokenization infrastructure: Additional ~2,000 lines for advanced line breaking (see `Tokenization/` folder)
- - Threading: Uses locks for thread-safe access to spacing tables
- - Performance: Includes early-exit optimizations when content fits within constraints
-
- For detailed line breaking implementation notes, see `MULTILINE_IMPLEMENTATION_NOTES.md`.
- */
+/// `Typesetter` is the core rendering engine that converts mathematical atom structures (`MathList`)
+/// into displayable visual representations (`MathListDisplay`).
+///
+/// ## Overview
+///
+/// This class implements the fundamental typesetting algorithm for mathematical equations, following TeX's
+/// typesetting rules for spacing, positioning, and layout. It handles:
+///
+/// - **Atom processing**: Converts mathematical atoms into display objects with proper positioning
+/// - **Inter-element spacing**: Applies TeX spacing rules between different atom types (operators, relations, etc.)
+/// - **Script positioning**: Places superscripts and subscripts at appropriate positions and sizes
+/// - **Line breaking**: Supports automatic line wrapping with intelligent breaking points
+/// - **Complex structures**: Handles fractions, radicals, matrices, delimiters, accents, and large operators
+///
+/// ## Architecture
+///
+/// The typesetter uses a stateful approach where it maintains:
+/// - Current position (`currentPosition`) for placing elements
+/// - Display atom array (`displayAtoms`) collecting rendered elements
+/// - Font and style information for determining sizes and positioning
+/// - Line breaking state when width constraints are active
+///
+/// ## Line Breaking
+///
+/// MathViews implements sophisticated multiline support with two complementary mechanisms:
+///
+/// ### 1. Interatom Line Breaking (Primary)
+/// Breaks equations **between atoms** when content exceeds width constraints. This preserves semantic
+/// structure and respects TeX spacing rules. Supported for:
+/// - Variables, operators, relations, punctuation
+/// - Fractions, radicals, large operators (inline when they fit)
+/// - Delimited expressions, colored sections, matrices
+/// - Atoms with scripts (superscripts/subscripts)
+///
+/// ### 2. Universal Line Breaking (Fallback)
+/// Uses Core Text for Unicode-aware breaking within very long text atoms, with number protection
+/// to prevent splitting numerical values.
+///
+/// ### Advanced Features
+/// - **Dynamic line height**: Adjusts spacing based on actual content height (tall fractions get more space)
+/// - **Break quality scoring**: Prefers breaking after operators rather than arbitrary positions
+/// - **Look-ahead optimization**: Considers upcoming atoms to find better break points
+/// - **Early exit optimization**: Skips expensive checks when remaining content clearly fits
+///
+/// ## Usage
+///
+/// The main entry point is the static `createLineForMathList` method:
+///
+/// ```swift
+/// // Basic rendering (no line breaking)
+/// let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+///
+/// // With line breaking support
+/// let display = Typesetter.createLineForMathList(mathList, font: font, style: .display, maxWidth: 300)
+/// ```
+///
+/// ## Implementation Notes
+///
+/// - Total implementation: ~7,900 lines including helper functions and spacing rules
+/// - Tokenization infrastructure: Additional ~2,000 lines for advanced line breaking (see `Tokenization/` folder)
+/// - Threading: Uses locks for thread-safe access to spacing tables
+/// - Performance: Includes early-exit optimizations when content fits within constraints
+///
+/// For detailed line breaking implementation notes, see `MULTILINE_IMPLEMENTATION_NOTES.md`.
 class Typesetter {
-    var font:FontInstance!
+    var font: FontInstance!
     var displayAtoms = [Display]()
     var currentPosition = CGPoint.zero
-    var style:LineStyle { didSet { _styleFont = nil } }
-    private var _styleFont:FontInstance?
-    var styleFont:FontInstance {
+    var style: LineStyle { didSet { _styleFont = nil } }
+    private var _styleFont: FontInstance?
+    var styleFont: FontInstance {
         if _styleFont == nil {
             _styleFont = font.copy(withSize: Self.getStyleSize(style, font: font))
         }
         return _styleFont!
     }
+
     var cramped = false
     var spaced = false
-    var maxWidth: CGFloat = 0  // Maximum width for line breaking, 0 means no constraint
+    var maxWidth: CGFloat = 0 // Maximum width for line breaking, 0 means no constraint
 
-    static func createLineForMathList(_ mathList:MathList?, font:FontInstance?, style:LineStyle, maxWidth:CGFloat = 0) -> MathListDisplay? {
+    static func createLineForMathList(
+        _ mathList: MathList?,
+        font: FontInstance?,
+        style: LineStyle,
+        maxWidth: CGFloat = 0,
+    ) -> MathListDisplay? {
         let finalizedList = mathList?.finalized
-        return self.createLineForMathList(finalizedList, font:font, style:style, cramped:false, spaced:false, maxWidth: maxWidth)
+        return createLineForMathList(
+            finalizedList, font: font, style: style, cramped: false, spaced: false,
+            maxWidth: maxWidth,
+        )
     }
 
-    static func createLineForMathList(_ mathList:MathList?, font:FontInstance?, style:LineStyle, cramped:Bool, spaced:Bool = false, maxWidth:CGFloat = 0) -> MathListDisplay? {
+    static func createLineForMathList(
+        _ mathList: MathList?,
+        font: FontInstance?,
+        style: LineStyle,
+        cramped: Bool,
+        spaced: Bool = false,
+        maxWidth: CGFloat = 0,
+    ) -> MathListDisplay? {
         assert(font != nil)
 
         // Always use tokenization approach
@@ -440,36 +420,43 @@ class Typesetter {
             style: style,
             cramped: cramped,
             spaced: spaced,
-            maxWidth: maxWidth
+            maxWidth: maxWidth,
         )
     }
-    
-    static var placeholderColor: MathColor { MathColor.blue }
 
-    init(withFont font:FontInstance?, style:LineStyle, cramped:Bool, spaced:Bool, maxWidth:CGFloat = 0) {
+    static var placeholderColor: PlatformColor { PlatformColor.blue }
+
+    init(
+        withFont font: FontInstance?,
+        style: LineStyle,
+        cramped: Bool,
+        spaced: Bool,
+        maxWidth: CGFloat = 0,
+    ) {
         self.font = font
-        self.displayAtoms = [Display]()
-        self.currentPosition = CGPoint.zero
+        displayAtoms = [Display]()
+        currentPosition = CGPoint.zero
         self.cramped = cramped
         self.spaced = spaced
         self.maxWidth = maxWidth
         self.style = style
     }
-    
-    static func preprocessMathList(_ ml:MathList?) -> [MathAtom] {
+
+    static func preprocessMathList(_ ml: MathList?) -> [MathAtom] {
         // Note: Some of the preprocessing described by the TeX algorithm is done in the finalize method of MathList.
         // Specifically rules 5 & 6 in Appendix G are handled by finalize.
         // This function does not do a complete preprocessing as specified by TeX either. It removes any special atom types
         // that are not included in TeX and applies Rule 14 to merge ordinary characters.
         var preprocessed = [MathAtom]() //  arrayWithCapacity:ml.atoms.count)
-        var prevNode:MathAtom! = nil
+        var prevNode: MathAtom! = nil
         preprocessed.reserveCapacity(ml!.atoms.count)
         for atom in ml!.atoms {
             if atom.type == .variable || atom.type == .number {
                 // This is not a TeX type node. TeX does this during parsing the input.
                 // switch to using the italic math font
                 // We convert it to ordinary
-                let newFont = changeFont(atom.nucleus, fontStyle: atom.fontStyle) // mathItalicize(atom.nucleus)
+                let newFont = changeFont(atom.nucleus,
+                                         fontStyle: atom.fontStyle) // mathItalicize(atom.nucleus)
                 atom.type = .ordinary
                 atom.nucleus = newFont
             } else if atom.type == .unaryOperator {
@@ -486,10 +473,10 @@ class Typesetter {
                     shouldConvertToOrdinary = true
                 } else {
                     switch prevNode.type {
-                    case .binaryOperator, .relation, .open, .punctuation, .largeOperator:
-                        shouldConvertToOrdinary = true
-                    default:
-                        shouldConvertToOrdinary = false
+                        case .binaryOperator, .relation, .open, .punctuation, .largeOperator:
+                            shouldConvertToOrdinary = true
+                        default:
+                            shouldConvertToOrdinary = false
                     }
                 }
 
@@ -504,22 +491,24 @@ class Typesetter {
                 // CRITICAL FIX: Only fuse atoms with the same fontStyle
                 // This prevents fusing roman text (\text{...}) with italic math variables (A, B, etc.)
                 // which would cause incorrect line breaking when the combined string is tokenized
-                if prevNode != nil && prevNode.type == .ordinary && prevNode.subScript == nil && prevNode.superScript == nil && prevNode.fontStyle == atom.fontStyle {
+                if prevNode != nil, prevNode.type == .ordinary, prevNode.subScript == nil,
+                   prevNode.superScript == nil, prevNode.fontStyle == atom.fontStyle
+                {
                     prevNode.fuse(with: atom)
                     // skip the current node, we are done here.
                     continue
                 }
             }
-            
-            // TODO: add italic correction here or in second pass?
+
+            // Italic correction could be added here or in second pass
             prevNode = atom
             preprocessed.append(atom)
         }
         return preprocessed
     }
-    
+
     // returns the size of the font in this style
-    static func getStyleSize(_ style:LineStyle, font:FontInstance?) -> CGFloat {
+    static func getStyleSize(_ style: LineStyle, font: FontInstance?) -> CGFloat {
         let original = font!.fontSize
         let scaled: CGFloat
         switch style {
@@ -535,66 +524,65 @@ class Typesetter {
         // Minimum of 6pt ensures readability while maintaining proper hierarchy
         return max(scaled, 6.0)
     }
-    
+
     // MARK: - Spacing
-    
+
     // Returned in units of mu = 1/18 em.
     func getSpacingInMu(_ type: InterElementSpaceType) -> Int {
         // let valid = [LineStyle.display, .text]
         switch type {
-            case .invalid:  return -1
-            case .none:     return 0
-            case .thin:     return 3
-            case .nsThin:   return style.isNotScript ? 3 : 0;
-            case .nsMedium: return style.isNotScript ? 4 : 0;
-            case .nsThick:  return style.isNotScript ? 5 : 0;
+            case .invalid: return -1
+            case .none: return 0
+            case .thin: return 3
+            case .nsThin: return style.isNotScript ? 3 : 0
+            case .nsMedium: return style.isNotScript ? 4 : 0
+            case .nsThick: return style.isNotScript ? 5 : 0
         }
     }
-    
-    func getInterElementSpace(_ left: MathAtomType, right:MathAtomType) -> CGFloat {
+
+    func getInterElementSpace(_ left: MathAtomType, right: MathAtomType) -> CGFloat {
         let leftIndex = getInterElementSpaceArrayIndexForType(left, row: true)
         let rightIndex = getInterElementSpaceArrayIndexForType(right, row: false)
         let spaceArray = interElementSpaces[Int(leftIndex)]
         let spaceTypeObj = spaceArray[Int(rightIndex)]
         let spaceType = spaceTypeObj
         assert(spaceType != .invalid, "Invalid space between \(left) and \(right)")
-        
-        let spaceMultipler = self.getSpacingInMu(spaceType)
+
+        let spaceMultipler = getSpacingInMu(spaceType)
         if spaceMultipler > 0 {
             // 1 em = size of font in pt. space multipler is in multiples mu or 1/18 em
             return CGFloat(spaceMultipler) * styleFont.mathTable!.muUnit
         }
         return 0
     }
-    
-    
+
     // MARK: - Subscript/Superscript
-    
+
     func scriptStyle() -> LineStyle {
         switch style {
-            case .display, .text:          return .script
+            case .display, .text: return .script
             case .script, .scriptOfScript: return .scriptOfScript
         }
     }
-    
+
     // subscript is always cramped
     func subscriptCramped() -> Bool { true }
-    
+
     // superscript is cramped only if the current style is cramped
     func superScriptCramped() -> Bool { cramped }
-    
+
     func superScriptShiftUp() -> CGFloat {
         if cramped {
-            return styleFont.mathTable!.superscriptShiftUpCramped;
+            return styleFont.mathTable!.superscriptShiftUpCramped
         } else {
-            return styleFont.mathTable!.superscriptShiftUp;
+            return styleFont.mathTable!.superscriptShiftUp
         }
     }
-    
+
     // make scripts for the last atom
     // index is the index of the element which is getting the sub/super scripts.
-    func makeScripts(_ atom: MathAtom?, display:Display?, index:UInt, delta:CGFloat) {
-        guard let atom = atom else { return }
+    func makeScripts(_ atom: MathAtom?, display: Display?, index: UInt, delta: CGFloat) {
+        guard let atom else { return }
         guard atom.subScript != nil || atom.superScript != nil else { return }
         guard let mathTable = styleFont.mathTable else { return }
 
@@ -602,72 +590,104 @@ class Typesetter {
         var subscriptShiftDown = 0.0
 
         display?.hasScript = true
-        if !(display is CTLineDisplay), let display = display {
+        if !(display is CTLineDisplay), let display {
             // get the font in script style
-            let scriptFontSize = Self.getStyleSize(self.scriptStyle(), font:font)
+            let scriptFontSize = Self.getStyleSize(scriptStyle(), font: font)
             let scriptFont = font.copy(withSize: scriptFontSize)
             let scriptFontMetrics = scriptFont.mathTable
 
             // if it is not a simple line then
-            if let scriptFontMetrics = scriptFontMetrics {
+            if let scriptFontMetrics {
                 superScriptShiftUp = display.ascent - scriptFontMetrics.superscriptBaselineDropMax
                 subscriptShiftDown = display.descent + scriptFontMetrics.subscriptBaselineDropMin
             }
         }
 
         if atom.superScript == nil {
-            guard let _subscript = Typesetter.createLineForMathList(atom.subScript, font:font, style:self.scriptStyle(), cramped:self.subscriptCramped()) else { return }
+            guard
+                let _subscript = Typesetter.createLineForMathList(
+                    atom.subScript, font: font, style: scriptStyle(), cramped: subscriptCramped(),
+                )
+            else { return }
             _subscript.type = .ssubscript
             _subscript.index = Int(index)
 
-            subscriptShiftDown = fmax(subscriptShiftDown, mathTable.subscriptShiftDown);
-            subscriptShiftDown = fmax(subscriptShiftDown, _subscript.ascent - mathTable.subscriptTopMax);
+            subscriptShiftDown = fmax(subscriptShiftDown, mathTable.subscriptShiftDown)
+            subscriptShiftDown = fmax(
+                subscriptShiftDown,
+                _subscript.ascent - mathTable.subscriptTopMax,
+            )
             // add the subscript
-            _subscript.position = CGPointMake(currentPosition.x, currentPosition.y - subscriptShiftDown);
+            _subscript.position = CGPoint(
+                x: currentPosition.x,
+                y: currentPosition.y - subscriptShiftDown,
+            )
             displayAtoms.append(_subscript)
             // update the position
-            currentPosition.x += _subscript.width + mathTable.spaceAfterScript;
-            return;
+            currentPosition.x += _subscript.width + mathTable.spaceAfterScript
+            return
         }
-        
-        guard let superScript = Typesetter.createLineForMathList(atom.superScript, font:font, style:self.scriptStyle(), cramped:self.superScriptCramped()) else { return }
+
+        guard
+            let superScript = Typesetter.createLineForMathList(
+                atom.superScript, font: font, style: scriptStyle(), cramped: superScriptCramped(),
+            )
+        else { return }
         superScript.type = .superscript
-        superScript.index = Int(index);
-        superScriptShiftUp = fmax(superScriptShiftUp, self.superScriptShiftUp());
-        superScriptShiftUp = fmax(superScriptShiftUp, superScript.descent + mathTable.superscriptBottomMin);
+        superScript.index = Int(index)
+        superScriptShiftUp = fmax(superScriptShiftUp, self.superScriptShiftUp())
+        superScriptShiftUp = fmax(
+            superScriptShiftUp, superScript.descent + mathTable.superscriptBottomMin,
+        )
 
         if atom.subScript == nil {
-            superScript.position = CGPointMake(currentPosition.x, currentPosition.y + superScriptShiftUp);
+            superScript.position = CGPoint(
+                x: currentPosition.x, y: currentPosition.y + superScriptShiftUp,
+            )
             displayAtoms.append(superScript)
             // update the position
-            currentPosition.x += superScript.width + mathTable.spaceAfterScript;
-            return;
+            currentPosition.x += superScript.width + mathTable.spaceAfterScript
+            return
         }
-        guard let ssubscript = Typesetter.createLineForMathList(atom.subScript, font:font, style:self.scriptStyle(), cramped:self.subscriptCramped()) else { return }
+        guard
+            let ssubscript = Typesetter.createLineForMathList(
+                atom.subScript, font: font, style: scriptStyle(), cramped: subscriptCramped(),
+            )
+        else { return }
         ssubscript.type = .ssubscript
         ssubscript.index = Int(index)
-        subscriptShiftDown = fmax(subscriptShiftDown, mathTable.subscriptShiftDown);
+        subscriptShiftDown = fmax(subscriptShiftDown, mathTable.subscriptShiftDown)
 
         // joint positioning of subscript & superscript
-        let subSuperScriptGap = (superScriptShiftUp - superScript.descent) + (subscriptShiftDown - ssubscript.ascent);
-        if (subSuperScriptGap < mathTable.subSuperscriptGapMin) {
+        let subSuperScriptGap =
+            (superScriptShiftUp - superScript.descent) + (subscriptShiftDown - ssubscript.ascent)
+        if subSuperScriptGap < mathTable.subSuperscriptGapMin {
             // Set the gap to atleast as much
-            subscriptShiftDown += mathTable.subSuperscriptGapMin - subSuperScriptGap;
-            let superscriptBottomDelta = mathTable.superscriptBottomMaxWithSubscript - (superScriptShiftUp - superScript.descent);
-            if (superscriptBottomDelta > 0) {
+            subscriptShiftDown += mathTable.subSuperscriptGapMin - subSuperScriptGap
+            let superscriptBottomDelta =
+                mathTable
+                    .superscriptBottomMaxWithSubscript - (superScriptShiftUp - superScript.descent)
+            if superscriptBottomDelta > 0 {
                 // superscript is lower than the max allowed by the font with a subscript.
-                superScriptShiftUp += superscriptBottomDelta;
-                subscriptShiftDown -= superscriptBottomDelta;
+                superScriptShiftUp += superscriptBottomDelta
+                subscriptShiftDown -= superscriptBottomDelta
             }
         }
         // The delta is the italic correction above that shift superscript position
-        superScript.position = CGPointMake(currentPosition.x + delta, currentPosition.y + superScriptShiftUp);
+        superScript.position = CGPoint(
+            x:
+            currentPosition.x + delta, y: currentPosition.y + superScriptShiftUp,
+        )
         displayAtoms.append(superScript)
-        ssubscript.position = CGPointMake(currentPosition.x, currentPosition.y - subscriptShiftDown);
+        ssubscript.position = CGPoint(
+            x: currentPosition.x,
+            y: currentPosition.y - subscriptShiftDown,
+        )
         displayAtoms.append(ssubscript)
-        currentPosition.x += max(superScript.width + delta, ssubscript.width) + mathTable.spaceAfterScript;
+        currentPosition.x +=
+            max(superScript.width + delta, ssubscript.width) + mathTable.spaceAfterScript
     }
-    
+
     // MARK: - Helper Functions
 
     private func safeUIntFromLocation(_ location: Int) -> UInt {
@@ -677,7 +697,7 @@ class Typesetter {
 
     // MARK: - Fractions
 
-    func numeratorShiftUp(_ hasRule:Bool) -> CGFloat {
+    func numeratorShiftUp(_ hasRule: Bool) -> CGFloat {
         if hasRule {
             if style == .display {
                 return styleFont.mathTable!.fractionNumeratorDisplayStyleShiftUp
@@ -692,65 +712,65 @@ class Typesetter {
             }
         }
     }
-    
+
     func numeratorGapMin() -> CGFloat {
         if style == .display {
-            return styleFont.mathTable!.fractionNumeratorDisplayStyleGapMin;
+            return styleFont.mathTable!.fractionNumeratorDisplayStyleGapMin
         } else {
-            return styleFont.mathTable!.fractionNumeratorGapMin;
+            return styleFont.mathTable!.fractionNumeratorGapMin
         }
     }
-    
-    func denominatorShiftDown(_ hasRule:Bool) -> CGFloat {
+
+    func denominatorShiftDown(_ hasRule: Bool) -> CGFloat {
         if hasRule {
             if style == .display {
-                return styleFont.mathTable!.fractionDenominatorDisplayStyleShiftDown;
+                return styleFont.mathTable!.fractionDenominatorDisplayStyleShiftDown
             } else {
-                return styleFont.mathTable!.fractionDenominatorShiftDown;
+                return styleFont.mathTable!.fractionDenominatorShiftDown
             }
         } else {
             if style == .display {
-                return styleFont.mathTable!.stackBottomDisplayStyleShiftDown;
+                return styleFont.mathTable!.stackBottomDisplayStyleShiftDown
             } else {
-                return styleFont.mathTable!.stackBottomShiftDown;
+                return styleFont.mathTable!.stackBottomShiftDown
             }
         }
     }
-    
+
     func denominatorGapMin() -> CGFloat {
         if style == .display {
-            return styleFont.mathTable!.fractionDenominatorDisplayStyleGapMin;
+            return styleFont.mathTable!.fractionDenominatorDisplayStyleGapMin
         } else {
-            return styleFont.mathTable!.fractionDenominatorGapMin;
+            return styleFont.mathTable!.fractionDenominatorGapMin
         }
     }
-    
+
     func stackGapMin() -> CGFloat {
         if style == .display {
-            return styleFont.mathTable!.stackDisplayStyleGapMin;
+            return styleFont.mathTable!.stackDisplayStyleGapMin
         } else {
-            return styleFont.mathTable!.stackGapMin;
+            return styleFont.mathTable!.stackGapMin
         }
     }
-    
-    func fractionDelimiterHeight()-> CGFloat {
+
+    func fractionDelimiterHeight() -> CGFloat {
         if style == .display {
-            return styleFont.mathTable!.fractionDelimiterDisplayStyleSize;
+            return styleFont.mathTable!.fractionDelimiterDisplayStyleSize
         } else {
-            return styleFont.mathTable!.fractionDelimiterSize;
+            return styleFont.mathTable!.fractionDelimiterSize
         }
     }
-    
+
     func fractionStyle() -> LineStyle {
         // Keep fractions at the same style level instead of incrementing.
         // This ensures that fraction numerators/denominators have the same
         // font size as regular text, preventing them from appearing too small
         // in inline mode or when nested.
-        return style
+        style
     }
-    
-    func makeFraction(_ frac:Fraction?) -> Display? {
-        guard let frac = frac else { return nil }
+
+    func makeFraction(_ frac: Fraction?) -> Display? {
+        guard let frac else { return nil }
 
         // lay out the parts of the fraction
         let numeratorStyle: LineStyle
@@ -762,79 +782,95 @@ class Typesetter {
             denominatorStyle = .display
         } else {
             // Regular fractions use adaptive style
-            let fractionStyle = self.fractionStyle;
+            let fractionStyle = fractionStyle
             numeratorStyle = fractionStyle()
             denominatorStyle = fractionStyle()
         }
 
-        let numeratorDisplay = Typesetter.createLineForMathList(frac.numerator, font:font, style:numeratorStyle, cramped:false)
-        let denominatorDisplay = Typesetter.createLineForMathList(frac.denominator, font:font, style:denominatorStyle, cramped:true)
+        let numeratorDisplay = Typesetter.createLineForMathList(
+            frac.numerator, font: font, style: numeratorStyle, cramped: false,
+        )
+        let denominatorDisplay = Typesetter.createLineForMathList(
+            frac.denominator, font: font, style: denominatorStyle, cramped: true,
+        )
 
         // Handle empty numerator or denominator by creating empty displays
-        let numDisplay = numeratorDisplay ?? MathListDisplay(withDisplays: [], range: 0..<0)
-        let denomDisplay = denominatorDisplay ?? MathListDisplay(withDisplays: [], range: 0..<0)
+        let numDisplay = numeratorDisplay ?? MathListDisplay(withDisplays: [], range: 0 ..< 0)
+        let denomDisplay = denominatorDisplay ?? MathListDisplay(withDisplays: [], range: 0 ..< 0)
 
         // determine the location of the numerator
-        var numeratorShiftUp = self.numeratorShiftUp(frac.hasRule)
-        var denominatorShiftDown = self.denominatorShiftDown(frac.hasRule)
+        var numeratorShiftUp = numeratorShiftUp(frac.hasRule)
+        var denominatorShiftDown = denominatorShiftDown(frac.hasRule)
         let barLocation = styleFont.mathTable!.axisHeight
         let barThickness = frac.hasRule ? styleFont.mathTable!.fractionRuleThickness : 0
 
         if frac.hasRule {
             // This is the difference between the lowest edge of the numerator and the top edge of the fraction bar
-            let distanceFromNumeratorToBar = (numeratorShiftUp - numDisplay.descent) - (barLocation + barThickness/2);
+            let distanceFromNumeratorToBar =
+                (numeratorShiftUp - numDisplay.descent) - (barLocation + barThickness / 2)
             // The distance should at least be displayGap
-            let minNumeratorGap = self.numeratorGapMin;
+            let minNumeratorGap = numeratorGapMin
             if distanceFromNumeratorToBar < minNumeratorGap() {
                 // This makes the distance between the bottom of the numerator and the top edge of the fraction bar
                 // at least minNumeratorGap.
-                numeratorShiftUp += (minNumeratorGap() - distanceFromNumeratorToBar);
+                numeratorShiftUp += (minNumeratorGap() - distanceFromNumeratorToBar)
             }
 
             // Do the same for the denominator
             // This is the difference between the top edge of the denominator and the bottom edge of the fraction bar
-            let distanceFromDenominatorToBar = (barLocation - barThickness/2) - (denomDisplay.ascent - denominatorShiftDown);
+            let distanceFromDenominatorToBar =
+                (barLocation - barThickness / 2) - (denomDisplay.ascent - denominatorShiftDown)
             // The distance should at least be denominator gap
-            let minDenominatorGap = self.denominatorGapMin;
+            let minDenominatorGap = denominatorGapMin
             if distanceFromDenominatorToBar < minDenominatorGap() {
                 // This makes the distance between the top of the denominator and the bottom of the fraction bar to be exactly
                 // minDenominatorGap
-                denominatorShiftDown += (minDenominatorGap() - distanceFromDenominatorToBar);
+                denominatorShiftDown += (minDenominatorGap() - distanceFromDenominatorToBar)
             }
         } else {
             // This is the distance between the numerator and the denominator
-            let clearance = (numeratorShiftUp - numDisplay.descent) - (denomDisplay.ascent - denominatorShiftDown);
+            let clearance =
+                (numeratorShiftUp - numDisplay.descent) -
+                (denomDisplay.ascent - denominatorShiftDown)
             // This is the minimum clearance between the numerator and denominator.
             // For ruleless fractions (like binom, choose, atop), use 1.5x the standard gap
             // for better visual separation, following TeX's approach for binomial coefficients
-            let minGap = self.stackGapMin() * 1.5
+            let minGap = stackGapMin() * 1.5
             if clearance < minGap {
-                numeratorShiftUp += (minGap - clearance)/2;
-                denominatorShiftDown += (minGap - clearance)/2;
+                numeratorShiftUp += (minGap - clearance) / 2
+                denominatorShiftDown += (minGap - clearance) / 2
             }
         }
 
-        let display = FractionDisplay(withNumerator: numDisplay, denominator: denomDisplay, position: currentPosition, range: frac.indexRange)
+        let display = FractionDisplay(
+            withNumerator: numDisplay, denominator: denomDisplay, position: currentPosition,
+            range: frac.indexRange,
+        )
 
-        display.numeratorUp = numeratorShiftUp;
-        display.denominatorDown = denominatorShiftDown;
-        display.lineThickness = barThickness;
-        display.linePosition = barLocation;
-        if frac.leftDelimiter.isEmpty && frac.rightDelimiter.isEmpty {
+        display.numeratorUp = numeratorShiftUp
+        display.denominatorDown = denominatorShiftDown
+        display.lineThickness = barThickness
+        display.linePosition = barLocation
+        if frac.leftDelimiter.isEmpty, frac.rightDelimiter.isEmpty {
             return display
         } else {
-            return self.addDelimitersToFractionDisplay(display, forFraction: frac)
+            return addDelimitersToFractionDisplay(display, forFraction: frac)
         }
     }
 
-    func addDelimitersToFractionDisplay(_ display: FractionDisplay, forFraction frac: Fraction) -> Display {
-        assert(!frac.leftDelimiter.isEmpty || !frac.rightDelimiter.isEmpty, "Fraction should have delimiters to call this function")
+    func addDelimitersToFractionDisplay(_ display: FractionDisplay, forFraction frac: Fraction)
+        -> Display
+    {
+        assert(
+            !frac.leftDelimiter.isEmpty || !frac.rightDelimiter.isEmpty,
+            "Fraction should have delimiters to call this function",
+        )
 
         var innerElements = [Display]()
-        let glyphHeight = self.fractionDelimiterHeight
+        let glyphHeight = fractionDelimiterHeight
         var position = CGPoint.zero
         if !frac.leftDelimiter.isEmpty {
-            if let leftGlyph = self.findGlyphForBoundary(frac.leftDelimiter, withHeight: glyphHeight()) {
+            if let leftGlyph = findGlyphForBoundary(frac.leftDelimiter, withHeight: glyphHeight()) {
                 leftGlyph.position = position
                 position.x += leftGlyph.width
                 innerElements.append(leftGlyph)
@@ -846,7 +882,8 @@ class Typesetter {
         innerElements.append(display)
 
         if !frac.rightDelimiter.isEmpty {
-            if let rightGlyph = self.findGlyphForBoundary(frac.rightDelimiter, withHeight: glyphHeight()) {
+            if let rightGlyph = findGlyphForBoundary(frac.rightDelimiter, withHeight: glyphHeight())
+            {
                 rightGlyph.position = position
                 position.x += rightGlyph.width
                 innerElements.append(rightGlyph)
@@ -856,9 +893,9 @@ class Typesetter {
         innerDisplay.position = currentPosition
         return innerDisplay
     }
-    
+
     // MARK: - Radicals
-    
+
     func radicalVerticalGap() -> CGFloat {
         if style == .display {
             return styleFont.mathTable!.radicalDisplayStyleVerticalGap
@@ -866,54 +903,69 @@ class Typesetter {
             return styleFont.mathTable!.radicalVerticalGap
         }
     }
-    
-    func getRadicalGlyphWithHeight(_ radicalHeight:CGFloat) -> DisplayDS? {
-        var glyphAscent=CGFloat(0), glyphDescent=CGFloat(0), glyphWidth=CGFloat(0)
-        
-        let radicalGlyph = self.findGlyphForCharacterAtIndex("\u{221A}".startIndex, inString:"\u{221A}")
-        let glyph = self.findGlyph(radicalGlyph, withHeight:radicalHeight, glyphAscent:&glyphAscent, glyphDescent:&glyphDescent, glyphWidth:&glyphWidth)
-        
-        var glyphDisplay:DisplayDS?
+
+    func getRadicalGlyphWithHeight(_ radicalHeight: CGFloat) -> DisplayDS? {
+        var glyphAscent = CGFloat(0)
+        var glyphDescent = CGFloat(0)
+        var glyphWidth = CGFloat(0)
+
+        let radicalGlyph = findGlyphForCharacterAtIndex(
+            "\u{221A}".startIndex, inString: "\u{221A}",
+        )
+        let glyph = findGlyph(
+            radicalGlyph, withHeight: radicalHeight, glyphAscent: &glyphAscent,
+            glyphDescent: &glyphDescent, glyphWidth: &glyphWidth,
+        )
+
+        var glyphDisplay: DisplayDS?
         if glyphAscent + glyphDescent < radicalHeight {
             // the glyphs is not as large as required. A glyph needs to be constructed using the extenders.
-            glyphDisplay = self.constructGlyph(radicalGlyph, withHeight:radicalHeight)
+            glyphDisplay = constructGlyph(radicalGlyph, withHeight: radicalHeight)
         }
-        
+
         if glyphDisplay == nil {
             // No constructed display so use the glyph we got.
-            glyphDisplay = GlyphDisplay(withGlpyh: glyph, range: 0..<0, font:styleFont)
-            glyphDisplay!.ascent = glyphAscent;
-            glyphDisplay!.descent = glyphDescent;
-            glyphDisplay!.width = glyphWidth;
+            glyphDisplay = GlyphDisplay(withGlpyh: glyph, range: 0 ..< 0, font: styleFont)
+            glyphDisplay!.ascent = glyphAscent
+            glyphDisplay!.descent = glyphDescent
+            glyphDisplay!.width = glyphWidth
         }
-        return glyphDisplay;
+        return glyphDisplay
     }
-    
-    func makeRadical(_ radicand:MathList?, range:Range<Int>) -> RadicalDisplay? {
-        let innerDisplay = Typesetter.createLineForMathList(radicand, font:font, style:style, cramped:true)!
-        var clearance = self.radicalVerticalGap()
+
+    func makeRadical(_ radicand: MathList?, range: Range<Int>) -> RadicalDisplay? {
+        let innerDisplay = Typesetter.createLineForMathList(
+            radicand, font: font, style: style, cramped: true,
+        )!
+        var clearance = radicalVerticalGap()
         let radicalRuleThickness = styleFont.mathTable!.radicalRuleThickness
-        let radicalHeight = innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness
-        
-        let glyph = self.getRadicalGlyphWithHeight(radicalHeight)!
-        
+        let radicalHeight =
+            innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness
+
+        let glyph = getRadicalGlyphWithHeight(radicalHeight)!
+
         // Note this is a departure from Latex. Latex assumes that glyphAscent == thickness.
         // Open type math makes no such assumption, and ascent and descent are independent of the thickness.
         // Latex computes delta as descent - (h(inner) + d(inner) + clearance)
         // but since we may not have ascent == thickness, we modify the delta calculation slightly.
         // If the font designer followes Latex conventions, it will be identical.
-        let delta = (glyph.descent + glyph.ascent) - (innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness)
+        let delta =
+            (glyph.descent + glyph.ascent)
+                - (innerDisplay.ascent + innerDisplay.descent + clearance + radicalRuleThickness)
         if delta > 0 {
-            clearance += delta/2  // increase the clearance to center the radicand inside the sign.
+            clearance += delta / 2 // increase the clearance to center the radicand inside the sign.
         }
-        
+
         // we need to shift the radical glyph up, to coincide with the baseline of inner.
         // The new ascent of the radical glyph should be thickness + adjusted clearance + h(inner)
         let radicalAscent = radicalRuleThickness + clearance + innerDisplay.ascent
-        let shiftUp = radicalAscent - glyph.ascent  // Note: if the font designer followed latex conventions, this is the same as glyphAscent == thickness.
+        let shiftUp = radicalAscent - glyph
+            .ascent // Note: if the font designer followed latex conventions, this is the same as glyphAscent == thickness.
         glyph.shiftDown = -shiftUp
-        
-        let radical = RadicalDisplay(withRadicand: innerDisplay, glyph: glyph, position: currentPosition, range: range)
+
+        let radical = RadicalDisplay(
+            withRadicand: innerDisplay, glyph: glyph, position: currentPosition, range: range,
+        )
         radical.ascent = radicalAscent + styleFont.mathTable!.radicalExtraAscender
         radical.topKern = styleFont.mathTable!.radicalExtraAscender
         radical.lineThickness = radicalRuleThickness
@@ -924,122 +976,156 @@ class Typesetter {
         radical.width = glyph.width + innerDisplay.width
         return radical
     }
-    
+
     // MARK: - Glyphs
-    
-    func findGlyph(_ glyph:CGGlyph, withHeight height:CGFloat, glyphAscent:inout CGFloat, glyphDescent:inout CGFloat, glyphWidth:inout CGFloat) -> CGGlyph {
+
+    func findGlyph(
+        _ glyph: CGGlyph,
+        withHeight height: CGFloat,
+        glyphAscent: inout CGFloat,
+        glyphDescent: inout CGFloat,
+        glyphWidth: inout CGFloat,
+    ) -> CGGlyph {
         let variants = styleFont.mathTable!.getVerticalVariantsForGlyph(glyph)
-        let numVariants = variants.count;
+        let numVariants = variants.count
         var glyphs = variants
 
         var bboxes = [CGRect](repeating: CGRect.zero, count: numVariants)
         var advances = [CGSize](repeating: CGSize.zero, count: numVariants)
 
         // Get the bounds for these glyphs
-        CTFontGetBoundingRectsForGlyphs(styleFont.ctFont, .horizontal, &glyphs, &bboxes, numVariants)
-        CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyphs, &advances, numVariants);
-        var ascent=CGFloat(0), descent=CGFloat(0), width=CGFloat(0)
-        for i in 0..<numVariants {
+        CTFontGetBoundingRectsForGlyphs(
+            styleFont.ctFont,
+            .horizontal,
+            &glyphs,
+            &bboxes,
+            numVariants,
+        )
+        CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyphs, &advances, numVariants)
+        var ascent = CGFloat(0)
+        var descent = CGFloat(0)
+        var width = CGFloat(0)
+        for i in 0 ..< numVariants {
             let bounds = bboxes[i]
-            width = advances[i].width;
-            getBboxDetails(bounds, ascent: &ascent, descent: &descent);
-            
-            if (ascent + descent >= height) {
-                glyphAscent = ascent;
-                glyphDescent = descent;
-                glyphWidth = width;
+            width = advances[i].width
+            getBboxDetails(bounds, ascent: &ascent, descent: &descent)
+
+            if ascent + descent >= height {
+                glyphAscent = ascent
+                glyphDescent = descent
+                glyphWidth = width
                 return glyphs[i]
             }
         }
-        glyphAscent = ascent;
-        glyphDescent = descent;
-        glyphWidth = width;
+        glyphAscent = ascent
+        glyphDescent = descent
+        glyphWidth = width
         return glyphs[numVariants - 1]
     }
-    
-    func constructGlyph(_ glyph:CGGlyph, withHeight glyphHeight:CGFloat) -> GlyphConstructionDisplay? {
+
+    func constructGlyph(_ glyph: CGGlyph, withHeight glyphHeight: CGFloat)
+        -> GlyphConstructionDisplay?
+    {
         let parts = styleFont.mathTable!.getVerticalGlyphAssembly(forGlyph: glyph)
-        if parts.count == 0 {
+        if parts.isEmpty {
             return nil
         }
-        var glyphs = [CGGlyph](), offsets = [CGFloat]()
-        var height:CGFloat=0
-        self.constructGlyphWithParts(parts, glyphHeight:glyphHeight, glyphs:&glyphs, offsets:&offsets, height:&height)
+        var glyphs = [CGGlyph]()
+        var offsets = [CGFloat]()
+        var height: CGFloat = 0
+        constructGlyphWithParts(
+            parts, glyphHeight: glyphHeight, glyphs: &glyphs, offsets: &offsets, height: &height,
+        )
         var first = glyphs[0]
-        let width = CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &first, nil, 1);
-        let display = GlyphConstructionDisplay(withGlyphs: glyphs, offsets: offsets, font: styleFont)
-        display.width = width;
-        display.ascent = height;
-        display.descent = 0;   // it's upto the rendering to adjust the display up or down.
-        return display;
+        let width = CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &first, nil, 1)
+        let display = GlyphConstructionDisplay(
+            withGlyphs: glyphs,
+            offsets: offsets,
+            font: styleFont,
+        )
+        display.width = width
+        display.ascent = height
+        display.descent = 0 // it's upto the rendering to adjust the display up or down.
+        return display
     }
-    
-    func constructGlyphWithParts(_ parts:[GlyphPart], glyphHeight:CGFloat, glyphs:inout [CGGlyph], offsets:inout [CGFloat], height:inout CGFloat) {
-        // Loop forever until the glyph height is valid
-        for numExtenders in 0..<Int.max {
-            var glyphsRv = [CGGlyph]()
-            var offsetsRv = [CGFloat]()
 
-            var prev:GlyphPart? = nil;
-            let minDistance = styleFont.mathTable!.minConnectorOverlap;
+    func constructGlyphWithParts(
+        _ parts: [GlyphPart],
+        glyphHeight: CGFloat,
+        glyphs: inout [CGGlyph],
+        offsets: inout [CGFloat],
+        height: inout CGFloat,
+    ) {
+        // Increase extender count until the glyph reaches the required height
+        for numExtenders in 0 ..< 1000 {
+            // Estimate capacity: non-extender parts + extender parts * numExtenders
+            let estimatedCount = parts.count + parts.filter(\.isExtender).count * (numExtenders - 1)
+            var glyphsRv = [CGGlyph]()
+            glyphsRv.reserveCapacity(max(estimatedCount, parts.count))
+            var offsetsRv = [CGFloat]()
+            offsetsRv.reserveCapacity(max(estimatedCount, parts.count))
+
+            var prev: GlyphPart?
+            let minDistance = styleFont.mathTable!.minConnectorOverlap
             var minOffset = CGFloat(0)
-            var maxDelta = CGFloat.greatestFiniteMagnitude  // the maximum amount we can increase the offsets by
+            var maxDelta = CGFloat
+                .greatestFiniteMagnitude // the maximum amount we can increase the offsets by
 
             for part in parts {
-                var repeats = 1;
+                var repeats = 1
                 if part.isExtender {
-                    repeats = numExtenders;
+                    repeats = numExtenders
                 }
                 // add the extender num extender times
                 for _ in 0 ..< repeats {
                     glyphsRv.append(part.glyph)
                     if prev != nil {
-                        let maxOverlap = min(prev!.endConnectorLength, part.startConnectorLength);
+                        let maxOverlap = min(prev!.endConnectorLength, part.startConnectorLength)
                         // the minimum amount we can add to the offset
-                        let minOffsetDelta = prev!.fullAdvance - maxOverlap;
+                        let minOffsetDelta = prev!.fullAdvance - maxOverlap
                         // The maximum amount we can add to the offset.
-                        let maxOffsetDelta = prev!.fullAdvance - minDistance;
+                        let maxOffsetDelta = prev!.fullAdvance - minDistance
                         // we can increase the offsets by at most max - min.
-                        maxDelta = min(maxDelta, maxOffsetDelta - minOffsetDelta);
-                        minOffset = minOffset + minOffsetDelta;
+                        maxDelta = min(maxDelta, maxOffsetDelta - minOffsetDelta)
+                        minOffset = minOffset + minOffsetDelta
                     }
                     offsetsRv.append(minOffset)
                     prev = part
                 }
             }
 
-            assert(glyphsRv.count == offsetsRv.count, "Offsets should match the glyphs");
+            assert(glyphsRv.count == offsetsRv.count, "Offsets should match the glyphs")
             if prev == nil {
-                continue;   // maybe only extenders
+                continue // maybe only extenders
             }
             let minHeight = minOffset + prev!.fullAdvance
             let maxHeight = minHeight + maxDelta * CGFloat(glyphsRv.count - 1)
-            if (minHeight >= glyphHeight) {
+            if minHeight >= glyphHeight {
                 // we are done
-                glyphs = glyphsRv;
-                offsets = offsetsRv;
-                height = minHeight;
-                return;
-            } else if (glyphHeight <= maxHeight) {
+                glyphs = glyphsRv
+                offsets = offsetsRv
+                height = minHeight
+                return
+            } else if glyphHeight <= maxHeight {
                 // spread the delta equally between all the connectors
-                let delta = glyphHeight - minHeight;
+                let delta = glyphHeight - minHeight
                 let deltaIncrease = delta / CGFloat(glyphsRv.count - 1)
                 var lastOffset = CGFloat(0)
-                for i in 0..<offsetsRv.count {
-                    let offset = offsetsRv[i] + CGFloat(i) * deltaIncrease;
+                for i in 0 ..< offsetsRv.count {
+                    let offset = offsetsRv[i] + CGFloat(i) * deltaIncrease
                     offsetsRv[i] = offset
                     lastOffset = offset
                 }
                 // we are done
                 glyphs = glyphsRv
                 offsets = offsetsRv
-                height = lastOffset + prev!.fullAdvance;
-                return;
+                height = lastOffset + prev!.fullAdvance
+                return
             }
         }
     }
-    
-    func findGlyphForCharacterAtIndex(_ index:String.Index, inString str:String) -> CGGlyph {
+
+    func findGlyphForCharacterAtIndex(_ index: String.Index, inString str: String) -> CGGlyph {
         // Get the character at index taking into account UTF-32 characters
         var chars = Array(str[index].utf16)
 
@@ -1049,7 +1135,12 @@ class Typesetter {
         if !found {
             // Try fallback font if available
             if let fallbackFont = styleFont.fallbackFont {
-                let fallbackFound = CTFontGetGlyphsForCharacters(fallbackFont, &chars, &glyph, chars.count)
+                let fallbackFound = CTFontGetGlyphsForCharacters(
+                    fallbackFont,
+                    &chars,
+                    &glyph,
+                    chars.count,
+                )
                 if fallbackFound {
                     return glyph[0]
                 }
@@ -1059,16 +1150,16 @@ class Typesetter {
         }
         return glyph[0]
     }
-    
+
     // MARK: - Large Operators
-    
-    func makeLargeOp(_ op:LargeOperator!) -> Display?  {
+
+    func makeLargeOp(_ op: LargeOperator!) -> Display? {
         // Show limits above/below in display mode
         // For inline mode, we still center limits below for operators like \lim, but with tighter spacing
         let limits = op.limits && (style == .display || style == .text)
         var delta = CGFloat(0)
         if op.nucleus.count == 1 {
-            var glyph = self.findGlyphForCharacterAtIndex(op.nucleus.startIndex, inString:op.nucleus)
+            var glyph = findGlyphForCharacterAtIndex(op.nucleus.startIndex, inString: op.nucleus)
             if glyph != 0 {
                 // Enlarge large operators to make them visually distinctive
                 if style == .display {
@@ -1084,87 +1175,127 @@ class Typesetter {
             delta = styleFont.mathTable!.getItalicCorrection(glyph)
 
             // vertically center
-            let bbox = CTFontGetBoundingRectsForGlyphs(styleFont.ctFont, .horizontal, &glyph, nil, 1);
-            let width = CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyph, nil, 1);
-            var ascent=CGFloat(0), descent=CGFloat(0)
+            let bbox = CTFontGetBoundingRectsForGlyphs(
+                styleFont.ctFont,
+                .horizontal,
+                &glyph,
+                nil,
+                1,
+            )
+            let width = CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyph, nil, 1)
+            var ascent = CGFloat(0)
+            var descent = CGFloat(0)
             getBboxDetails(bbox, ascent: &ascent, descent: &descent)
-            let shiftDown = 0.5*(ascent - descent) - styleFont.mathTable!.axisHeight;
+            let shiftDown = 0.5 * (ascent - descent) - styleFont.mathTable!.axisHeight
             let glyphDisplay = GlyphDisplay(withGlpyh: glyph, range: op.indexRange, font: styleFont)
-            glyphDisplay.ascent = ascent;
-            glyphDisplay.descent = descent;
-            glyphDisplay.width = width;
-            if (op.subScript != nil) && !limits {
+            glyphDisplay.ascent = ascent
+            glyphDisplay.descent = descent
+            glyphDisplay.width = width
+            if op.subScript != nil, !limits {
                 // Remove italic correction from the width of the glyph if
                 // there is a subscript and limits is not set.
-                glyphDisplay.width -= delta;
+                glyphDisplay.width -= delta
             }
-            glyphDisplay.shiftDown = shiftDown;
-            glyphDisplay.position = currentPosition;
-            return self.addLimitsToDisplay(glyphDisplay, forOperator:op, delta:delta)
+            glyphDisplay.shiftDown = shiftDown
+            glyphDisplay.position = currentPosition
+            return addLimitsToDisplay(glyphDisplay, forOperator: op, delta: delta)
         } else {
             // Create a regular node
             let line = NSMutableAttributedString(string: op.nucleus)
             // add the font
-            line.addAttribute(kCTFontAttributeName as NSAttributedString.Key, value:styleFont.ctFont, range:NSMakeRange(0, line.length))
-            let displayAtom = CTLineDisplay(withString: line, position: currentPosition, range: op.indexRange, font: styleFont, atoms: [op])
-            return self.addLimitsToDisplay(displayAtom, forOperator:op, delta:0)
+            line.addAttribute(
+                kCTFontAttributeName as NSAttributedString.Key, value: styleFont.ctFont,
+                range: NSRange(location: 0, length: line.length),
+            )
+            let displayAtom = CTLineDisplay(
+                withString: line, position: currentPosition, range: op.indexRange, font: styleFont,
+                atoms: [op],
+            )
+            return addLimitsToDisplay(displayAtom, forOperator: op, delta: 0)
         }
     }
-    
-    func addLimitsToDisplay(_ display:Display?, forOperator op:LargeOperator, delta:CGFloat) -> Display? {
+
+    func addLimitsToDisplay(_ display: Display?, forOperator op: LargeOperator, delta: CGFloat)
+        -> Display?
+    {
         // If there is no subscript or superscript, just return the current display
-        if op.subScript == nil && op.superScript == nil {
+        if op.subScript == nil, op.superScript == nil {
             currentPosition.x += display!.width
-            return display;
+            return display
         }
         // Show limits above/below in both display and text (inline) modes
-        if op.limits && (style == .display || style == .text) {
+        if op.limits, style == .display || style == .text {
             // make limits (above/below positioning)
-            var superScript:MathListDisplay? = nil, subScript:MathListDisplay? = nil
+            var superScript: MathListDisplay?
+            var subScript: MathListDisplay?
 
             // Scale font for script style before creating scripts
             // This matches how DisplayPreRenderer.renderScript() handles script sizing
-            let scriptStyle = self.scriptStyle()
+            let scriptStyle = scriptStyle()
             let scriptFontSize = Typesetter.getStyleSize(scriptStyle, font: font)
             let scriptFont = font.copy(withSize: scriptFontSize)
 
             if op.superScript != nil {
-                superScript = Typesetter.createLineForMathList(op.superScript, font:scriptFont, style:scriptStyle, cramped:self.superScriptCramped())
+                superScript = Typesetter.createLineForMathList(
+                    op.superScript, font: scriptFont, style: scriptStyle,
+                    cramped: superScriptCramped(),
+                )
             }
             if op.subScript != nil {
-                subScript = Typesetter.createLineForMathList(op.subScript, font:scriptFont, style:scriptStyle, cramped:self.subscriptCramped())
+                subScript = Typesetter.createLineForMathList(
+                    op.subScript, font: scriptFont, style: scriptStyle, cramped: subscriptCramped(),
+                )
             }
-            assert((superScript != nil) || (subScript != nil), "At least one of superscript or subscript should have been present.");
-            let opsDisplay = LargeOpLimitsDisplay(withNucleus:display, upperLimit:superScript, lowerLimit:subScript, limitShift:delta/2, extraPadding:0)
+            assert(
+                (superScript != nil) || (subScript != nil),
+                "At least one of superscript or subscript should have been present.",
+            )
+            let opsDisplay = LargeOpLimitsDisplay(
+                withNucleus: display, upperLimit: superScript, lowerLimit: subScript,
+                limitShift: delta / 2,
+                extraPadding: 0,
+            )
 
             // Use standard OpenType MATH metrics for limit spacing
             if superScript != nil {
-                let upperLimitGap = max(styleFont.mathTable!.upperLimitGapMin, styleFont.mathTable!.upperLimitBaselineRiseMin - superScript!.descent);
-                opsDisplay.upperLimitGap = upperLimitGap;
+                let upperLimitGap = max(
+                    styleFont.mathTable!.upperLimitGapMin,
+                    styleFont.mathTable!.upperLimitBaselineRiseMin - superScript!.descent,
+                )
+                opsDisplay.upperLimitGap = upperLimitGap
             }
             if subScript != nil {
-                let lowerLimitGap = max(styleFont.mathTable!.lowerLimitGapMin, styleFont.mathTable!.lowerLimitBaselineDropMin - subScript!.ascent);
-                opsDisplay.lowerLimitGap = lowerLimitGap;
+                let lowerLimitGap = max(
+                    styleFont.mathTable!.lowerLimitGapMin,
+                    styleFont.mathTable!.lowerLimitBaselineDropMin - subScript!.ascent,
+                )
+                opsDisplay.lowerLimitGap = lowerLimitGap
             }
-            opsDisplay.position = currentPosition;
-            opsDisplay.range = op.indexRange;
-            currentPosition.x += opsDisplay.width;
-            return opsDisplay;
+            opsDisplay.position = currentPosition
+            opsDisplay.range = op.indexRange
+            currentPosition.x += opsDisplay.width
+            return opsDisplay
         } else {
-            currentPosition.x += display!.width;
-            self.makeScripts(op, display:display, index:safeUIntFromLocation(op.indexRange.lowerBound), delta:delta)
-            return display;
+            currentPosition.x += display!.width
+            makeScripts(
+                op, display: display, index: safeUIntFromLocation(op.indexRange.lowerBound),
+                delta: delta,
+            )
+            return display
         }
     }
-    
+
     // MARK: - Large delimiters
-    
+
     // Delimiter shortfall from plain.tex
     static let kDelimiterFactor = CGFloat(901)
     static let kDelimiterShortfallPoints = CGFloat(5)
-    
+
     func makeLeftRight(_ inner: Inner?, maxWidth: CGFloat = 0) -> Display? {
-        assert(inner!.leftBoundary != nil || inner!.rightBoundary != nil, "Inner should have a boundary to call this function");
+        assert(
+            inner!.leftBoundary != nil || inner!.rightBoundary != nil,
+            "Inner should have a boundary to call this function",
+        )
 
         let glyphHeight: CGFloat
 
@@ -1175,15 +1306,23 @@ class Typesetter {
             glyphHeight = styleFont.fontSize * delimiterMultiplier
         } else {
             // Calculate height based on inner content (for \left...\right)
-            let innerListDisplay = Typesetter.createLineForMathList(inner!.innerList, font:font, style:style, cramped:cramped, spaced:true, maxWidth:maxWidth)
+            let innerListDisplay = Typesetter.createLineForMathList(
+                inner!.innerList, font: font, style: style, cramped: cramped, spaced: true,
+                maxWidth: maxWidth,
+            )
             let axisHeight = styleFont.mathTable!.axisHeight
             // delta is the max distance from the axis
-            let delta = max(innerListDisplay!.ascent - axisHeight, innerListDisplay!.descent + axisHeight);
-            let d1 = (delta / 500) * Typesetter.kDelimiterFactor;  // This represents atleast 90% of the formula
-            let d2 = 2 * delta - Typesetter.kDelimiterShortfallPoints;  // This represents a shortfall of 5pt
+            let delta = max(
+                innerListDisplay!.ascent - axisHeight,
+                innerListDisplay!.descent + axisHeight,
+            )
+            let d1 = (delta / 500) * Typesetter
+                .kDelimiterFactor // This represents atleast 90% of the formula
+            let d2 = 2 * delta - Typesetter
+                .kDelimiterShortfallPoints // This represents a shortfall of 5pt
             // The size of the delimiter glyph should cover at least 90% of the formula or
             // be at most 5pt short.
-            glyphHeight = max(d1, d2);
+            glyphHeight = max(d1, d2)
         }
 
         var innerElements = [Display]()
@@ -1193,8 +1332,10 @@ class Typesetter {
         // Use 2 mu (about 1/9 em) for breathing room, matching TeX standards
         let delimiterPadding = styleFont.mathTable!.muUnit * 2
 
-        if inner!.leftBoundary != nil && !inner!.leftBoundary!.nucleus.isEmpty {
-            let leftGlyph = self.findGlyphForBoundary(inner!.leftBoundary!.nucleus, withHeight:glyphHeight)
+        if inner!.leftBoundary != nil, !inner!.leftBoundary!.nucleus.isEmpty {
+            let leftGlyph = findGlyphForBoundary(
+                inner!.leftBoundary!.nucleus, withHeight: glyphHeight,
+            )
             leftGlyph!.position = position
             position.x += leftGlyph!.width
             innerElements.append(leftGlyph!)
@@ -1205,77 +1346,103 @@ class Typesetter {
         // Only include inner content if not using explicit delimiter height
         // (explicit height commands like \big produce standalone delimiters)
         if inner!.delimiterHeight == nil {
-            let innerListDisplay = Typesetter.createLineForMathList(inner!.innerList, font:font, style:style, cramped:cramped, spaced:true, maxWidth:maxWidth)
-            innerListDisplay!.position = position;
-            position.x += innerListDisplay!.width;
+            let innerListDisplay = Typesetter.createLineForMathList(
+                inner!.innerList, font: font, style: style, cramped: cramped, spaced: true,
+                maxWidth: maxWidth,
+            )
+            innerListDisplay!.position = position
+            position.x += innerListDisplay!.width
             innerElements.append(innerListDisplay!)
         }
 
-        if inner!.rightBoundary != nil && !inner!.rightBoundary!.nucleus.isEmpty {
+        if inner!.rightBoundary != nil, !inner!.rightBoundary!.nucleus.isEmpty {
             // Add padding before right delimiter
             position.x += delimiterPadding
-            let rightGlyph = self.findGlyphForBoundary(inner!.rightBoundary!.nucleus, withHeight:glyphHeight)
-            rightGlyph!.position = position;
-            position.x += rightGlyph!.width;
+            let rightGlyph = findGlyphForBoundary(
+                inner!.rightBoundary!.nucleus, withHeight: glyphHeight,
+            )
+            rightGlyph!.position = position
+            position.x += rightGlyph!.width
             innerElements.append(rightGlyph!)
         }
-        let innerDisplay = MathListDisplay(withDisplays: innerElements, range: inner!.indexRange)
-        return innerDisplay
+        return MathListDisplay(withDisplays: innerElements, range: inner!.indexRange)
     }
-    
-    func findGlyphForBoundary(_ delimiter:String, withHeight glyphHeight:CGFloat) -> Display? {
-        var glyphAscent=CGFloat(0), glyphDescent=CGFloat(0), glyphWidth=CGFloat(0)
-        let leftGlyph = self.findGlyphForCharacterAtIndex(delimiter.startIndex, inString:delimiter)
-        let glyph = self.findGlyph(leftGlyph, withHeight:glyphHeight, glyphAscent:&glyphAscent, glyphDescent:&glyphDescent, glyphWidth:&glyphWidth)
-        
-        var glyphDisplay:DisplayDS?
-        if (glyphAscent + glyphDescent < glyphHeight) {
+
+    func findGlyphForBoundary(_ delimiter: String, withHeight glyphHeight: CGFloat) -> Display? {
+        var glyphAscent = CGFloat(0)
+        var glyphDescent = CGFloat(0)
+        var glyphWidth = CGFloat(0)
+        let leftGlyph = findGlyphForCharacterAtIndex(delimiter.startIndex, inString: delimiter)
+        let glyph = findGlyph(
+            leftGlyph, withHeight: glyphHeight, glyphAscent: &glyphAscent,
+            glyphDescent: &glyphDescent,
+            glyphWidth: &glyphWidth,
+        )
+
+        var glyphDisplay: DisplayDS?
+        if glyphAscent + glyphDescent < glyphHeight {
             // we didn't find a pre-built glyph that is large enough
-            glyphDisplay = self.constructGlyph(leftGlyph, withHeight:glyphHeight)
+            glyphDisplay = constructGlyph(leftGlyph, withHeight: glyphHeight)
         }
-        
+
         if glyphDisplay == nil {
             // Create a glyph display
-            glyphDisplay = GlyphDisplay(withGlpyh: glyph, range: 0..<0, font:styleFont)
-            glyphDisplay!.ascent = glyphAscent;
-            glyphDisplay!.descent = glyphDescent;
-            glyphDisplay!.width = glyphWidth;
+            glyphDisplay = GlyphDisplay(withGlpyh: glyph, range: 0 ..< 0, font: styleFont)
+            glyphDisplay!.ascent = glyphAscent
+            glyphDisplay!.descent = glyphDescent
+            glyphDisplay!.width = glyphWidth
         }
         // Center the glyph on the axis
-        let shiftDown = 0.5*(glyphDisplay!.ascent - glyphDisplay!.descent) - styleFont.mathTable!.axisHeight;
-        glyphDisplay!.shiftDown = shiftDown;
-        return glyphDisplay;
+        let shiftDown =
+            0.5 * (glyphDisplay!.ascent - glyphDisplay!.descent) - styleFont.mathTable!.axisHeight
+        glyphDisplay!.shiftDown = shiftDown
+        return glyphDisplay
     }
-    
+
     // MARK: - Underline/Overline
-    
-    func makeUnderline(_ under:UnderLine?) -> Display? {
-        let innerListDisplay = Typesetter.createLineForMathList(under!.innerList, font:font, style:style, cramped:cramped)
-        let underDisplay = LineDisplay(withInner: innerListDisplay, position: currentPosition, range: under!.indexRange)
+
+    func makeUnderline(_ under: UnderLine?) -> Display? {
+        let innerListDisplay = Typesetter.createLineForMathList(
+            under!.innerList, font: font, style: style, cramped: cramped,
+        )
+        let underDisplay = LineDisplay(
+            withInner: innerListDisplay, position: currentPosition, range: under!.indexRange,
+        )
         // Move the line down by the vertical gap.
-        underDisplay.lineShiftUp = -(innerListDisplay!.descent + styleFont.mathTable!.underbarVerticalGap);
-        underDisplay.lineThickness = styleFont.mathTable!.underbarRuleThickness;
+        underDisplay.lineShiftUp =
+            -(innerListDisplay!.descent + styleFont.mathTable!.underbarVerticalGap)
+        underDisplay.lineThickness = styleFont.mathTable!.underbarRuleThickness
         underDisplay.ascent = innerListDisplay!.ascent
-        underDisplay.descent = innerListDisplay!.descent + styleFont.mathTable!.underbarVerticalGap + styleFont.mathTable!.underbarRuleThickness + styleFont.mathTable!.underbarExtraDescender;
-        underDisplay.width = innerListDisplay!.width;
-        return underDisplay;
+        underDisplay.descent =
+            innerListDisplay!.descent + styleFont.mathTable!.underbarVerticalGap
+                + styleFont.mathTable!.underbarRuleThickness + styleFont.mathTable!
+                .underbarExtraDescender
+        underDisplay.width = innerListDisplay!.width
+        return underDisplay
     }
-    
-    func makeOverline(_ over:OverLine?) -> Display? {
-        let innerListDisplay = Typesetter.createLineForMathList(over!.innerList, font:font, style:style, cramped:true)
-        let overDisplay = LineDisplay(withInner:innerListDisplay, position:currentPosition, range:over!.indexRange)
-        overDisplay.lineShiftUp = innerListDisplay!.ascent + styleFont.mathTable!.overbarVerticalGap;
-        overDisplay.lineThickness = styleFont.mathTable!.underbarRuleThickness;
-        overDisplay.ascent = innerListDisplay!.ascent + styleFont.mathTable!.overbarVerticalGap + styleFont.mathTable!.overbarRuleThickness + styleFont.mathTable!.overbarExtraAscender;
-        overDisplay.descent = innerListDisplay!.descent;
-        overDisplay.width = innerListDisplay!.width;
-        return overDisplay;
+
+    func makeOverline(_ over: OverLine?) -> Display? {
+        let innerListDisplay = Typesetter.createLineForMathList(
+            over!.innerList, font: font, style: style, cramped: true,
+        )
+        let overDisplay = LineDisplay(
+            withInner: innerListDisplay, position: currentPosition, range: over!.indexRange,
+        )
+        overDisplay.lineShiftUp = innerListDisplay!.ascent + styleFont.mathTable!.overbarVerticalGap
+        overDisplay.lineThickness = styleFont.mathTable!.underbarRuleThickness
+        overDisplay.ascent =
+            innerListDisplay!.ascent + styleFont.mathTable!.overbarVerticalGap
+                + styleFont.mathTable!.overbarRuleThickness + styleFont.mathTable!
+                .overbarExtraAscender
+        overDisplay.descent = innerListDisplay!.descent
+        overDisplay.width = innerListDisplay!.width
+        return overDisplay
     }
-    
+
     // MARK: - Accents
-    
-    func isSingleCharAccentee(_ accent:Accent?) -> Bool {
-        guard let accent = accent else { return false }
+
+    func isSingleCharAccentee(_ accent: Accent?) -> Bool {
+        guard let accent else { return false }
         if accent.innerList!.atoms.count != 1 {
             // Not a single char list.
             return false
@@ -1290,68 +1457,88 @@ class Typesetter {
         }
         return true
     }
-    
+
     // The distance the accent must be moved from the beginning.
-    func getSkew(_ accent: Accent?, accenteeWidth width:CGFloat, accentGlyph:CGGlyph) -> CGFloat {
-        guard let accent = accent else { return 0 }
+    func getSkew(_ accent: Accent?, accenteeWidth width: CGFloat, accentGlyph: CGGlyph) -> CGFloat {
+        guard let accent else { return 0 }
         if accent.nucleus.isEmpty {
             // No accent
             return 0
         }
         let accentAdjustment = styleFont.mathTable!.getTopAccentAdjustment(accentGlyph)
         var accenteeAdjustment = CGFloat(0)
-        if !self.isSingleCharAccentee(accent) {
+        if !isSingleCharAccentee(accent) {
             // use the center of the accentee
-            accenteeAdjustment = width/2
+            accenteeAdjustment = width / 2
         } else {
             let innerAtom = accent.innerList!.atoms[0]
-            let accenteeGlyph = self.findGlyphForCharacterAtIndex(innerAtom.nucleus.index(innerAtom.nucleus.endIndex, offsetBy:-1), inString:innerAtom.nucleus)
+            let accenteeGlyph = findGlyphForCharacterAtIndex(
+                innerAtom.nucleus.index(innerAtom.nucleus.endIndex, offsetBy: -1),
+                inString: innerAtom.nucleus,
+            )
             accenteeAdjustment = styleFont.mathTable!.getTopAccentAdjustment(accenteeGlyph)
         }
         // The adjustments need to aligned, so skew is just the difference.
-        return (accenteeAdjustment - accentAdjustment)
+        return accenteeAdjustment - accentAdjustment
     }
-    
+
     // Find the largest horizontal variant if exists, with width less than max width.
-    func findVariantGlyph(_ glyph:CGGlyph, withMaxWidth maxWidth:CGFloat, maxWidth glyphAscent:inout CGFloat, glyphDescent:inout CGFloat, glyphWidth:inout CGFloat, glyphMinY:inout CGFloat) -> CGGlyph {
+    func findVariantGlyph(
+        _ glyph: CGGlyph,
+        withMaxWidth maxWidth: CGFloat,
+        maxWidth glyphAscent: inout CGFloat,
+        glyphDescent: inout CGFloat,
+        glyphWidth: inout CGFloat,
+        glyphMinY: inout CGFloat,
+    ) -> CGGlyph {
         let variants = styleFont.mathTable!.getHorizontalVariantsForGlyph(glyph)
         let numVariants = variants.count
-        assert(numVariants > 0, "A glyph is always it's own variant, so number of variants should be > 0");
+        assert(
+            numVariants > 0,
+            "A glyph is always it's own variant, so number of variants should be > 0",
+        )
         var glyphs = variants
 
-        var curGlyph = glyphs[0]  // if no other glyph is found, we'll return the first one.
+        var curGlyph = glyphs[0] // if no other glyph is found, we'll return the first one.
         var bboxes = [CGRect](repeating: CGRect.zero, count: numVariants) // [numVariants)
-        var advances = [CGSize](repeating: CGSize.zero, count:numVariants)
+        var advances = [CGSize](repeating: CGSize.zero, count: numVariants)
         // Get the bounds for these glyphs
-        CTFontGetBoundingRectsForGlyphs(styleFont.ctFont, .horizontal, &glyphs, &bboxes, numVariants);
-        CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyphs, &advances, numVariants);
-        for i in 0..<numVariants {
+        CTFontGetBoundingRectsForGlyphs(
+            styleFont.ctFont,
+            .horizontal,
+            &glyphs,
+            &bboxes,
+            numVariants,
+        )
+        CTFontGetAdvancesForGlyphs(styleFont.ctFont, .horizontal, &glyphs, &advances, numVariants)
+        for i in 0 ..< numVariants {
             let bounds = bboxes[i]
-            var ascent=CGFloat(0), descent=CGFloat(0)
-            let width = CGRectGetMaxX(bounds);
-            getBboxDetails(bounds, ascent: &ascent, descent: &descent);
+            var ascent = CGFloat(0)
+            var descent = CGFloat(0)
+            let width = bounds.maxX
+            getBboxDetails(bounds, ascent: &ascent, descent: &descent)
 
-            if (width > maxWidth) {
-                if (i == 0) {
+            if width > maxWidth {
+                if i == 0 {
                     // glyph dimensions are not yet set
-                    glyphWidth = advances[i].width;
-                    glyphAscent = ascent;
-                    glyphDescent = descent;
-                    glyphMinY = bounds.minY;
+                    glyphWidth = advances[i].width
+                    glyphAscent = ascent
+                    glyphDescent = descent
+                    glyphMinY = bounds.minY
                 }
-                return curGlyph;
+                return curGlyph
             } else {
                 curGlyph = glyphs[i]
-                glyphWidth = advances[i].width;
-                glyphAscent = ascent;
-                glyphDescent = descent;
-                glyphMinY = bounds.minY;
+                glyphWidth = advances[i].width
+                glyphAscent = ascent
+                glyphDescent = descent
+                glyphMinY = bounds.minY
             }
         }
         // We exhausted all the variants and none was larger than the width, so we return the largest
-        return curGlyph;
+        return curGlyph
     }
-    
+
     /// Gets the proper glyph name for arrow accents that have stretchy variants in the font.
     /// Returns different glyphs based on the LaTeX command used:
     /// - \vec: use combining character glyph (uni20D7) for small fixed-size arrow
@@ -1362,14 +1549,14 @@ class Typesetter {
 
         // Map Unicode combining characters to appropriate glyph names
         switch accent.nucleus {
-        case "\u{20D6}":  // Combining left arrow above
-            return useStretchy ? "arrowleft" : "uni20D6"
-        case "\u{20D7}":  // Combining right arrow above (\vec or \overrightarrow)
-            return useStretchy ? "arrowright" : "uni20D7"
-        case "\u{20E1}":  // Combining left right arrow above
-            return useStretchy ? "arrowboth" : "uni20E1"
-        default:
-            return nil
+            case "\u{20D6}": // Combining left arrow above
+                return useStretchy ? "arrowleft" : "uni20D6"
+            case "\u{20D7}": // Combining right arrow above (\vec or \overrightarrow)
+                return useStretchy ? "arrowright" : "uni20D7"
+            case "\u{20E1}": // Combining left right arrow above
+                return useStretchy ? "arrowboth" : "uni20E1"
+            default:
+                return nil
         }
     }
 
@@ -1383,14 +1570,14 @@ class Typesetter {
 
         // Map Unicode combining characters to non-combining glyph names with stretchy variants
         switch accent.nucleus {
-        case "\u{0302}":  // COMBINING CIRCUMFLEX ACCENT (\hat or \widehat)
-            return "circumflex"
-        case "\u{0303}":  // COMBINING TILDE (\tilde or \widetilde)
-            return "tilde"
-        case "\u{030C}":  // COMBINING CARON (\check or \widecheck)
-            return "caron"
-        default:
-            return nil
+            case "\u{0302}": // COMBINING CIRCUMFLEX ACCENT (\hat or \widehat)
+                return "circumflex"
+            case "\u{0303}": // COMBINING TILDE (\tilde or \widetilde)
+                return "tilde"
+            case "\u{030C}": // COMBINING CARON (\check or \widecheck)
+                return "caron"
+            default:
+                return nil
         }
     }
 
@@ -1402,24 +1589,24 @@ class Typesetter {
         var charCount = 0
         for atom in innerList.atoms {
             switch atom.type {
-            case .variable, .number:
-                // Count actual characters
-                charCount += atom.nucleus.count
-            case .ordinary, .binaryOperator, .relation:
-                // Count as single character
-                charCount += 1
-            case .fraction:
-                // Fractions count as 2 units
-                charCount += 2
-            case .radical:
-                // Radicals count as 2 units
-                charCount += 2
-            case .largeOperator:
-                // Large operators count as 2 units
-                charCount += 2
-            default:
-                // Other types count as 1 unit
-                charCount += 1
+                case .variable, .number:
+                    // Count actual characters
+                    charCount += atom.nucleus.count
+                case .ordinary, .binaryOperator, .relation:
+                    // Count as single character
+                    charCount += 1
+                case .fraction:
+                    // Fractions count as 2 units
+                    charCount += 2
+                case .radical:
+                    // Radicals count as 2 units
+                    charCount += 2
+                case .largeOperator:
+                    // Large operators count as 2 units
+                    charCount += 2
+                default:
+                    // Other types count as 1 unit
+                    charCount += 1
             }
         }
         return charCount
@@ -1448,17 +1635,19 @@ class Typesetter {
         }
     }
 
-    func makeAccent(_ accent:Accent?) -> Display? {
-        guard let accent = accent else { return nil }
+    func makeAccent(_ accent: Accent?) -> Display? {
+        guard let accent else { return nil }
 
-        var accentee = Typesetter.createLineForMathList(accent.innerList, font:font, style:style, cramped:true)
+        var accentee = Typesetter.createLineForMathList(
+            accent.innerList, font: font, style: style, cramped: true,
+        )
         if accent.nucleus.isEmpty {
             // no accent!
             return accentee
         }
 
         // If accentee is nil (empty content), create an empty display
-        guard let accentee = accentee else {
+        guard let accentee else {
             // Return an empty display for empty content
             let emptyDisplay = MathListDisplay(withDisplays: [], range: accent.indexRange)
             emptyDisplay.position = currentPosition
@@ -1481,11 +1670,14 @@ class Typesetter {
         } else {
             // For regular accents, use Unicode character lookup
             let end = accent.nucleus.index(before: accent.nucleus.endIndex)
-            accentGlyph = self.findGlyphForCharacterAtIndex(end, inString:accent.nucleus)
+            accentGlyph = findGlyphForCharacterAtIndex(end, inString: accent.nucleus)
         }
 
-        let accenteeWidth = accentee.width;
-        var glyphAscent=CGFloat(0), glyphDescent=CGFloat(0), glyphWidth=CGFloat(0), glyphMinY=CGFloat(0)
+        let accenteeWidth = accentee.width
+        var glyphAscent = CGFloat(0)
+        var glyphDescent = CGFloat(0)
+        var glyphWidth = CGFloat(0)
+        var glyphMinY = CGFloat(0)
 
         // Adjust requested width based on accent type:
         // - Wide accents (\widehat): request width based on content length (variant selection)
@@ -1498,19 +1690,22 @@ class Typesetter {
             requestedWidth = accenteeWidth * multiplier
         } else if isArrowAccent {
             if accent.isStretchy {
-                requestedWidth = accenteeWidth * 1.1  // Request extra width for stretching
+                requestedWidth = accenteeWidth * 1.1 // Request extra width for stretching
             } else {
-                requestedWidth = 1.0  // Get smallest non-zero variant (typically .h1)
+                requestedWidth = 1.0 // Get smallest non-zero variant (typically .h1)
             }
         } else {
             requestedWidth = accenteeWidth
         }
 
-        accentGlyph = self.findVariantGlyph(accentGlyph, withMaxWidth:requestedWidth, maxWidth:&glyphAscent, glyphDescent:&glyphDescent, glyphWidth:&glyphWidth, glyphMinY:&glyphMinY)
+        accentGlyph = findVariantGlyph(
+            accentGlyph, withMaxWidth: requestedWidth, maxWidth: &glyphAscent,
+            glyphDescent: &glyphDescent, glyphWidth: &glyphWidth, glyphMinY: &glyphMinY,
+        )
 
         // For non-stretchy arrow accents (\vec): if we got a zero-width glyph (base combining char),
         // manually select the first variant which is the proper accent size
-        if isArrowAccent && !accent.isStretchy && glyphWidth == 0 {
+        if isArrowAccent, !accent.isStretchy, glyphWidth == 0 {
             guard let mathTable = styleFont.mathTable else { return nil }
             let variants = mathTable.getHorizontalVariantsForGlyph(accentGlyph)
             if variants.count > 1 {
@@ -1522,7 +1717,13 @@ class Typesetter {
                 glyphWidth = advances.width
                 // Recalculate ascent and descent for the variant glyph
                 var boundingRects = CGRect.zero
-                CTFontGetBoundingRectsForGlyphs(styleFont.ctFont, .horizontal, &glyph, &boundingRects, 1)
+                CTFontGetBoundingRectsForGlyphs(
+                    styleFont.ctFont,
+                    .horizontal,
+                    &glyph,
+                    &boundingRects,
+                    1,
+                )
                 glyphMinY = boundingRects.minY
                 glyphAscent = boundingRects.maxY
                 glyphDescent = -boundingRects.minY
@@ -1536,9 +1737,9 @@ class Typesetter {
 
         if isWideAccent {
             // Wide accents (\widehat, \widetilde): use same vertical spacing as stretchy arrows
-            delta = 0  // No compression for wide accents
+            delta = 0 // No compression for wide accents
             guard let mathTable = styleFont.mathTable else { return nil }
-            let wideAccentSpacing = mathTable.upperLimitGapMin  // Same as stretchy arrows
+            let wideAccentSpacing = mathTable.upperLimitGapMin // Same as stretchy arrows
             // Compensate for internal glyph whitespace (minY > 0)
             let minYCompensation = max(0, glyphMinY)
             height = accentee.ascent + wideAccentSpacing - minYCompensation
@@ -1548,33 +1749,43 @@ class Typesetter {
             if glyphWidth < accenteeWidth {
                 // Add padding to make accent extend slightly beyond content
                 // Use ~0.1em padding (less than arrows which use ~0.167em)
-                let widePadding = styleFont.fontSize / 10  // Approximately 0.1em
+                let widePadding = styleFont.fontSize / 10 // Approximately 0.1em
                 let targetWidth = accenteeWidth + widePadding
 
                 let scaleX = targetWidth / glyphWidth
-                let accentGlyphDisplay = GlyphDisplay(withGlpyh: accentGlyph, range: accent.indexRange, font: styleFont)
-                accentGlyphDisplay.scaleX = scaleX  // Apply horizontal scaling
+                let accentGlyphDisplay = GlyphDisplay(
+                    withGlpyh: accentGlyph, range: accent.indexRange, font: styleFont,
+                )
+                accentGlyphDisplay.scaleX = scaleX // Apply horizontal scaling
                 accentGlyphDisplay.ascent = glyphAscent
                 accentGlyphDisplay.descent = glyphDescent
-                accentGlyphDisplay.width = targetWidth  // Set width to include padding
-                accentGlyphDisplay.position = CGPointMake(0, height)  // Align to left edge
+                accentGlyphDisplay.width = targetWidth // Set width to include padding
+                accentGlyphDisplay.position = CGPoint(x: 0, y: height) // Align to left edge
 
                 var finalAccentee = accentee
-                if self.isSingleCharAccentee(accent) && (accent.subScript != nil || accent.superScript != nil) {
+                if isSingleCharAccentee(accent),
+                   accent.subScript != nil || accent.superScript != nil
+                {
                     // Attach the super/subscripts to the accentee instead of the accent.
                     guard let innerList = accent.innerList,
-                          !innerList.atoms.isEmpty else { return nil }
+                          !innerList.atoms.isEmpty
+                    else { return nil }
                     let innerAtom = innerList.atoms[0]
                     innerAtom.superScript = accent.superScript
                     innerAtom.subScript = accent.subScript
                     accent.superScript = nil
                     accent.subScript = nil
-                    if let remadeAccentee = Typesetter.createLineForMathList(accent.innerList, font:font, style:style, cramped:cramped) {
+                    if let remadeAccentee = Typesetter.createLineForMathList(
+                        accent.innerList, font: font, style: style, cramped: cramped,
+                    ) {
                         finalAccentee = remadeAccentee
                     }
                 }
 
-                let display = AccentDisplay(withAccent:accentGlyphDisplay, accentee:finalAccentee, range:accent.indexRange)
+                let display = AccentDisplay(
+                    withAccent: accentGlyphDisplay, accentee: finalAccentee,
+                    range: accent.indexRange,
+                )
                 display.width = finalAccentee.width
                 display.descent = finalAccentee.descent
                 let ascent = height + glyphAscent
@@ -1590,8 +1801,8 @@ class Typesetter {
             guard let mathTable = styleFont.mathTable else { return nil }
             if accent.isStretchy {
                 // Stretchy arrows (\overrightarrow): use full ascent + additional spacing
-                delta = 0  // No compression for stretchy arrows
-                let arrowSpacing = mathTable.upperLimitGapMin  // Use standard gap
+                delta = 0 // No compression for stretchy arrows
+                let arrowSpacing = mathTable.upperLimitGapMin // Use standard gap
                 // Compensate for internal glyph whitespace (minY > 0)
                 let minYCompensation = max(0, glyphMinY)
                 height = accentee.ascent + arrowSpacing - minYCompensation
@@ -1608,36 +1819,47 @@ class Typesetter {
             // scale it horizontally to fully cover the content
             // Add small padding to make arrow tip extend slightly beyond content
             // For non-stretchy accents (\vec): always center without scaling
-            if accent.isStretchy && glyphWidth < accenteeWidth {
+            if accent.isStretchy, glyphWidth < accenteeWidth {
                 // Add padding to make arrow extend beyond content on the tip side
                 // Use approximately 0.15-0.2em extra width
-                let arrowPadding = styleFont.fontSize / 6  // Approximately 0.167em at typical font sizes
+                let arrowPadding = styleFont
+                    .fontSize / 6 // Approximately 0.167em at typical font sizes
                 let targetWidth = accenteeWidth + arrowPadding
 
                 let scaleX = targetWidth / glyphWidth
-                let accentGlyphDisplay = GlyphDisplay(withGlpyh: accentGlyph, range: accent.indexRange, font: styleFont)
-                accentGlyphDisplay.scaleX = scaleX  // Apply horizontal scaling
+                let accentGlyphDisplay = GlyphDisplay(
+                    withGlpyh: accentGlyph, range: accent.indexRange, font: styleFont,
+                )
+                accentGlyphDisplay.scaleX = scaleX // Apply horizontal scaling
                 accentGlyphDisplay.ascent = glyphAscent
                 accentGlyphDisplay.descent = glyphDescent
-                accentGlyphDisplay.width = targetWidth  // Set width to include padding
-                accentGlyphDisplay.position = CGPointMake(0, height)  // Align to left edge
+                accentGlyphDisplay.width = targetWidth // Set width to include padding
+                accentGlyphDisplay.position = CGPoint(x: 0, y: height) // Align to left edge
 
                 var finalAccentee = accentee
-                if self.isSingleCharAccentee(accent) && (accent.subScript != nil || accent.superScript != nil) {
+                if isSingleCharAccentee(accent),
+                   accent.subScript != nil || accent.superScript != nil
+                {
                     // Attach the super/subscripts to the accentee instead of the accent.
                     guard let innerList = accent.innerList,
-                          !innerList.atoms.isEmpty else { return nil }
+                          !innerList.atoms.isEmpty
+                    else { return nil }
                     let innerAtom = innerList.atoms[0]
                     innerAtom.superScript = accent.superScript
                     innerAtom.subScript = accent.subScript
                     accent.superScript = nil
                     accent.subScript = nil
-                    if let remadeAccentee = Typesetter.createLineForMathList(accent.innerList, font:font, style:style, cramped:cramped) {
+                    if let remadeAccentee = Typesetter.createLineForMathList(
+                        accent.innerList, font: font, style: style, cramped: cramped,
+                    ) {
                         finalAccentee = remadeAccentee
                     }
                 }
 
-                let display = AccentDisplay(withAccent:accentGlyphDisplay, accentee:finalAccentee, range:accent.indexRange)
+                let display = AccentDisplay(
+                    withAccent: accentGlyphDisplay, accentee: finalAccentee,
+                    range: accent.indexRange,
+                )
                 display.width = finalAccentee.width
                 display.descent = finalAccentee.descent
                 let ascent = height + glyphAscent
@@ -1652,47 +1874,54 @@ class Typesetter {
             // For regular accents: use traditional tight positioning
             guard let mathTable = styleFont.mathTable else { return nil }
             delta = min(accentee.ascent, mathTable.accentBaseHeight)
-            skew = self.getSkew(accent, accenteeWidth:accenteeWidth, accentGlyph:accentGlyph)
-            height = accentee.ascent - delta  // This is always positive since delta <= height.
+            skew = getSkew(accent, accenteeWidth: accenteeWidth, accentGlyph: accentGlyph)
+            height = accentee.ascent - delta // This is always positive since delta <= height.
         }
 
-        let accentPosition = CGPointMake(skew, height);
-        let accentGlyphDisplay = GlyphDisplay(withGlpyh: accentGlyph, range: accent.indexRange, font: styleFont)
-        accentGlyphDisplay.ascent = glyphAscent;
-        accentGlyphDisplay.descent = glyphDescent;
-        accentGlyphDisplay.width = glyphWidth;
-        accentGlyphDisplay.position = accentPosition;
+        let accentPosition = CGPoint(x: skew, y: height)
+        let accentGlyphDisplay = GlyphDisplay(
+            withGlpyh: accentGlyph, range: accent.indexRange, font: styleFont,
+        )
+        accentGlyphDisplay.ascent = glyphAscent
+        accentGlyphDisplay.descent = glyphDescent
+        accentGlyphDisplay.width = glyphWidth
+        accentGlyphDisplay.position = accentPosition
 
         var finalAccentee = accentee
-        if self.isSingleCharAccentee(accent) && (accent.subScript != nil || accent.superScript != nil) {
+        if isSingleCharAccentee(accent), accent.subScript != nil || accent.superScript != nil {
             // Attach the super/subscripts to the accentee instead of the accent.
             guard let innerList = accent.innerList,
-                  !innerList.atoms.isEmpty else { return nil }
+                  !innerList.atoms.isEmpty
+            else { return nil }
             let innerAtom = innerList.atoms[0]
-            innerAtom.superScript = accent.superScript;
-            innerAtom.subScript = accent.subScript;
-            accent.superScript = nil;
-            accent.subScript = nil;
+            innerAtom.superScript = accent.superScript
+            innerAtom.subScript = accent.subScript
+            accent.superScript = nil
+            accent.subScript = nil
             // Remake the accentee (now with sub/superscripts)
             // Note: Latex adjusts the heights in case the height of the char is different in non-cramped mode. However this shouldn't be the case since cramping
             // only affects fractions and superscripts. We skip adjusting the heights.
-            if let remadeAccentee = Typesetter.createLineForMathList(accent.innerList, font:font, style:style, cramped:cramped) {
+            if let remadeAccentee = Typesetter.createLineForMathList(
+                accent.innerList, font: font, style: style, cramped: cramped,
+            ) {
                 finalAccentee = remadeAccentee
             }
         }
 
-        let display = AccentDisplay(withAccent:accentGlyphDisplay, accentee:finalAccentee, range:accent.indexRange)
-        display.width = finalAccentee.width;
-        display.descent = finalAccentee.descent;
+        let display = AccentDisplay(
+            withAccent: accentGlyphDisplay, accentee: finalAccentee, range: accent.indexRange,
+        )
+        display.width = finalAccentee.width
+        display.descent = finalAccentee.descent
 
         // Calculate total ascent based on positioning
         // For arrows: height already includes spacing, so ascent = height + glyphAscent
         // For regular accents: ascent = accentee.ascent - delta + glyphAscent (existing formula)
-        let ascent = height + glyphAscent;
-        display.ascent = max(finalAccentee.ascent, ascent);
-        display.position = currentPosition;
+        let ascent = height + glyphAscent
+        display.ascent = max(finalAccentee.ascent, ascent)
+        display.position = currentPosition
 
-        return display;
+        return display
     }
 
     /// Determines if an accent can use Unicode composition for inline rendering.
@@ -1702,7 +1931,8 @@ class Typesetter {
         // Check if innerList has exactly one simple character
         guard let innerList = accent.innerList,
               innerList.atoms.count == 1,
-              let firstAtom = innerList.atoms.first else {
+              let firstAtom = innerList.atoms.first
+        else {
             return false
         }
 
@@ -1712,16 +1942,16 @@ class Typesetter {
         }
 
         // Check that the atom doesn't have subscripts/superscripts
-        guard firstAtom.subScript == nil && firstAtom.superScript == nil else {
+        guard firstAtom.subScript == nil, firstAtom.superScript == nil else {
             return false
         }
 
         // Exclude arrow accents - they need stretching from font glyphs
         // These Unicode combining characters only apply to single preceding characters
         let arrowAccents: Set<String> = [
-            "\u{20D6}",  // overleftarrow
-            "\u{20D7}",  // overrightarrow / vec
-            "\u{20E1}"   // overleftrightarrow
+            "\u{20D6}", // overleftarrow
+            "\u{20D7}", // overrightarrow / vec
+            "\u{20E1}", // overleftrightarrow
         ]
 
         if arrowAccents.contains(accent.nucleus) {
@@ -1732,53 +1962,56 @@ class Typesetter {
     }
 
     // MARK: - Table
-    
-    let kBaseLineSkipMultiplier = CGFloat(1.2)  // default base line stretch is 12 pt for 10pt font.
-    let kLineSkipMultiplier = CGFloat(0.1)  // default is 1pt for 10pt font.
+
+    let kBaseLineSkipMultiplier = CGFloat(1.2) // default base line stretch is 12 pt for 10pt font.
+    let kLineSkipMultiplier = CGFloat(0.1) // default is 1pt for 10pt font.
     let kLineSkipLimitMultiplier = CGFloat(0)
     let kJotMultiplier = CGFloat(0.3) // A jot is 3pt for a 10pt font.
-    
-    func makeTable(_ table:MathTable?) -> Display? {
-        let numColumns = table!.numColumns;
+
+    func makeTable(_ table: MathTable?) -> Display? {
+        let numColumns = table!.numColumns
         if numColumns == 0 || table!.numRows == 0 {
             // Empty table
             return MathListDisplay(withDisplays: [Display](), range: table!.indexRange)
         }
 
         var columnWidths = [CGFloat](repeating: 0, count: numColumns)
-        let displays = self.typesetCells(table, columnWidths:&columnWidths)
+        let displays = typesetCells(table, columnWidths: &columnWidths)
 
         // Position all the columns in each row
         var rowDisplays = [Display]()
         for row in displays {
-            if let rowDisplay = self.makeRowWithColumns(row, forTable:table, columnWidths:columnWidths) {
+            if let rowDisplay = makeRowWithColumns(row, forTable: table, columnWidths: columnWidths)
+            {
                 rowDisplays.append(rowDisplay)
             }
         }
 
         // Position all the rows
-        self.positionRows(rowDisplays, forTable:table)
+        positionRows(rowDisplays, forTable: table)
         let tableDisplay = MathListDisplay(withDisplays: rowDisplays, range: table!.indexRange)
-        tableDisplay.position = currentPosition;
-        return tableDisplay;
+        tableDisplay.position = currentPosition
+        return tableDisplay
     }
-    
+
     // Typeset every cell in the table. As a side-effect calculate the max column width of each column.
-    func typesetCells(_ table:MathTable?, columnWidths: inout [CGFloat]) -> [[Display]] {
+    func typesetCells(_ table: MathTable?, columnWidths: inout [CGFloat]) -> [[Display]] {
         var displays = [[Display]]()
         for row in table!.cells {
             var colDisplays = [Display]()
-            for i in 0..<row.count {
+            for i in 0 ..< row.count {
                 // CRITICAL FIX: Pass maxWidth AND cramped to enable proper line breaking within table cells
                 // Without maxWidth, table rows (created by \\ in LaTeX) bypass width constraints
                 // causing content overflow and truncation
                 // Pass cramped state to maintain consistent typesetting context with parent
-                if let disp = Typesetter.createLineForMathList(row[i], font:font, style:style, cramped: cramped, maxWidth: maxWidth) {
+                if let disp = Typesetter.createLineForMathList(
+                    row[i], font: font, style: style, cramped: cramped, maxWidth: maxWidth,
+                ) {
                     columnWidths[i] = max(disp.width, columnWidths[i])
                     colDisplays.append(disp)
                 } else {
                     // If display creation fails, create empty display to maintain table structure
-                    let emptyDisplay = MathListDisplay(withDisplays: [], range: 0..<0)
+                    let emptyDisplay = MathListDisplay(withDisplays: [], range: 0 ..< 0)
                     colDisplays.append(emptyDisplay)
                 }
             }
@@ -1786,23 +2019,25 @@ class Typesetter {
         }
         return displays
     }
-    
-    func makeRowWithColumns(_ cols:[Display], forTable table:MathTable?, columnWidths:[CGFloat]) -> MathListDisplay? {
+
+    func makeRowWithColumns(_ cols: [Display], forTable table: MathTable?, columnWidths: [CGFloat])
+        -> MathListDisplay?
+    {
         var columnStart = CGFloat(0)
-        var rowRange = 0..<0;
-        for i in 0..<cols.count {
+        var rowRange = 0 ..< 0
+        for i in 0 ..< cols.count {
             let col = cols[i]
             let colWidth = columnWidths[i]
             let alignment = table?.get(alignmentForColumn: i)
-            var cellPos = columnStart;
+            var cellPos = columnStart
             switch alignment {
                 case .right:
                     cellPos += colWidth - col.width
                 case .center:
-                    cellPos += (colWidth - col.width) / 2;
+                    cellPos += (colWidth - col.width) / 2
                 case .left, .none:
                     // No changes if left aligned
-                    cellPos += 0  // no op
+                    cellPos += 0 // no op
             }
             if !col.range.isEmpty {
                 if rowRange.isEmpty {
@@ -1810,60 +2045,59 @@ class Typesetter {
                 } else {
                     let lo = min(rowRange.lowerBound, col.range.lowerBound)
                     let hi = max(rowRange.upperBound, col.range.upperBound)
-                    rowRange = lo..<hi
+                    rowRange = lo ..< hi
                 }
             }
 
-            col.position = CGPointMake(cellPos, 0);
-            columnStart += colWidth + table!.interColumnSpacing * styleFont.mathTable!.muUnit;
+            col.position = CGPoint(x: cellPos, y: 0)
+            columnStart += colWidth + table!.interColumnSpacing * styleFont.mathTable!.muUnit
         }
 
         if rowRange.isEmpty {
-            rowRange = 0..<cols.count;
+            rowRange = 0 ..< cols.count
         }
 
         // Create a display for the row
-        let rowDisplay = MathListDisplay(withDisplays: cols, range:rowRange)
-        return rowDisplay
+        return MathListDisplay(withDisplays: cols, range: rowRange)
     }
-    
-    func positionRows(_ rows:[Display], forTable table:MathTable?) {
+
+    func positionRows(_ rows: [Display], forTable table: MathTable?) {
         // Position the rows
         // We will first position the rows starting from 0 and then in the second pass center the whole table vertically.
         var currPos = CGFloat(0)
-        let openup = table!.interRowAdditionalSpacing * kJotMultiplier * styleFont.fontSize;
-        let baselineSkip = openup + kBaseLineSkipMultiplier * styleFont.fontSize;
-        let lineSkip = openup + kLineSkipMultiplier * styleFont.fontSize;
-        let lineSkipLimit = openup + kLineSkipLimitMultiplier * styleFont.fontSize;
+        let openup = table!.interRowAdditionalSpacing * kJotMultiplier * styleFont.fontSize
+        let baselineSkip = openup + kBaseLineSkipMultiplier * styleFont.fontSize
+        let lineSkip = openup + kLineSkipMultiplier * styleFont.fontSize
+        let lineSkipLimit = openup + kLineSkipLimitMultiplier * styleFont.fontSize
         var prevRowDescent = CGFloat(0)
         var ascent = CGFloat(0)
         var first = true
         for row in rows {
             if first {
-                row.position = CGPointZero;
-                ascent += row.ascent;
-                first = false;
+                row.position = CGPoint.zero
+                ascent += row.ascent
+                first = false
             } else {
-                var skip = baselineSkip;
-                if (skip - (prevRowDescent + row.ascent) < lineSkipLimit) {
+                var skip = baselineSkip
+                if skip - (prevRowDescent + row.ascent) < lineSkipLimit {
                     // rows are too close to each other. Space them apart further
-                    skip = prevRowDescent + row.ascent + lineSkip;
+                    skip = prevRowDescent + row.ascent + lineSkip
                 }
                 // We are going down so we decrease the y value.
-                currPos -= skip;
-                row.position = CGPointMake(0, currPos);
+                currPos -= skip
+                row.position = CGPoint(x: 0, y: currPos)
             }
-            prevRowDescent = row.descent;
+            prevRowDescent = row.descent
         }
 
         // Vertically center the whole structure around the axis
         // The descent of the structure is the position of the last row
         // plus the descent of the last row.
-        let descent =  -currPos + prevRowDescent;
-        let shiftDown = 0.5*(ascent - descent) - styleFont.mathTable!.axisHeight;
+        let descent = -currPos + prevRowDescent
+        let shiftDown = 0.5 * (ascent - descent) - styleFont.mathTable!.axisHeight
 
         for row in rows {
-            row.position = CGPointMake(row.position.x, row.position.y - shiftDown);
+            row.position = CGPoint(x: row.position.x, y: row.position.y - shiftDown)
         }
     }
 }

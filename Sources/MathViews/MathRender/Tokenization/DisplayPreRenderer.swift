@@ -2,8 +2,7 @@ import Foundation
 import CoreGraphics
 
 /// Pre-renders complex atoms (fractions, radicals, etc.) as Display objects during tokenization
-class DisplayPreRenderer {
-
+final class DisplayPreRenderer {
     // MARK: - Properties
 
     let font: FontInstance
@@ -23,26 +22,29 @@ class DisplayPreRenderer {
     /// Render a script (superscript or subscript) as a display
     func renderScript(_ mathList: MathList, isSuper: Bool) -> Display? {
         let scriptStyle = getScriptStyle()
-        let scriptCramped = isSuper ? cramped : true  // Subscripts are always cramped
+        let scriptCramped = isSuper ? cramped : true // Subscripts are always cramped
 
         // Scale the font for the script style
         let scriptFontSize = Typesetter.getStyleSize(scriptStyle, font: font)
         let scriptFont = font.copy(withSize: scriptFontSize)
 
-        guard let display = Typesetter.createLineForMathList(
-            mathList,
-            font: scriptFont,
-            style: scriptStyle,
-            cramped: scriptCramped,
-            spaced: false
-        ) else {
+        guard
+            let display = Typesetter.createLineForMathList(
+                mathList,
+                font: scriptFont,
+                style: scriptStyle,
+                cramped: scriptCramped,
+                spaced: false,
+            )
+        else {
             return nil
         }
 
         // If the result is a MathListDisplay with a single subdisplay, unwrap it
         // This matches the behavior of the legacy typesetter
         if let mathListDisplay = display as? MathListDisplay,
-           mathListDisplay.subDisplays.count == 1 {
+           mathListDisplay.subDisplays.count == 1
+        {
             return mathListDisplay.subDisplays[0]
         }
 
@@ -52,10 +54,10 @@ class DisplayPreRenderer {
     /// Get the appropriate style for scripts
     private func getScriptStyle() -> LineStyle {
         switch style {
-        case .display, .text:
-            return .script
-        case .script, .scriptOfScript:
-            return .scriptOfScript
+            case .display, .text:
+                return .script
+            case .script, .scriptOfScript:
+                return .scriptOfScript
         }
     }
 
@@ -63,8 +65,12 @@ class DisplayPreRenderer {
 
     /// Pre-render a simple math list without width constraints
     /// Used for rendering content inside fractions, radicals, etc.
-    func renderMathList(_ mathList: MathList?, style renderStyle: LineStyle? = nil, cramped renderCramped: Bool? = nil) -> Display? {
-        guard let mathList = mathList else { return nil }
+    func renderMathList(
+        _ mathList: MathList?,
+        style renderStyle: LineStyle? = nil,
+        cramped renderCramped: Bool? = nil,
+    ) -> Display? {
+        guard let mathList else { return nil }
 
         let actualStyle = renderStyle ?? style
         let actualCramped = renderCramped ?? cramped
@@ -74,7 +80,7 @@ class DisplayPreRenderer {
             font: font,
             style: actualStyle,
             cramped: actualCramped,
-            spaced: false
+            spaced: false,
         )
     }
 }

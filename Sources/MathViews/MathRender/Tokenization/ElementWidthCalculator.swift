@@ -1,10 +1,9 @@
-import Foundation
 import CoreText
+import Foundation
 import CoreGraphics
 
 /// Calculates widths for breakable elements with appropriate spacing
-class ElementWidthCalculator {
-
+final class ElementWidthCalculator {
     // MARK: - Properties
 
     let font: FontInstance
@@ -23,9 +22,12 @@ class ElementWidthCalculator {
     func measureText(_ text: String) -> CGFloat {
         guard !text.isEmpty else { return 0 }
 
-        let attrString = NSAttributedString(string: text, attributes: [
-            kCTFontAttributeName as NSAttributedString.Key: font.ctFont as Any
-        ])
+        let attrString = NSAttributedString(
+            string: text,
+            attributes: [
+                kCTFontAttributeName as NSAttributedString.Key: font.ctFont as Any,
+            ],
+        )
         let line = CTLineCreateWithAttributedString(attrString as CFAttributedString)
         return CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
     }
@@ -45,23 +47,23 @@ class ElementWidthCalculator {
         let muUnit = mathTable.muUnit
 
         switch type {
-        case .binaryOperator:
-            // Binary operators: 4mu on each side = 8mu total
-            return 2 * muUnit * 4
+            case .binaryOperator:
+                // Binary operators: 4mu on each side = 8mu total
+                return 2 * muUnit * 4
 
-        case .relation:
-            // Relations: 5mu on each side = 10mu total
-            return 2 * muUnit * 5
+            case .relation:
+                // Relations: 5mu on each side = 10mu total
+                return 2 * muUnit * 5
 
-        case .largeOperator:
-            // Large operators in inline mode: 1mu on each side
-            if style == .display || style == .text {
-                return 0  // In display mode, handled by LargeOpLimitsDisplay
-            }
-            return 2 * muUnit * 1
+            case .largeOperator:
+                // Large operators in inline mode: 1mu on each side
+                if style == .display || style == .text {
+                    return 0 // In display mode, handled by LargeOpLimitsDisplay
+                }
+                return 2 * muUnit * 1
 
-        default:
-            return 0
+            default:
+                return 0
         }
     }
 
@@ -69,7 +71,7 @@ class ElementWidthCalculator {
 
     /// Measure width of a pre-rendered display
     func measureDisplay(_ display: Display) -> CGFloat {
-        return display.width
+        display.width
     }
 
     // MARK: - Space Width Measurement
@@ -87,18 +89,18 @@ class ElementWidthCalculator {
         // \qquad = 2em
 
         switch spaceType {
-        case .space:
-            // Default space - context dependent
-            // For now, use thin space
-            return muUnit * 3
-        default:
-            return 0
+            case .space:
+                // Default space - context dependent
+                // For now, use thin space
+                return muUnit * 3
+            default:
+                return 0
         }
     }
 
     /// Measure explicit space value
     func measureExplicitSpace(_ width: CGFloat) -> CGFloat {
-        return width
+        width
     }
 
     // MARK: - Inter-element Spacing
@@ -125,32 +127,32 @@ class ElementWidthCalculator {
     /// Get spacing multiplier in mu units
     private func getSpacingInMu(_ spaceType: InterElementSpaceType) -> Int {
         switch style {
-        case .display, .text:
-            switch spaceType {
-            case .none, .invalid:
-                return 0
-            case .thin:
-                return 3
-            case .nsThin, .nsMedium, .nsThick:
-                // ns = non-script, same as regular in display/text mode
+            case .display, .text:
                 switch spaceType {
-                case .nsThin:  return 3
-                case .nsMedium: return 4
-                case .nsThick:  return 5
-                default: return 0
+                    case .none, .invalid:
+                        return 0
+                    case .thin:
+                        return 3
+                    case .nsThin, .nsMedium, .nsThick:
+                        // ns = non-script, same as regular in display/text mode
+                        switch spaceType {
+                            case .nsThin: return 3
+                            case .nsMedium: return 4
+                            case .nsThick: return 5
+                            default: return 0
+                        }
                 }
-            }
 
-        case .script, .scriptOfScript:
-            switch spaceType {
-            case .none, .invalid:
-                return 0
-            case .thin:
-                return 3
-            case .nsThin, .nsMedium, .nsThick:
-                // In script mode, ns types don't add space
-                return 0
-            }
+            case .script, .scriptOfScript:
+                switch spaceType {
+                    case .none, .invalid:
+                        return 0
+                    case .thin:
+                        return 3
+                    case .nsThin, .nsMedium, .nsThick:
+                        // In script mode, ns types don't add space
+                        return 0
+                }
         }
     }
 }

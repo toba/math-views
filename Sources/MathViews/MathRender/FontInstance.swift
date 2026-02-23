@@ -1,6 +1,6 @@
-public import Foundation
 public import CoreGraphics
 public import CoreText
+public import Foundation
 import Synchronization
 
 public final class FontInstance: @unchecked Sendable {
@@ -20,9 +20,9 @@ public final class FontInstance: @unchecked Sendable {
     init(font: MathFont = .latinModernFont, size: CGFloat) {
         self.font = font
         self.size = size
-        self._cgFont = font.cgFont()
-        self._ctFont = font.ctFont(withSize: size)
-        self.unitsPerEm = self._ctFont.unitsPerEm
+        _cgFont = font.cgFont()
+        _ctFont = font.ctFont(withSize: size)
+        unitsPerEm = _ctFont.unitsPerEm
     }
 
     var defaultCGFont: CGFont { _cgFont }
@@ -37,7 +37,7 @@ public final class FontInstance: @unchecked Sendable {
         }
     }
 
-    /** Returns a copy of this font but with a different size. */
+    /// Returns a copy of this font but with a different size.
     public func copy(withSize size: CGFloat) -> FontInstance {
         FontInstance(font: font, size: size)
     }
@@ -51,6 +51,6 @@ public final class FontInstance: @unchecked Sendable {
         defaultCGFont.getGlyphWithGlyphName(name: name as CFString)
     }
 
-    /** The size of this font in points. */
-    public var fontSize: CGFloat { CTFontGetSize(self.ctFont) }
+    /// The size of this font in points.
+    public var fontSize: CGFloat { CTFontGetSize(ctFont) }
 }

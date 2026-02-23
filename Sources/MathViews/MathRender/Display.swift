@@ -1,6 +1,7 @@
-public import Foundation
-public import QuartzCore
 public import CoreText
+import Foundation
+import QuartzCore
+
 #if os(iOS) || os(visionOS)
 import UIKit
 #elseif os(macOS)
@@ -9,83 +10,88 @@ import AppKit
 
 // The Downshift protocol allows an Display to be shifted down by a given amount.
 protocol DownShift {
-    var shiftDown:CGFloat { set get }
+    var shiftDown: CGFloat { get set }
 }
 
 // MARK: - Display
 
 /// The base class for rendering a math equation.
 public class Display: @unchecked Sendable {
-
-    init() { }
+    init() {}
 
     /// Draws itself in the given graphics context.
-    public func draw(_ context:CGContext) {
-        if self.localBackgroundColor != nil {
+    public func draw(_ context: CGContext) {
+        if localBackgroundColor != nil {
             context.saveGState()
             context.setBlendMode(.normal)
-            context.setFillColor(self.localBackgroundColor!.cgColor)
-            context.fill(self.displayBounds())
+            context.setFillColor(localBackgroundColor!.cgColor)
+            context.fill(displayBounds())
             context.restoreGState()
         }
     }
-    
+
     /// Gets the bounding rectangle for the Display
     func displayBounds() -> CGRect {
-        CGRectMake(self.position.x, self.position.y - self.descent, self.width, self.ascent + self.descent)
+        CGRect(
+            x:
+            position.x, y: position.y - descent, width: width,
+            height: ascent + descent,
+        )
     }
-    
+
     /// The distance from the axis to the top of the display
-    public var ascent:CGFloat = 0
+    public var ascent: CGFloat = 0
     /// The distance from the axis to the bottom of the display
-    public var descent:CGFloat = 0
+    public var descent: CGFloat = 0
     /// The width of the display
-    public var width:CGFloat = 0
+    public var width: CGFloat = 0
     /// Position of the display with respect to the parent view or display.
     var position = CGPoint.zero
     /// The range of characters supported by this item
-    public var range = 0..<0
+    public var range = 0 ..< 0
     /// Whether the display has a subscript/superscript following it.
-    public var hasScript:Bool = false
+    public var hasScript: Bool = false
     /// The text color for this display
-    var textColor: MathColor?
+    var textColor: PlatformColor?
     /// The local color, if the color was mutated local with the color command
-    var localTextColor: MathColor?
+    var localTextColor: PlatformColor?
     /// The background color for this display
-    var localBackgroundColor: MathColor?
-    
+    var localBackgroundColor: PlatformColor?
 }
 
 /// Special class to be inherited from that implements the DownShift protocol
-class DisplayDS : Display, DownShift {
-    
+class DisplayDS: Display, DownShift {
     var shiftDown: CGFloat = 0
-    
 }
 
 // MARK: - CTLineDisplay
 
 /// A rendering of a single CTLine as an Display
-public class CTLineDisplay : Display {
-    
+public final class CTLineDisplay: Display {
     /// The CTLine being displayed
-    public var line:CTLine!
+    public var line: CTLine!
     /// The attributed string used to generate the CTLineRef. Note setting this does not reset the dimensions of
     /// the display. So set only when
-    var attributedString:NSAttributedString? {
+    var attributedString: NSAttributedString? {
         didSet {
             line = CTLineCreateWithAttributedString(attributedString!)
         }
     }
-    
+
     /// An array of MathAtoms that this CTLine displays. Used for indexing back into the MathList
     public fileprivate(set) var atoms = [MathAtom]()
-    
-    init(withString attrString:NSAttributedString?, position:CGPoint, range:Range<Int>, font:FontInstance?, atoms:[MathAtom]) {
+
+    init(
+        withString attrString: NSAttributedString?,
+        position: CGPoint,
+        range: Range<Int>,
+        font _: FontInstance?,
+        atoms: [MathAtom],
+    ) {
         super.init()
         self.position = position
-        self.attributedString = attrString
-        self.line = CTLineCreateWithAttributedString(attrString!)
+        attributedString = attrString
+        line = CTLineCreateWithAttributedString(attrString!)
         self.range = range
         self.atoms = atoms
         // We can't use typographic bounds here as the ascent and descent returned are for the font and not for the line.
@@ -97,48 +103,48 @@ public class CTLineDisplay : Display {
         // Using max() ensures we account for overhang while maintaining proper spacing for normal glyphs.
         let typographicWidth = CGFloat(CTLineGetTypographicBounds(line, nil, nil, nil))
         let bounds = CTLineGetBoundsWithOptions(line, .useGlyphPathBounds)
-        self.ascent = max(0, CGRectGetMaxY(bounds))
-        self.descent = max(0, -CGRectGetMinY(bounds))
+        ascent = max(0, bounds.maxY)
+        descent = max(0, -bounds.minY)
         // Use the maximum of visual and typographic width to handle both:
         // 1. Overhanging glyphs (visual > typographic) - prevents clipping
         // 2. Normal glyphs (typographic >= visual) - maintains correct spacing
-        let visualWidth = CGRectGetMaxX(bounds)
-        self.width = max(typographicWidth, visualWidth)
+        let visualWidth = bounds.maxX
+        width = max(typographicWidth, visualWidth)
     }
-    
-    override var textColor: MathColor? {
+
+    override var textColor: PlatformColor? {
+        get { super.textColor }
         set {
             super.textColor = newValue
-            let attrStr = attributedString!.mutableCopy() as! NSMutableAttributedString
+            guard let attrStr = attributedString?.mutableCopy() as? NSMutableAttributedString
+            else { return }
             let foregroundColor = NSAttributedString.Key(kCTForegroundColorAttributeName as String)
-            attrStr.addAttribute(foregroundColor, value:self.textColor!.cgColor, range:NSMakeRange(0, attrStr.length))
-            self.attributedString = attrStr
+            attrStr.addAttribute(
+                foregroundColor, value: self.textColor!.cgColor,
+                range: NSRange(location: 0, length: attrStr.length),
+            )
+            attributedString = attrStr
         }
-        get { super.textColor }
     }
 
     override public func draw(_ context: CGContext) {
         super.draw(context)
         context.saveGState()
-        
-        context.textPosition = self.position
+
+        context.textPosition = position
         CTLineDraw(line, context)
-        
+
         context.restoreGState()
     }
-    
 }
 
 // MARK: - MathListDisplay
 
 /// A MathListDisplay is a rendered form of MathList in one line.
 /// It can render itself using the draw method.
-public class MathListDisplay : Display {
-
-    /**
-          The type of position for a line, i.e. subscript/superscript or regular.
-     */
-    public enum LinePosition : Int {
+public final class MathListDisplay: Display {
+    ///     The type of position for a line, i.e. subscript/superscript or regular.
+    public enum LinePosition: Int {
         /// Regular
         case regular
         /// Positioned at a subscript
@@ -146,30 +152,31 @@ public class MathListDisplay : Display {
         /// Positioned at a superscript
         case superscript
     }
-    
+
     /// Where the line is positioned
-    public var type:LinePosition = .regular
+    public var type: LinePosition = .regular
     /// An array of displays which are positioned relative to the position of the
     /// the current display.
     public fileprivate(set) var subDisplays = [Display]()
     /// If a subscript or superscript this denotes the location in the parent MathList. For a
     /// regular list this is NSNotFound
     public var index: Int = 0
-    
-    init(withDisplays displays:[Display], range:Range<Int>) {
+
+    init(withDisplays displays: [Display], range: Range<Int>) {
         super.init()
-        self.subDisplays = displays
-        self.position = CGPoint.zero
-        self.type = .regular 
-        self.index = NSNotFound
+        subDisplays = displays
+        position = CGPoint.zero
+        type = .regular
+        index = NSNotFound
         self.range = range
-        self.recomputeDimensions()
+        recomputeDimensions()
     }
-  
-    override var textColor: MathColor? {
+
+    override var textColor: PlatformColor? {
+        get { super.textColor }
         set {
             super.textColor = newValue
-            for displayAtom in self.subDisplays {
+            for displayAtom in subDisplays {
                 if displayAtom.localTextColor == nil {
                     displayAtom.textColor = newValue
                 } else {
@@ -177,128 +184,139 @@ public class MathListDisplay : Display {
                 }
             }
         }
-        get { super.textColor }
     }
 
     override public func draw(_ context: CGContext) {
         super.draw(context)
         context.saveGState()
-        
+
         // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
-        context.translateBy(x: self.position.x, y: self.position.y)
+        context.translateBy(x: position.x, y: position.y)
         context.textPosition = CGPoint.zero
-      
+
         // draw each atom separately
-        for displayAtom in self.subDisplays {
+        for displayAtom in subDisplays {
             displayAtom.draw(context)
         }
-        
+
         context.restoreGState()
     }
 
     func recomputeDimensions() {
-        var max_ascent:CGFloat = 0
-        var max_descent:CGFloat = 0
-        var max_width:CGFloat = 0
-        for atom in self.subDisplays {
-            let ascent = max(0, atom.position.y + atom.ascent);
-            if (ascent > max_ascent) {
-                max_ascent = ascent;
+        var max_ascent: CGFloat = 0
+        var max_descent: CGFloat = 0
+        var max_width: CGFloat = 0
+        for atom in subDisplays {
+            let ascent = max(0, atom.position.y + atom.ascent)
+            if ascent > max_ascent {
+                max_ascent = ascent
             }
 
-            let descent = max(0, 0 - (atom.position.y - atom.descent));
-            if (descent > max_descent) {
-                max_descent = descent;
+            let descent = max(0, 0 - (atom.position.y - atom.descent))
+            if descent > max_descent {
+                max_descent = descent
             }
-            let width = atom.width + atom.position.x;
-            if (width > max_width) {
-                max_width = width;
+            let width = atom.width + atom.position.x
+            if width > max_width {
+                max_width = width
             }
         }
-        self.ascent = max_ascent;
-        self.descent = max_descent;
-        self.width = max_width;
+        ascent = max_ascent
+        descent = max_descent
+        width = max_width
     }
-    
 }
 
 // MARK: - FractionDisplay
 
 /// Rendering of an Fraction as an Display
-public class FractionDisplay : Display {
-    
-    /** A display representing the numerator of the fraction. Its position is relative
-     to the parent and is not treated as a sub-display.
-     */
-    public fileprivate(set) var numerator:MathListDisplay?
-    /** A display representing the denominator of the fraction. Its position is relative
-     to the parent is not treated as a sub-display.
-     */
-    public fileprivate(set) var denominator:MathListDisplay?
-    
-    var numeratorUp:CGFloat=0 { didSet { self.updateNumeratorPosition() } }
-    var denominatorDown:CGFloat=0 { didSet { self.updateDenominatorPosition() } }
-    var linePosition:CGFloat=0
-    var lineThickness:CGFloat=0
-    
-    init(withNumerator numerator:MathListDisplay?, denominator:MathListDisplay?, position:CGPoint, range:Range<Int>) {
+public final class FractionDisplay: Display {
+    /// A display representing the numerator of the fraction. Its position is relative
+    /// to the parent and is not treated as a sub-display.
+    public fileprivate(set) var numerator: MathListDisplay?
+    /// A display representing the denominator of the fraction. Its position is relative
+    /// to the parent is not treated as a sub-display.
+    public fileprivate(set) var denominator: MathListDisplay?
+
+    var numeratorUp: CGFloat = 0 { didSet { updateNumeratorPosition() } }
+    var denominatorDown: CGFloat = 0 { didSet { updateDenominatorPosition() } }
+    var linePosition: CGFloat = 0
+    var lineThickness: CGFloat = 0
+
+    init(
+        withNumerator numerator: MathListDisplay?,
+        denominator: MathListDisplay?,
+        position: CGPoint,
+        range: Range<Int>,
+    ) {
         super.init()
-        self.numerator = numerator;
-        self.denominator = denominator;
-        self.position = position;
+        self.numerator = numerator
+        self.denominator = denominator
+        self.position = position
 
         if range.isEmpty {
-            self.range = range.lowerBound..<(range.lowerBound + 1)
+            self.range = range.lowerBound ..< (range.lowerBound + 1)
         } else {
-            self.range = range;
-            assert(self.range.count == 1, "Fraction range length not 1 - range (\(range.lowerBound), \(range.count))")
+            self.range = range
+            assert(
+                self.range.count == 1,
+                "Fraction range length not 1 - range (\(range.lowerBound), \(range.count))",
+            )
         }
     }
 
-    override public var ascent:CGFloat {
+    override public var ascent: CGFloat {
+        get { (numerator?.ascent ?? 0) + numeratorUp }
         set { super.ascent = newValue }
-        get { (numerator?.ascent ?? 0) + self.numeratorUp }
     }
 
-    override public var descent:CGFloat {
+    override public var descent: CGFloat {
+        get { (denominator?.descent ?? 0) + denominatorDown }
         set { super.descent = newValue }
-        get { (denominator?.descent ?? 0) + self.denominatorDown }
     }
 
-    override public var width:CGFloat {
-        set { super.width = newValue }
+    override public var width: CGFloat {
         get { max(numerator?.width ?? 0, denominator?.width ?? 0) }
+        set { super.width = newValue }
     }
 
     func updateDenominatorPosition() {
         guard denominator != nil else { return }
-        denominator!.position = CGPointMake(self.position.x + (self.width - denominator!.width)/2, self.position.y - self.denominatorDown)
+        denominator!.position = CGPoint(
+            x:
+            position.x + (width - denominator!.width) / 2,
+            y:
+            position.y - denominatorDown,
+        )
     }
 
     func updateNumeratorPosition() {
         guard numerator != nil else { return }
-        numerator!.position = CGPointMake(self.position.x + (self.width - numerator!.width)/2, self.position.y + self.numeratorUp)
+        numerator!.position = CGPoint(
+            x:
+            position.x + (width - numerator!.width) / 2, y: position.y + numeratorUp,
+        )
     }
 
     override var position: CGPoint {
+        get { super.position }
         set {
             super.position = newValue
-            self.updateDenominatorPosition()
-            self.updateNumeratorPosition()
+            updateDenominatorPosition()
+            updateNumeratorPosition()
         }
-        get { super.position }
     }
-    
-    override var textColor: MathColor? {
+
+    override var textColor: PlatformColor? {
+        get { super.textColor }
         set {
             super.textColor = newValue
             numerator?.textColor = newValue
             denominator?.textColor = newValue
         }
-        get { super.textColor }
     }
 
-    override public func draw(_ context:CGContext) {
+    override public func draw(_ context: CGContext) {
         super.draw(context)
         numerator?.draw(context)
         denominator?.draw(context)
@@ -307,57 +325,60 @@ public class FractionDisplay : Display {
 
         // draw the horizontal line
         // Note: line thickness of 0 draws the thinnest possible line - we want no line so check for 0s
-        if self.lineThickness > 0 {
-            context.setStrokeColor(self.textColor?.cgColor ?? MathColor.black.cgColor)
-            context.setLineWidth(self.lineThickness)
-            context.move(to: CGPointMake(self.position.x, self.position.y + self.linePosition))
-            context.addLine(to: CGPointMake(self.position.x + self.width, self.position.y + self.linePosition))
+        if lineThickness > 0 {
+            context.setStrokeColor(textColor?.cgColor ?? PlatformColor.black.cgColor)
+            context.setLineWidth(lineThickness)
+            context.move(to: CGPoint(x: position.x, y: position.y + linePosition))
+            context.addLine(
+                to: CGPoint(x: position.x + width, y: position.y + linePosition),
+            )
             context.strokePath()
         }
 
         context.restoreGState()
     }
-    
 }
 
 // MARK: - RadicalDisplay
 
 /// Rendering of an Radical as an Display
-class RadicalDisplay : Display {
-    
-    /** A display representing the radicand of the radical. Its position is relative
-     to the parent is not treated as a sub-display.
-     */
-    public fileprivate(set) var radicand:MathListDisplay?
-    /** A display representing the degree of the radical. Its position is relative
-     to the parent is not treated as a sub-display.
-     */
-    public fileprivate(set) var degree:MathListDisplay?
-    
+final class RadicalDisplay: Display {
+    /// A display representing the radicand of the radical. Its position is relative
+    /// to the parent is not treated as a sub-display.
+    fileprivate(set) var radicand: MathListDisplay?
+    /// A display representing the degree of the radical. Its position is relative
+    /// to the parent is not treated as a sub-display.
+    fileprivate(set) var degree: MathListDisplay?
+
     override var position: CGPoint {
+        get { super.position }
         set {
             super.position = newValue
-            self.updateRadicandPosition()
+            updateRadicandPosition()
         }
-        get { super.position }
     }
-    
-    override var textColor: MathColor? {
+
+    override var textColor: PlatformColor? {
+        get { super.textColor }
         set {
             super.textColor = newValue
-            self.radicand?.textColor = newValue
-            self.degree?.textColor = newValue
+            radicand?.textColor = newValue
+            degree?.textColor = newValue
         }
-        get { super.textColor }
     }
-    
-    private var _radicalGlyph:Display?
-    private var _radicalShift:CGFloat=0
-    
-    var topKern:CGFloat=0
-    var lineThickness:CGFloat=0
-    
-    init(withRadicand radicand:MathListDisplay?, glyph:Display, position:CGPoint, range:Range<Int>) {
+
+    private var _radicalGlyph: Display?
+    private var _radicalShift: CGFloat = 0
+
+    var topKern: CGFloat = 0
+    var lineThickness: CGFloat = 0
+
+    init(
+        withRadicand radicand: MathListDisplay?,
+        glyph: Display,
+        position: CGPoint,
+        range: Range<Int>,
+    ) {
         super.init()
         self.radicand = radicand
         _radicalGlyph = glyph
@@ -367,31 +388,31 @@ class RadicalDisplay : Display {
         self.range = range
     }
 
-    func setDegree(_ degree:MathListDisplay?, fontMetrics:FontMathTable?) {
+    func setDegree(_ degree: MathListDisplay?, fontMetrics: FontMathTable?) {
         // sets up the degree of the radical
-        var kernBefore = fontMetrics!.radicalKernBeforeDegree;
-        let kernAfter = fontMetrics!.radicalKernAfterDegree;
-        let raise = fontMetrics!.radicalDegreeBottomRaisePercent * (self.ascent - self.descent);
+        var kernBefore = fontMetrics!.radicalKernBeforeDegree
+        let kernAfter = fontMetrics!.radicalKernAfterDegree
+        let raise = fontMetrics!.radicalDegreeBottomRaisePercent * (ascent - descent)
 
         // The layout is:
         // kernBefore, raise, degree, kernAfter, radical
-        self.degree = degree;
+        self.degree = degree
 
         // the radical is now shifted by kernBefore + degree.width + kernAfter
-        _radicalShift = kernBefore + degree!.width + kernAfter;
+        _radicalShift = kernBefore + degree!.width + kernAfter
         if _radicalShift < 0 {
             // we can't have the radical shift backwards, so instead we increase the kernBefore such
             // that _radicalShift will be 0.
-            kernBefore -= _radicalShift;
-            _radicalShift = 0;
+            kernBefore -= _radicalShift
+            _radicalShift = 0
         }
-        
+
         // Note: position of degree is relative to parent.
-        self.degree!.position = CGPointMake(self.position.x + kernBefore, self.position.y + raise);
+        self.degree!.position = CGPoint(x: position.x + kernBefore, y: position.y + raise)
         // Update the width by the _radicalShift
-        self.width = _radicalShift + _radicalGlyph!.width + self.radicand!.width;
+        width = _radicalShift + _radicalGlyph!.width + radicand!.width
         // update the position of the radicand
-        self.updateRadicandPosition()
+        updateRadicandPosition()
     }
 
     func updateRadicandPosition() {
@@ -399,23 +420,26 @@ class RadicalDisplay : Display {
         // This is to make the positioning of the radical consistent with fractions and
         // have the cursor position finding algorithm work correctly.
         // move the radicand by the width of the radical sign
-        self.radicand!.position = CGPointMake(self.position.x + _radicalShift + _radicalGlyph!.width, self.position.y);
+        radicand!.position = CGPoint(
+            x:
+            position.x + _radicalShift + _radicalGlyph!.width, y: position.y,
+        )
     }
 
-    override public func draw(_ context: CGContext) {
+    override func draw(_ context: CGContext) {
         super.draw(context)
 
         // draw the radicand & degree at its position
-        self.radicand?.draw(context)
-        self.degree?.draw(context)
+        radicand?.draw(context)
+        degree?.draw(context)
 
         context.saveGState()
-        let color = self.textColor?.cgColor ?? MathColor.black.cgColor
+        let color = textColor?.cgColor ?? PlatformColor.black.cgColor
         context.setStrokeColor(color)
         context.setFillColor(color)
 
         // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
-        context.translateBy(x: self.position.x + _radicalShift, y: self.position.y)
+        context.translateBy(x: position.x + _radicalShift, y: position.y)
         context.textPosition = CGPoint.zero
 
         // Draw the glyph.
@@ -426,8 +450,13 @@ class RadicalDisplay : Display {
         let heightFromTop = topKern
 
         // draw the horizontal line with the given thickness
-        let lineStart = CGPointMake(_radicalGlyph!.width, self.ascent - heightFromTop - self.lineThickness / 2) // subtract half the line thickness to center the line
-        let lineEnd = CGPointMake(lineStart.x + self.radicand!.width, lineStart.y)
+        let lineStart = CGPoint(
+            x:
+            _radicalGlyph!.width,
+            y: ascent - heightFromTop - lineThickness /
+                2,
+        ) // subtract half the line thickness to center the line
+        let lineEnd = CGPoint(x: lineStart.x + radicand!.width, y: lineStart.y)
         context.setLineWidth(lineThickness)
         context.setLineCap(.round)
         context.move(to: lineStart)
@@ -441,30 +470,29 @@ class RadicalDisplay : Display {
 // MARK: - GlyphDisplay
 
 /// Rendering a glyph as a display
-class GlyphDisplay : DisplayDS {
-
-    var glyph:CGGlyph!
-    var font:FontInstance?
+final class GlyphDisplay: DisplayDS {
+    var glyph: CGGlyph!
+    var font: FontInstance?
     /// Horizontal scale factor for stretching glyphs (1.0 = no scaling)
     var scaleX: CGFloat = 1.0
 
-    init(withGlpyh glyph:CGGlyph, range:Range<Int>, font:FontInstance?) {
+    init(withGlpyh glyph: CGGlyph, range: Range<Int>, font: FontInstance?) {
         super.init()
         self.font = font
         self.glyph = glyph
 
-        self.position = CGPoint.zero
+        position = CGPoint.zero
         self.range = range
     }
 
-    override public func draw(_ context: CGContext) {
+    override func draw(_ context: CGContext) {
         super.draw(context)
         context.saveGState()
 
-        context.setFillColor(self.textColor?.cgColor ?? MathColor.black.cgColor)
+        context.setFillColor(textColor?.cgColor ?? PlatformColor.black.cgColor)
 
         // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
-        context.translateBy(x: self.position.x, y: self.position.y - self.shiftDown)
+        context.translateBy(x: position.x, y: position.y - shiftDown)
 
         // Apply horizontal scaling if needed (for stretchy arrows)
         if scaleX != 1.0 {
@@ -479,43 +507,43 @@ class GlyphDisplay : DisplayDS {
         context.restoreGState()
     }
 
-    override var ascent:CGFloat {
+    override var ascent: CGFloat {
+        get { super.ascent - shiftDown }
         set { super.ascent = newValue }
-        get { super.ascent - self.shiftDown }
     }
 
-    override var descent:CGFloat {
+    override var descent: CGFloat {
+        get { super.descent + shiftDown }
         set { super.descent = newValue }
-        get { super.descent + self.shiftDown }
     }
 }
 
 // MARK: - GlyphConstructionDisplay
 
-class GlyphConstructionDisplay:DisplayDS {
+final class GlyphConstructionDisplay: DisplayDS {
     var glyphs = [CGGlyph]()
     var positions = [CGPoint]()
-    var font:FontInstance?
-    var numGlyphs:Int=0
-    
-    init(withGlyphs glyphs:[CGGlyph], offsets:[CGFloat], font:FontInstance?) {
+    var font: FontInstance?
+    var numGlyphs: Int = 0
+
+    init(withGlyphs glyphs: [CGGlyph], offsets: [CGFloat], font: FontInstance?) {
         super.init()
         assert(glyphs.count == offsets.count, "Glyphs and offsets need to match")
-        self.numGlyphs = glyphs.count;
+        numGlyphs = glyphs.count
         self.glyphs = glyphs
-        self.positions = offsets.map { CGPoint(x: 0, y: $0) }
+        positions = offsets.map { CGPoint(x: 0, y: $0) }
         self.font = font
-        self.position = CGPoint.zero
+        position = CGPoint.zero
     }
-    
-    override public func draw(_ context: CGContext) {
+
+    override func draw(_ context: CGContext) {
         super.draw(context)
         context.saveGState()
 
-        context.setFillColor(self.textColor?.cgColor ?? MathColor.black.cgColor)
+        context.setFillColor(textColor?.cgColor ?? PlatformColor.black.cgColor)
 
         // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
-        context.translateBy(x: self.position.x, y: self.position.y - self.shiftDown)
+        context.translateBy(x: position.x, y: position.y - shiftDown)
         context.textPosition = CGPoint.zero
 
         // Draw the glyphs.
@@ -523,183 +551,195 @@ class GlyphConstructionDisplay:DisplayDS {
 
         context.restoreGState()
     }
-    
-    override var ascent:CGFloat {
+
+    override var ascent: CGFloat {
+        get { super.ascent - shiftDown }
         set { super.ascent = newValue }
-        get { super.ascent - self.shiftDown }
     }
 
-    override var descent:CGFloat {
+    override var descent: CGFloat {
+        get { super.descent + shiftDown }
         set { super.descent = newValue }
-        get { super.descent + self.shiftDown }
     }
-    
 }
 
 // MARK: - LargeOpLimitsDisplay
 
 /// Rendering a large operator with limits as an Display
-class LargeOpLimitsDisplay : Display {
-    
-    /** A display representing the upper limit of the large operator. Its position is relative
-     to the parent is not treated as a sub-display.
-     */
-    var upperLimit:MathListDisplay?
-    /** A display representing the lower limit of the large operator. Its position is relative
-     to the parent is not treated as a sub-display.
-     */
-    var lowerLimit:MathListDisplay?
-    
-    var limitShift:CGFloat=0
-    var upperLimitGap:CGFloat=0 { didSet { self.updateUpperLimitPosition() } }
-    var lowerLimitGap:CGFloat=0 { didSet { self.updateLowerLimitPosition() } }
-    var extraPadding:CGFloat=0
+final class LargeOpLimitsDisplay: Display {
+    /// A display representing the upper limit of the large operator. Its position is relative
+    /// to the parent is not treated as a sub-display.
+    var upperLimit: MathListDisplay?
+    /// A display representing the lower limit of the large operator. Its position is relative
+    /// to the parent is not treated as a sub-display.
+    var lowerLimit: MathListDisplay?
 
-    var nucleus:Display?
-    
-    init(withNucleus nucleus:Display?, upperLimit:MathListDisplay?, lowerLimit:MathListDisplay?, limitShift:CGFloat, extraPadding:CGFloat) {
+    var limitShift: CGFloat = 0
+    var upperLimitGap: CGFloat = 0 { didSet { updateUpperLimitPosition() } }
+    var lowerLimitGap: CGFloat = 0 { didSet { updateLowerLimitPosition() } }
+    var extraPadding: CGFloat = 0
+
+    var nucleus: Display?
+
+    init(
+        withNucleus nucleus: Display?,
+        upperLimit: MathListDisplay?,
+        lowerLimit: MathListDisplay?,
+        limitShift: CGFloat,
+        extraPadding: CGFloat,
+    ) {
         super.init()
-        self.upperLimit = upperLimit;
-        self.lowerLimit = lowerLimit;
-        self.nucleus = nucleus;
-        
+        self.upperLimit = upperLimit
+        self.lowerLimit = lowerLimit
+        self.nucleus = nucleus
+
         var maxWidth = max(nucleus!.width, upperLimit?.width ?? 0)
         maxWidth = max(maxWidth, lowerLimit?.width ?? 0)
-        
-        self.limitShift = limitShift;
-        self.upperLimitGap = 0;
-        self.lowerLimitGap = 0;
-        self.extraPadding = extraPadding;  // corresponds to \xi_13 in TeX
-        self.width = maxWidth;
+
+        self.limitShift = limitShift
+        upperLimitGap = 0
+        lowerLimitGap = 0
+        self.extraPadding = extraPadding // corresponds to \xi_13 in TeX
+        width = maxWidth
     }
 
-    override var ascent:CGFloat {
-        set { super.ascent = newValue }
+    override var ascent: CGFloat {
         get {
-            if self.upperLimit != nil {
-                return nucleus!.ascent + extraPadding + self.upperLimit!.ascent + upperLimitGap + self.upperLimit!.descent
+            if upperLimit != nil {
+                return nucleus!.ascent + extraPadding + upperLimit!.ascent + upperLimitGap
+                    + upperLimit!.descent
             } else {
                 return nucleus!.ascent
             }
         }
+        set { super.ascent = newValue }
     }
 
-    override var descent:CGFloat {
-        set { super.descent = newValue }
+    override var descent: CGFloat {
         get {
-            if self.lowerLimit != nil {
-                return nucleus!.descent + extraPadding + lowerLimitGap + self.lowerLimit!.descent + self.lowerLimit!.ascent;
+            if lowerLimit != nil {
+                return nucleus!.descent + extraPadding + lowerLimitGap + lowerLimit!.descent
+                    + lowerLimit!.ascent
             } else {
-                return nucleus!.descent;
+                return nucleus!.descent
             }
         }
+        set { super.descent = newValue }
     }
-    
+
     override var position: CGPoint {
+        get { super.position }
         set {
             super.position = newValue
-            self.updateLowerLimitPosition()
-            self.updateUpperLimitPosition()
-            self.updateNucleusPosition()
+            updateLowerLimitPosition()
+            updateUpperLimitPosition()
+            updateNucleusPosition()
         }
-        get { super.position }
     }
 
     func updateLowerLimitPosition() {
-        if self.lowerLimit != nil {
+        if lowerLimit != nil {
             // The position of the lower limit includes the position of the LargeOpLimitsDisplay
             // This is to make the positioning of the radical consistent with fractions and radicals
             // Move the starting point to below the nucleus leaving a gap of _lowerLimitGap and subtract
             // the ascent to to get the baseline. Also center and shift it to the left by _limitShift.
-            self.lowerLimit!.position = CGPointMake(self.position.x - limitShift + (self.width - lowerLimit!.width)/2,
-                                                   self.position.y - nucleus!.descent - lowerLimitGap - self.lowerLimit!.ascent);
+            lowerLimit!.position = CGPoint(
+                x:
+                position.x - limitShift + (width - lowerLimit!.width) / 2,
+                y:
+                position.y - nucleus!.descent - lowerLimitGap - lowerLimit!.ascent,
+            )
         }
     }
 
     func updateUpperLimitPosition() {
-        if self.upperLimit != nil {
+        if upperLimit != nil {
             // The position of the upper limit includes the position of the LargeOpLimitsDisplay
             // This is to make the positioning of the radical consistent with fractions and radicals
             // Move the starting point to above the nucleus leaving a gap of _upperLimitGap and add
             // the descent to to get the baseline. Also center and shift it to the right by _limitShift.
-            self.upperLimit!.position = CGPointMake(self.position.x + limitShift + (self.width - self.upperLimit!.width)/2,
-                                                   self.position.y + nucleus!.ascent + upperLimitGap + self.upperLimit!.descent);
+            upperLimit!.position = CGPoint(
+                x:
+                position.x + limitShift + (width - upperLimit!.width) / 2,
+                y:
+                position.y + nucleus!.ascent + upperLimitGap + upperLimit!.descent,
+            )
         }
     }
 
     func updateNucleusPosition() {
         // Center the nucleus
-        nucleus?.position = CGPointMake(self.position.x + (self.width - nucleus!.width)/2, self.position.y);
-    }
-    
-    override var textColor: MathColor? {
-        set {
-            super.textColor = newValue
-            self.upperLimit?.textColor = newValue
-            self.lowerLimit?.textColor = newValue
-            nucleus?.textColor = newValue
-        }
-        get { super.textColor }
+        nucleus?.position = CGPoint(
+            x:
+            position.x + (width - nucleus!.width) / 2, y: position.y,
+        )
     }
 
-    override func draw(_ context:CGContext) {
+    override var textColor: PlatformColor? {
+        get { super.textColor }
+        set {
+            super.textColor = newValue
+            upperLimit?.textColor = newValue
+            lowerLimit?.textColor = newValue
+            nucleus?.textColor = newValue
+        }
+    }
+
+    override func draw(_ context: CGContext) {
         super.draw(context)
         // Draw the elements.
-        self.upperLimit?.draw(context)
-        self.lowerLimit?.draw(context)
+        upperLimit?.draw(context)
+        lowerLimit?.draw(context)
         nucleus?.draw(context)
     }
-    
 }
 
 // MARK: - LineDisplay
 
 /// Rendering of an list with an overline or underline
-class LineDisplay : Display {
-    
-    /** A display representing the inner list that is underlined. Its position is relative
-     to the parent is not treated as a sub-display.
-     */
-    var inner:MathListDisplay?
-    var lineShiftUp:CGFloat=0
-    var lineThickness:CGFloat=0
-    
-    init(withInner inner:MathListDisplay?, position:CGPoint, range:Range<Int>) {
-        super.init()
-        self.inner = inner;
+final class LineDisplay: Display {
+    /// A display representing the inner list that is underlined. Its position is relative
+    /// to the parent is not treated as a sub-display.
+    var inner: MathListDisplay?
+    var lineShiftUp: CGFloat = 0
+    var lineThickness: CGFloat = 0
 
-        self.position = position;
-        self.range = range;
+    init(withInner inner: MathListDisplay?, position: CGPoint, range: Range<Int>) {
+        super.init()
+        self.inner = inner
+
+        self.position = position
+        self.range = range
     }
-    
-    override var textColor: MathColor? {
+
+    override var textColor: PlatformColor? {
+        get { super.textColor }
         set {
             super.textColor = newValue
             inner?.textColor = newValue
         }
-        get { super.textColor }
-    }
-    
-    override var position: CGPoint {
-        set {
-            super.position = newValue
-            self.updateInnerPosition()
-        }
-        get { super.position }
     }
 
-    override func draw(_ context:CGContext) {
+    override var position: CGPoint {
+        get { super.position }
+        set {
+            super.position = newValue
+            updateInnerPosition()
+        }
+    }
+
+    override func draw(_ context: CGContext) {
         super.draw(context)
-        self.inner?.draw(context)
+        inner?.draw(context)
 
         context.saveGState()
 
-        context.setStrokeColor(self.textColor?.cgColor ?? MathColor.black.cgColor)
+        context.setStrokeColor(textColor?.cgColor ?? PlatformColor.black.cgColor)
 
         // draw the horizontal line
-        let lineStart = CGPointMake(self.position.x, self.position.y + self.lineShiftUp)
-        let lineEnd = CGPointMake(lineStart.x + self.inner!.width, lineStart.y)
-        context.setLineWidth(self.lineThickness)
+        let lineStart = CGPoint(x: position.x, y: position.y + lineShiftUp)
+        let lineEnd = CGPoint(x: lineStart.x + inner!.width, y: lineStart.y)
+        context.setLineWidth(lineThickness)
         context.move(to: lineStart)
         context.addLine(to: lineEnd)
         context.strokePath()
@@ -708,65 +748,60 @@ class LineDisplay : Display {
     }
 
     func updateInnerPosition() {
-        self.inner?.position = CGPointMake(self.position.x, self.position.y);
+        inner?.position = CGPoint(x: position.x, y: position.y)
     }
-    
 }
 
 // MARK: - AccentDisplay
 
 /// Rendering an accent as a display
-class AccentDisplay : Display {
-    
-    /** A display representing the inner list that is accented. Its position is relative
-     to the parent is not treated as a sub-display.
-     */
-    var accentee:MathListDisplay?
-    
-    /** A display representing the accent. Its position is relative to the current display.
-     */
-    var accent:GlyphDisplay?
-    
-    init(withAccent glyph:GlyphDisplay?, accentee:MathListDisplay?, range:Range<Int>) {
+final class AccentDisplay: Display {
+    /// A display representing the inner list that is accented. Its position is relative
+    /// to the parent is not treated as a sub-display.
+    var accentee: MathListDisplay?
+
+    /// A display representing the accent. Its position is relative to the current display.
+    var accent: GlyphDisplay?
+
+    init(withAccent glyph: GlyphDisplay?, accentee: MathListDisplay?, range: Range<Int>) {
         super.init()
-        self.accent = glyph
+        accent = glyph
         self.accentee = accentee
         self.accentee?.position = CGPoint.zero
         self.range = range
     }
-    
-    override var textColor: MathColor? {
+
+    override var textColor: PlatformColor? {
+        get { super.textColor }
         set {
             super.textColor = newValue
             accentee?.textColor = newValue
             accent?.textColor = newValue
         }
-        get { super.textColor }
     }
 
     override var position: CGPoint {
+        get { super.position }
         set {
             super.position = newValue
-            self.updateAccenteePosition()
+            updateAccenteePosition()
         }
-        get { super.position }
     }
 
     func updateAccenteePosition() {
-        self.accentee?.position = CGPointMake(self.position.x, self.position.y);
+        accentee?.position = CGPoint(x: position.x, y: position.y)
     }
 
-    override func draw(_ context:CGContext) {
+    override func draw(_ context: CGContext) {
         super.draw(context)
-        self.accentee?.draw(context)
+        accentee?.draw(context)
 
-        context.saveGState();
-        context.translateBy(x: self.position.x, y: self.position.y);
+        context.saveGState()
+        context.translateBy(x: position.x, y: position.y)
         context.textPosition = CGPoint.zero
 
-        self.accent?.draw(context)
+        accent?.draw(context)
 
-        context.restoreGState();
+        context.restoreGState()
     }
-    
 }

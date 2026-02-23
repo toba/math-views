@@ -2,8 +2,7 @@ import Foundation
 import CoreGraphics
 
 /// Fits breakable elements into lines respecting width constraints and break rules
-class LineFitter {
-
+final class LineFitter {
     // MARK: - Properties
 
     let maxWidth: CGFloat
@@ -21,15 +20,17 @@ class LineFitter {
     /// Fit elements into lines using greedy algorithm with backtracking
     func fitLines(_ elements: [BreakableElement]) -> [[BreakableElement]] {
         guard !elements.isEmpty else { return [] }
-        guard maxWidth > 0 else { return [elements] }  // No width constraint
+        guard maxWidth > 0 else { return [elements] } // No width constraint
 
-        let debugPunctuation = false  // Enable to debug line breaking issues
+        let debugPunctuation = false // Enable to debug line breaking issues
 
         if debugPunctuation {
             print("\n=== LineFitter: fitting \(elements.count) elements, maxWidth=\(maxWidth) ===")
             for (idx, elem) in elements.enumerated() {
-                if case .text(let t) = elem.content {
-                    print("[\(idx)] '\(t)' breakBefore=\(elem.isBreakBefore) breakAfter=\(elem.isBreakAfter) width=\(elem.width)")
+                if case let .text(t) = elem.content {
+                    print(
+                        "[\(idx)] '\(t)' breakBefore=\(elem.isBreakBefore) breakAfter=\(elem.isBreakAfter) width=\(elem.width)",
+                    )
                 }
             }
         }
@@ -41,20 +42,24 @@ class LineFitter {
         while i < elements.count {
             let element = elements[i]
 
-            if debugPunctuation, case .text(let t) = element.content {
+            if debugPunctuation, case let .text(t) = element.content {
                 print("\n  Processing element[\(i)]: '\(t)' breakBefore=\(element.isBreakBefore)")
             }
 
             // Handle grouped elements (base + scripts)
             if let groupId = element.groupId {
-                let (groupElements, nextIndex) = collectGroup(elements, startIndex: i, groupId: groupId)
+                let (groupElements, nextIndex) = collectGroup(
+                    elements,
+                    startIndex: i,
+                    groupId: groupId,
+                )
 
                 // Calculate group width correctly for scripts
                 // Scripts overlap vertically, so width = max(script widths), not sum
                 let groupWidth = calculateGroupWidth(groupElements)
 
                 // Check if group fits on current line
-                if !lines.last!.isEmpty && currentWidth + groupWidth > maxWidth - margin {
+                if !lines.last!.isEmpty, currentWidth + groupWidth > maxWidth - margin {
                     // Group doesn't fit - check if first element of group can start a new line
                     if groupElements.first?.isBreakBefore ?? true {
                         // Can start new line
@@ -74,35 +79,41 @@ class LineFitter {
             }
 
             // Check if element fits on current line
-            if !lines.last!.isEmpty && currentWidth + element.width > maxWidth - margin {
-                if debugPunctuation, case .text(let t) = element.content {
-                    print("    Doesn't fit (width=\(currentWidth) + \(element.width) > \(maxWidth)), current line has \(lines.last!.count) elements")
+            if !lines.last!.isEmpty, currentWidth + element.width > maxWidth - margin {
+                if debugPunctuation, case let .text(t) = element.content {
+                    print(
+                        "    Doesn't fit (width=\(currentWidth) + \(element.width) > \(maxWidth)), current line has \(lines.last!.count) elements",
+                    )
                 }
                 // Element doesn't fit - find best break point in current line
                 if let breakIndex = findBestBreak(in: lines[lines.count - 1]) {
                     if debugPunctuation {
-                        print("    Found break at index \(breakIndex) out of \(lines.last!.count) elements")
+                        print(
+                            "    Found break at index \(breakIndex) out of \(lines.last!.count) elements",
+                        )
                         if breakIndex < lines.last!.count {
-                            if case .text(let t) = lines.last![breakIndex].content {
+                            if case let .text(t) = lines.last![breakIndex].content {
                                 print("      Break at element: '\(t)'")
                             }
                         }
                     }
-                    // Found a break point - move elements from breakIndex onward to next line
-                    let moveElements = Array(lines[lines.count - 1][breakIndex...])
-                    let oldLine = Array(lines[lines.count - 1][..<breakIndex])
+                    // Found a break point - split current line at breakIndex
+                    let currentLine = lines[lines.count - 1]
 
                     // Verify the first element being moved can start a line
                     // (findBestBreak already ensures this, but double-check)
-                    if moveElements.first?.isBreakBefore ?? true {
-                        // Move elements to new line
-                        lines[lines.count - 1] = oldLine
-                        lines.append(moveElements)
-                        currentWidth = moveElements.reduce(0) { $0 + $1.width }
+                    if currentLine[breakIndex].isBreakBefore {
+                        // Split: keep [0..<breakIndex] on current line, move [breakIndex...] to new line
+                        let movedSlice = currentLine[breakIndex...]
+                        lines[lines.count - 1] = Array(currentLine[..<breakIndex])
+                        lines.append(Array(movedSlice))
+                        currentWidth = movedSlice.reduce(0) { $0 + $1.width }
 
                         // Now check if current element should go on new line or stay with old line
-                        if debugPunctuation, case .text(let t) = element.content {
-                            print("      Checking element '\(t)' (i=\(i)): breakBefore=\(element.isBreakBefore)")
+                        if debugPunctuation, case let .text(t) = element.content {
+                            print(
+                                "      Checking element '\(t)' (i=\(i)): breakBefore=\(element.isBreakBefore)",
+                            )
                         }
                         if !element.isBreakBefore {
                             // CRITICAL FIX: Current element cannot start a line, so it's part of the
@@ -110,15 +121,17 @@ class LineFitter {
                             // Add it to the NEW line, not the old line!
                             // Example: "matrices" breaks before 'm', so 'm','a','t','r','i' move to new line.
                             // When we process 'c', it can't start a line, so it must join the new line.
-                            if debugPunctuation, case .text(let t) = element.content {
-                                print("      -> Adding '\(t)' to new line (part of unbreakable sequence)")
+                            if debugPunctuation, case let .text(t) = element.content {
+                                print(
+                                    "      -> Adding '\(t)' to new line (part of unbreakable sequence)",
+                                )
                             }
                             lines[lines.count - 1].append(element)
                             currentWidth += element.width
                             i += 1
                             continue
                         } else {
-                            if debugPunctuation, case .text(let t) = element.content {
+                            if debugPunctuation, case let .text(t) = element.content {
                                 print("      -> Adding '\(t)' to new line (can start line)")
                             }
                         }
@@ -126,8 +139,6 @@ class LineFitter {
                     } else {
                         // Should not happen if findBestBreak is correct, but handle gracefully
                         // Keep elements on current line (allow overflow)
-                        lines[lines.count - 1].append(contentsOf: moveElements)
-                        currentWidth += moveElements.reduce(0) { $0 + $1.width }
                     }
                 } else {
                     // No good break point found
@@ -161,7 +172,7 @@ class LineFitter {
             for (lineIdx, line) in finalLines.enumerated() {
                 print("Line \(lineIdx):")
                 for elem in line {
-                    if case .text(let t) = elem.content {
+                    if case let .text(t) = elem.content {
                         print("  '\(t)'", terminator: "")
                     }
                 }
@@ -180,15 +191,17 @@ class LineFitter {
         // For grouped elements (base + scripts), just sum all widths
         // The display generator will handle the actual positioning and overlap
         // This is just for line fitting purposes
-        return groupElements.reduce(0) { $0 + $1.width }
+        groupElements.reduce(0) { $0 + $1.width }
     }
 
     /// Collect all elements that share the same groupId
-    private func collectGroup(_ elements: [BreakableElement], startIndex: Int, groupId: UUID) -> ([BreakableElement], Int) {
+    private func collectGroup(_ elements: [BreakableElement], startIndex: Int, groupId: UUID) -> (
+        [BreakableElement], Int,
+    ) {
         var groupElements: [BreakableElement] = []
         var index = startIndex
 
-        while index < elements.count && elements[index].groupId == groupId {
+        while index < elements.count, elements[index].groupId == groupId {
             groupElements.append(elements[index])
             index += 1
         }
@@ -199,10 +212,10 @@ class LineFitter {
     /// Find the best break point in a line
     /// Returns the index where the break should occur (elements from this index move to next line)
     private func findBestBreak(in line: [BreakableElement]) -> Int? {
-        var bestIndex: Int? = nil
+        var bestIndex: Int?
         var lowestPenalty = Int.max
 
-        let debugBreak = false  // Enable to debug break point selection
+        let debugBreak = false // Enable to debug break point selection
         let debugFit = false
 
         // Scan from right to left to prefer breaking later in the line
@@ -225,13 +238,16 @@ class LineFitter {
             // We can break here only if BOTH:
             // 1. Current element allows breaking after it
             // 2. Next element allows breaking before it
-            if canBreakAfter && canBreakBeforeNext {
+            if canBreakAfter, canBreakBeforeNext {
                 let totalPenalty = max(penaltyAfter, penaltyBeforeNext)
                 if totalPenalty < lowestPenalty {
-                    if debugBreak && idx < line.count - 1 {
-                        let currText = if case .text(let t) = element.content { t } else { "?" }
-                        let nextText = if case .text(let t) = line[idx + 1].content { t } else { "?" }
-                        print("  Considering break: '\(currText)' | '\(nextText)' at idx=\(idx), penalty=\(totalPenalty)")
+                    if debugBreak, idx < line.count - 1 {
+                        let currText = if case let .text(t) = element.content { t } else { "?" }
+                        let nextText = if case let .text(t) = line[idx + 1].content { t }
+                        else { "?" }
+                        print(
+                            "  Considering break: '\(currText)' | '\(nextText)' at idx=\(idx), penalty=\(totalPenalty)",
+                        )
                     }
                     bestIndex = idx + 1
                     lowestPenalty = totalPenalty
@@ -253,6 +269,6 @@ class LineFitter {
 
     /// Check if a line width exceeds the maximum
     private func exceedsMaxWidth(_ width: CGFloat) -> Bool {
-        return width > maxWidth - margin
+        width > maxWidth - margin
     }
 }

@@ -1,11 +1,9 @@
 public import SwiftUI
 
-/**
- Different display styles supported by `MathView`.
-
- The only significant difference between the two modes is how fractions
- and limits on large operators are displayed.
- */
+/// Different display styles supported by `MathView`.
+///
+/// The only significant difference between the two modes is how fractions
+/// and limits on large operators are displayed.
 public enum MathLabelMode {
     /// Display mode. Equivalent to $$ in TeX
     case display
@@ -40,8 +38,8 @@ public struct MathView: View {
     private var textColor: Color = .primary
     private var labelMode: MathLabelMode = .display
     private var textAlignment: MathTextAlignment = .center
-    private var contentInsets: EdgeInsets = EdgeInsets()
-    private var maxLayoutWidth: CGFloat? = nil
+    private var contentInsets = EdgeInsets()
+    private var maxLayoutWidth: CGFloat?
 
     public init(latex: String) {
         self.latex = latex
@@ -49,23 +47,23 @@ public struct MathView: View {
 
     public var body: some View {
         switch render() {
-        case .success(let info):
-            Canvas { context, _ in
-                context.withCGContext { cgContext in
-                    cgContext.saveGState()
-                    // Flip coordinates: Canvas is top-left origin,
-                    // Display.draw expects bottom-left (CoreGraphics)
-                    cgContext.translateBy(x: 0, y: info.size.height)
-                    cgContext.scaleBy(x: 1, y: -1)
-                    info.displayList.draw(cgContext)
-                    cgContext.restoreGState()
+            case let .success(info):
+                Canvas { context, _ in
+                    context.withCGContext { cgContext in
+                        cgContext.saveGState()
+                        // Flip coordinates: Canvas is top-left origin,
+                        // Display.draw expects bottom-left (CoreGraphics)
+                        cgContext.translateBy(x: 0, y: info.size.height)
+                        cgContext.scaleBy(x: 1, y: -1)
+                        info.displayList.draw(cgContext)
+                        cgContext.restoreGState()
+                    }
                 }
-            }
-            .frame(width: info.size.width, height: info.size.height)
-        case .failure(let error):
-            Text(error.localizedDescription)
-                .foregroundStyle(.red)
-                .font(.caption)
+                .frame(width: info.size.width, height: info.size.height)
+            case let .failure(error):
+                Text(error.localizedDescription)
+                    .foregroundStyle(.red)
+                    .font(.caption)
         }
     }
 
@@ -129,8 +127,8 @@ public struct MathView: View {
 
     private var currentStyle: LineStyle {
         switch labelMode {
-        case .display: return .display
-        case .text: return .text
+            case .display: return .display
+            case .text: return .text
         }
     }
 
@@ -150,8 +148,17 @@ public struct MathView: View {
             maxWidth = max(0, maxWidth)
         }
 
-        guard let displayList = Typesetter.createLineForMathList(mathList, font: fontInst, style: currentStyle, maxWidth: maxWidth) else {
-            return .success(RenderInfo(displayList: MathListDisplay(withDisplays: [], range: 0..<0), size: .zero))
+        guard
+            let displayList = Typesetter.createLineForMathList(
+                mathList, font: fontInst, style: currentStyle, maxWidth: maxWidth,
+            )
+        else {
+            return .success(
+                RenderInfo(
+                    displayList: MathListDisplay(withDisplays: [], range: 0 ..< 0),
+                    size: .zero,
+                ),
+            )
         }
 
         // Resolve SwiftUI Color to MathColor (UIColor/NSColor)
@@ -159,15 +166,20 @@ public struct MathView: View {
 
         // Calculate size
         let width = displayList.width + contentInsets.leading + contentInsets.trailing
-        let height = displayList.ascent + displayList.descent + contentInsets.top + contentInsets.bottom
+        let height = displayList.ascent + displayList.descent + contentInsets.top + contentInsets
+            .bottom
         let size = CGSize(width: ceil(max(0, width)), height: ceil(max(0, height)))
 
         // Position the display list
         var textX: CGFloat = 0
         switch textAlignment {
-        case .left:   textX = contentInsets.leading
-        case .center: textX = (size.width - contentInsets.leading - contentInsets.trailing - displayList.width) / 2 + contentInsets.leading
-        case .right:  textX = size.width - displayList.width - contentInsets.trailing
+            case .left: textX = contentInsets.leading
+            case .center:
+                textX =
+                    (size.width - contentInsets.leading - contentInsets.trailing - displayList
+                        .width) / 2
+                    + contentInsets.leading
+            case .right: textX = size.width - displayList.width - contentInsets.trailing
         }
 
         let availableHeight = size.height - contentInsets.bottom - contentInsets.top
@@ -175,14 +187,15 @@ public struct MathView: View {
         if contentHeight < fontSize / 2 {
             contentHeight = fontSize / 2
         }
-        let textY = (availableHeight - contentHeight) / 2 + displayList.descent + contentInsets.bottom
+        let textY = (availableHeight - contentHeight) / 2 + displayList.descent + contentInsets
+            .bottom
 
         displayList.position = CGPoint(x: textX, y: textY)
 
         return .success(RenderInfo(displayList: displayList, size: size))
     }
 
-    private func resolveMathColor(_ color: Color) -> MathColor {
+    private func resolveMathColor(_ color: Color) -> PlatformColor {
         #if os(iOS) || os(visionOS)
         return UIColor(color)
         #elseif os(macOS)

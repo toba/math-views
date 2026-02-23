@@ -1,6 +1,7 @@
 import CoreGraphics
 import Foundation
 import Testing
+import ImageIO
 
 @testable import MathViews
 
@@ -62,12 +63,12 @@ struct MathImageTests {
 }
 struct MathImageResult {
   let error: ParseError?
-  let image: PlatformImage?
+  let image: CGImage?
   let layoutInfo: MathImage.LayoutInfo?
 }
 extension MathImageResult {
   static func useMathImage(
-    latex: String, font: MathFont, fontSize: CGFloat, textColor: MathColor = MathColor.black
+    latex: String, font: MathFont, fontSize: CGFloat, textColor: CGColor = CGColor(red: 0, green: 0, blue: 0, alpha: 1)
   ) -> MathImageResult {
     let alignment = MathTextAlignment.left
     var formatter = MathImage(
@@ -79,20 +80,18 @@ extension MathImageResult {
     return MathImageResult(error: error, image: image, layoutInfo: layoutInfo)
   }
 }
-#if os(macOS)
-  import AppKit
-  extension NSBitmapImageRep {
-    var png: Data? { representation(using: .png, properties: [:]) }
-  }
-  extension Data {
-    var bitmap: NSBitmapImageRep? { NSBitmapImageRep(data: self) }
-  }
-  extension NSImage {
-    func pngData() -> Data? {
-      tiffRepresentation?.bitmap?.png
+
+extension CGImage {
+  func pngData() -> Data? {
+    let data = NSMutableData()
+    guard let destination = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil) else {
+      return nil
     }
+    CGImageDestinationAddImage(destination, self, nil)
+    guard CGImageDestinationFinalize(destination) else { return nil }
+    return data as Data
   }
-#endif
+}
 
 // MARK: - Shared helpers for Swift Testing render tests
 

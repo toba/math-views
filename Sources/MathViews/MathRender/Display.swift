@@ -1,7 +1,11 @@
 public import Foundation
 public import QuartzCore
 public import CoreText
-public import SwiftUI
+#if os(iOS) || os(visionOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 // The Downshift protocol allows an Display to be shifted down by a given amount.
 protocol DownShift {
@@ -30,31 +34,6 @@ public class Display: @unchecked Sendable {
     func displayBounds() -> CGRect {
         CGRectMake(self.position.x, self.position.y - self.descent, self.width, self.ascent + self.descent)
     }
-    
-    /// For debugging. Shows the object in quick look in Xcode.
-#if os(iOS) || os(visionOS)
-    func debugQuickLookObject() -> Any {
-        let size = CGSizeMake(self.width, self.ascent + self.descent);
-        UIGraphicsBeginImageContext(size);
-        
-        // get a reference to that context we created
-        let context = UIGraphicsGetCurrentContext()!
-        // translate/flip the graphics context (for transforming from CG* coords to UI* coords
-        context.translateBy(x: 0, y: size.height);
-        context.scaleBy(x: 1.0, y: -1.0);
-        // move the position to (0,0)
-        context.translateBy(x: -self.position.x, y: -self.position.y);
-        
-        // Move the line up by self.descent
-        context.translateBy(x: 0, y: self.descent);
-        // Draw self on context
-        self.draw(context)
-        
-        // generate a new UIImage from the graphics context we drew onto
-        let img = UIGraphicsGetImageFromCurrentImageContext()
-        return img as Any
-    }
-#endif
     
     /// The distance from the axis to the top of the display
     public var ascent:CGFloat = 0
@@ -325,19 +304,17 @@ public class FractionDisplay : Display {
         denominator?.draw(context)
 
         context.saveGState()
-        
-        self.textColor?.setStroke()
-        
+
         // draw the horizontal line
         // Note: line thickness of 0 draws the thinnest possible line - we want no line so check for 0s
         if self.lineThickness > 0 {
-            let path = MathBezierPath()
-            path.move(to: CGPointMake(self.position.x, self.position.y + self.linePosition))
-            path.addLine(to: CGPointMake(self.position.x + self.width, self.position.y + self.linePosition))
-            path.lineWidth = self.lineThickness
-            path.stroke()
+            context.setStrokeColor(self.textColor?.cgColor ?? MathColor.black.cgColor)
+            context.setLineWidth(self.lineThickness)
+            context.move(to: CGPointMake(self.position.x, self.position.y + self.linePosition))
+            context.addLine(to: CGPointMake(self.position.x + self.width, self.position.y + self.linePosition))
+            context.strokePath()
         }
-        
+
         context.restoreGState()
     }
     
@@ -427,17 +404,18 @@ class RadicalDisplay : Display {
 
     override public func draw(_ context: CGContext) {
         super.draw(context)
-        
+
         // draw the radicand & degree at its position
         self.radicand?.draw(context)
         self.degree?.draw(context)
 
-        context.saveGState();
-        self.textColor?.setStroke()
-        self.textColor?.setFill()
+        context.saveGState()
+        let color = self.textColor?.cgColor ?? MathColor.black.cgColor
+        context.setStrokeColor(color)
+        context.setFillColor(color)
 
         // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
-        context.translateBy(x: self.position.x + _radicalShift, y: self.position.y);
+        context.translateBy(x: self.position.x + _radicalShift, y: self.position.y)
         context.textPosition = CGPoint.zero
 
         // Draw the glyph.
@@ -445,19 +423,18 @@ class RadicalDisplay : Display {
 
         // Draw the VBOX
         // for the kern of, we don't need to draw anything.
-        let heightFromTop = topKern;
+        let heightFromTop = topKern
 
         // draw the horizontal line with the given thickness
-        let path = MathBezierPath()
-        let lineStart = CGPointMake(_radicalGlyph!.width, self.ascent - heightFromTop - self.lineThickness / 2); // subtract half the line thickness to center the line
-        let lineEnd = CGPointMake(lineStart.x + self.radicand!.width, lineStart.y);
-        path.move(to: lineStart)
-        path.addLine(to: lineEnd)
-        path.lineWidth = lineThickness
-        path.lineCapStyle = .round
-        path.stroke()
+        let lineStart = CGPointMake(_radicalGlyph!.width, self.ascent - heightFromTop - self.lineThickness / 2) // subtract half the line thickness to center the line
+        let lineEnd = CGPointMake(lineStart.x + self.radicand!.width, lineStart.y)
+        context.setLineWidth(lineThickness)
+        context.setLineCap(.round)
+        context.move(to: lineStart)
+        context.addLine(to: lineEnd)
+        context.strokePath()
 
-        context.restoreGState();
+        context.restoreGState()
     }
 }
 
@@ -484,11 +461,10 @@ class GlyphDisplay : DisplayDS {
         super.draw(context)
         context.saveGState()
 
-        self.textColor?.setFill()
+        context.setFillColor(self.textColor?.cgColor ?? MathColor.black.cgColor)
 
         // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
-
-        context.translateBy(x: self.position.x, y: self.position.y - self.shiftDown);
+        context.translateBy(x: self.position.x, y: self.position.y - self.shiftDown)
 
         // Apply horizontal scaling if needed (for stretchy arrows)
         if scaleX != 1.0 {
@@ -498,9 +474,9 @@ class GlyphDisplay : DisplayDS {
         context.textPosition = CGPoint.zero
 
         var pos = CGPoint.zero
-        CTFontDrawGlyphs(font!.ctFont, &glyph, &pos, 1, context);
+        CTFontDrawGlyphs(font!.ctFont, &glyph, &pos, 1, context)
 
-        context.restoreGState();
+        context.restoreGState()
     }
 
     override var ascent:CGFloat {
@@ -535,16 +511,16 @@ class GlyphConstructionDisplay:DisplayDS {
     override public func draw(_ context: CGContext) {
         super.draw(context)
         context.saveGState()
-        
-        self.textColor?.setFill()
-        
+
+        context.setFillColor(self.textColor?.cgColor ?? MathColor.black.cgColor)
+
         // Make the current position the origin as all the positions of the sub atoms are relative to the origin.
         context.translateBy(x: self.position.x, y: self.position.y - self.shiftDown)
         context.textPosition = CGPoint.zero
-        
+
         // Draw the glyphs.
         CTFontDrawGlyphs(font!.ctFont, glyphs, positions, numGlyphs, context)
-        
+
         context.restoreGState()
     }
     
@@ -715,21 +691,20 @@ class LineDisplay : Display {
     override func draw(_ context:CGContext) {
         super.draw(context)
         self.inner?.draw(context)
-        
-        context.saveGState();
-        
-        self.textColor?.setStroke()
-        
+
+        context.saveGState()
+
+        context.setStrokeColor(self.textColor?.cgColor ?? MathColor.black.cgColor)
+
         // draw the horizontal line
-        let path = MathBezierPath()
-        let lineStart = CGPointMake(self.position.x, self.position.y + self.lineShiftUp);
-        let lineEnd = CGPointMake(lineStart.x + self.inner!.width, lineStart.y);
-        path.move(to:lineStart)
-        path.addLine(to: lineEnd)
-        path.lineWidth = self.lineThickness;
-        path.stroke()
-        
-        context.restoreGState();
+        let lineStart = CGPointMake(self.position.x, self.position.y + self.lineShiftUp)
+        let lineEnd = CGPointMake(lineStart.x + self.inner!.width, lineStart.y)
+        context.setLineWidth(self.lineThickness)
+        context.move(to: lineStart)
+        context.addLine(to: lineEnd)
+        context.strokePath()
+
+        context.restoreGState()
     }
 
     func updateInnerPosition() {

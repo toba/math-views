@@ -1,29 +1,18 @@
+import CoreGraphics
+import Foundation
 import Testing
 
 @testable import MathViews
 
-#if os(macOS)
-  import AppKit
-#else
-  import UIKit
-#endif
-
-@MainActor struct DebugOverlapTest {
+struct DebugOverlapTest {
   @Test func debugOverlap() {
-    let label = MathUILabel()
-    label.latex = "y=x^{2}+3x+4x+9x+8x+8+\\sqrt{\\dfrac{3x^{2}+5x}{\\cos x}}"
-    label.preferredMaxLayoutWidth = 200
+    var helper = TypesetterHelper()
+    helper.latex = "y=x^{2}+3x+4x+9x+8x+8+\\sqrt{\\dfrac{3x^{2}+5x}{\\cos x}}"
+    helper.maxWidth = 200
 
-    let size = label.intrinsicContentSize
-    label.frame = CGRect(origin: .zero, size: size)
+    let size = helper.intrinsicContentSize
 
-    #if os(macOS)
-      label.layout()
-    #else
-      label.layoutSubviews()
-    #endif
-
-    if let displayList = label.displayList {
+    if let displayList = helper.displayList {
       print("\n=== Display List Analysis ===")
       print("Total displays: \(displayList.subDisplays.count)")
 
@@ -45,5 +34,8 @@ import Testing
         }
       }
     }
+
+    #expect(size.width > 0)
+    #expect(size.height > 0)
   }
 }

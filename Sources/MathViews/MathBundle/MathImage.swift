@@ -1,26 +1,22 @@
 public import Foundation
-
-#if os(iOS) || os(visionOS)
-    public import UIKit
-#elseif os(macOS)
-    public import AppKit
-#endif
+public import CoreGraphics
+public import SwiftUI
 
 public struct MathImage {
     public var font: MathFont = .latinModernFont
     public var fontSize: CGFloat
-    public var textColor: MathColor
+    public var textColor: CGColor
 
-    public var labelMode: MathUILabelMode
+    public var labelMode: MathLabelMode
     public var textAlignment: MathTextAlignment
 
-    public var contentInsets: MathEdgeInsets = MathEdgeInsetsZero
-    
+    public var contentInsets: EdgeInsets = EdgeInsets()
+
     public let latex: String
-    
+
     private(set) var intrinsicContentSize = CGSize.zero
 
-    public init(latex: String, fontSize: CGFloat, textColor: MathColor, labelMode: MathUILabelMode = .display, textAlignment: MathTextAlignment = .center) {
+    public init(latex: String, fontSize: CGFloat, textColor: CGColor, labelMode: MathLabelMode = .display, textAlignment: MathTextAlignment = .center) {
         self.latex = latex
         self.fontSize = fontSize
         self.textColor = textColor
@@ -36,7 +32,7 @@ extension MathImage {
         }
     }
     private func intrinsicContentSize(_ displayList: MathListDisplay) -> CGSize {
-        CGSize(width: displayList.width + contentInsets.left + contentInsets.right,
+        CGSize(width: displayList.width + contentInsets.leading + contentInsets.trailing,
                height: displayList.ascent + displayList.descent + contentInsets.top + contentInsets.bottom)
     }
     public struct LayoutInfo {
@@ -48,13 +44,13 @@ extension MathImage {
             self.descent = descent
         }
     }
-    public mutating func asImage() -> (ParseError?, PlatformImage?, LayoutInfo?) {
+    public mutating func asImage() -> (ParseError?, CGImage?, LayoutInfo?) {
         func layoutImage(size: CGSize, displayList: MathListDisplay) {
             var textX = CGFloat(0)
             switch self.textAlignment {
-                case .left:   textX = contentInsets.left
-                case .center: textX = (size.width - contentInsets.left - contentInsets.right - displayList.width) / 2 + contentInsets.left
-                case .right:  textX = size.width - displayList.width - contentInsets.right
+                case .left:   textX = contentInsets.leading
+                case .center: textX = (size.width - contentInsets.leading - contentInsets.trailing - displayList.width) / 2 + contentInsets.leading
+                case .right:  textX = size.width - displayList.width - contentInsets.trailing
             }
             let availableHeight = size.height - contentInsets.bottom - contentInsets.top
 
@@ -79,38 +75,41 @@ extension MathImage {
         }
 
         intrinsicContentSize = intrinsicContentSize(displayList)
-        displayList.textColor = textColor
+        #if os(iOS) || os(visionOS)
+        displayList.textColor = UIColor(cgColor: textColor)
+        #elseif os(macOS)
+        displayList.textColor = NSColor(cgColor: textColor) ?? .black
+        #endif
 
         let size = intrinsicContentSize.regularized
         layoutImage(size: size, displayList: displayList)
-        
-        #if os(iOS) || os(visionOS)
-            let renderer = UIGraphicsImageRenderer(size: size)
-            let image = renderer.image { rendererContext in
-                rendererContext.cgContext.saveGState()
-                rendererContext.cgContext.concatenate(.flippedVertically(size.height))
-                displayList.draw(rendererContext.cgContext)
-                rendererContext.cgContext.restoreGState()
-            }
-            return (nil, image, LayoutInfo(ascent: displayList.ascent, descent: displayList.descent))
-        #endif
-        #if os(macOS)
-            let image = NSImage(size: size, flipped: false) { bounds in
-                guard let context = NSGraphicsContext.current?.cgContext else { return false }
-                context.saveGState()
-                displayList.draw(context)
-                context.restoreGState()
-                return true
-            }
-            return (nil, image, LayoutInfo(ascent: displayList.ascent, descent: displayList.descent))
-        #endif
-    }
-}
-private extension CGAffineTransform {
-    static func flippedVertically(_ height: CGFloat) -> CGAffineTransform {
-        var transform = CGAffineTransform(scaleX: 1, y: -1)
-        transform = transform.translatedBy(x: 0, y: -height)
-        return transform
+
+        let width = Int(size.width)
+        let height = Int(size.height)
+        guard width > 0, height > 0 else { return (nil, nil, nil) }
+
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else {
+            return (nil, nil, nil)
+        }
+
+        context.saveGState()
+        displayList.draw(context)
+        context.restoreGState()
+
+        guard let image = context.makeImage() else {
+            return (nil, nil, nil)
+        }
+
+        return (nil, image, LayoutInfo(ascent: displayList.ascent, descent: displayList.descent))
     }
 }
 extension CGSize {

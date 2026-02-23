@@ -3588,80 +3588,36 @@ extension CGPoint {
     #expect(display!.descent > 0, "Display should have positive descent")
   }
 
-  @Test func sizeThatFitsNeverReturnsNegativeValues() {
-    // This tests the fix for the SwiftUI preview crash caused by negative values from sizeThatFits
-    // The issue occurred when contentInsets or calculations resulted in negative CGSize dimensions
+  @Test func typesetterNeverReturnsNegativeDimensions() {
+    // This tests that typesetting never produces negative dimensions
+    var helper = TypesetterHelper()
 
-    let label = MathUILabel()
-
-    // Test 1: Complex multiline expression that could cause negative values
-    let latex1 =
+    // Test 1: Complex multiline expression
+    helper.latex =
       #"\[ AC = c = 3\sqrt{3} \\ CB^{2} = AB^{2} + AC^{2} = 5^{2} + \left(3\sqrt{3}\right)^{2} = 25 + 27 = 52 \\ CB = \sqrt{52} = 2\sqrt{13} \approx 7.211 \]"#
-    label.latex = latex1
 
-    // Test with various sizes including edge cases
-    let testSizes: [CGSize] = [
-      CGSize(width: 100, height: 100),
-      CGSize(width: 50, height: 50),
-      CGSize.zero,
-      CGSize(width: -1, height: -1),  // CGSizeZero marker
-      CGSize(width: 500, height: 500),
-    ]
-
-    for testSize in testSizes {
-      let size = label.sizeThatFits(testSize)
-      #expect(
-        size.width >= 0, "sizeThatFits width should never be negative for input size \(testSize)")
-      #expect(
-        size.height >= 0, "sizeThatFits height should never be negative for input size \(testSize)")
+    // Test with various width constraints
+    let testWidths: [CGFloat] = [100, 50, 0, 500]
+    for width in testWidths {
+      helper.maxWidth = width
+      let size = helper.intrinsicContentSize
+      #expect(size.width >= 0, "Width should never be negative for maxWidth \(width)")
+      #expect(size.height >= 0, "Height should never be negative for maxWidth \(width)")
     }
 
-    // Test 2: With large contentInsets that exceed available space
-    label.contentInsets = MathEdgeInsets(top: 1000, left: 1000, bottom: 1000, right: 1000)
-    let sizeWithLargeInsets = label.sizeThatFits(CGSize(width: 200, height: 200))
-    #expect(
-      sizeWithLargeInsets.width >= 0,
-      "sizeThatFits width should never be negative even with large contentInsets")
-    #expect(
-      sizeWithLargeInsets.height >= 0,
-      "sizeThatFits height should never be negative even with large contentInsets")
+    // Test 2: With maxWidth constraint
+    helper.maxWidth = 150
+    let sizeWithMaxWidth = helper.intrinsicContentSize
+    #expect(sizeWithMaxWidth.width >= 0, "Width should never be negative with maxWidth")
+    #expect(sizeWithMaxWidth.height >= 0, "Height should never be negative with maxWidth")
 
-    // Test 3: With preferredMaxLayoutWidth
-    label.contentInsets = MathEdgeInsetsZero
-    label.preferredMaxLayoutWidth = 150
-    let sizeWithMaxWidth = label.sizeThatFits(CGSize(width: 300, height: 300))
-    #expect(
-      sizeWithMaxWidth.width >= 0,
-      "sizeThatFits width should never be negative with preferredMaxLayoutWidth")
-    #expect(
-      sizeWithMaxWidth.height >= 0,
-      "sizeThatFits height should never be negative with preferredMaxLayoutWidth")
-
-    // Test 4: With preferredMaxLayoutWidth smaller than contentInsets
-    label.contentInsets = MathEdgeInsets(top: 20, left: 100, bottom: 20, right: 100)
-    label.preferredMaxLayoutWidth = 150  // contentInsets.left + right = 200, exceeds preferredMaxLayoutWidth
-    let sizeWithConflict = label.sizeThatFits(CGSize.zero)
-    #expect(
-      sizeWithConflict.width >= 0,
-      "sizeThatFits width should never be negative when contentInsets exceed preferredMaxLayoutWidth"
-    )
-    #expect(
-      sizeWithConflict.height >= 0,
-      "sizeThatFits height should never be negative when contentInsets exceed preferredMaxLayoutWidth"
-    )
-
-    // Test 5: Verify the problematic cosine fraction expression
-    let latex2 =
+    // Test 3: Verify the problematic cosine fraction expression
+    helper.latex =
       #"\[ \cos\widehat{ABC} = \frac{\overrightarrow{BA}\cdot\overrightarrow{BC}}{|\overrightarrow{BA}||\overrightarrow{BC}|} = \frac{25}{5\cdot 2\sqrt{13}} = \frac{5}{2\sqrt{13}} \\ \widehat{ABC} = \arccos\left(\frac{5}{2\sqrt{13}}\right) \approx 0.806 \text{ rad} \]"#
-    label.latex = latex2
-    label.contentInsets = MathEdgeInsetsZero
-    label.preferredMaxLayoutWidth = 0
-    let sizeForCosine = label.sizeThatFits(CGSize(width: 300, height: 300))
-    #expect(
-      sizeForCosine.width >= 0, "sizeThatFits width should never be negative for cosine expression")
-    #expect(
-      sizeForCosine.height >= 0,
-      "sizeThatFits height should never be negative for cosine expression")
+    helper.maxWidth = 300
+    let sizeForCosine = helper.intrinsicContentSize
+    #expect(sizeForCosine.width >= 0, "Width should never be negative for cosine expression")
+    #expect(sizeForCosine.height >= 0, "Height should never be negative for cosine expression")
   }
 
   @Test func nSRangeOverflowProtection() throws {

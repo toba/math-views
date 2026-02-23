@@ -1,11 +1,11 @@
 ---
 # 3ss-4pl
 title: SwiftUI Migration
-status: ready
+status: completed
 type: epic
 priority: normal
 created_at: 2026-02-22T17:08:27Z
-updated_at: 2026-02-22T19:19:33Z
+updated_at: 2026-02-23T00:39:02Z
 parent: 1ve-o8n
 blocked_by:
     - z9b-r1r
@@ -81,3 +81,23 @@ struct MathView: View {
     }
 }
 ```
+
+
+## Summary of Changes
+
+Replaced the UIKit/AppKit view layer with native SwiftUI:
+
+1. **Display.swift**: Replaced all `MathBezierPath` usage with direct `CGContext` path operations (`context.move(to:)`, `context.addLine(to:)`, `context.strokePath()`). Replaced implicit-context `setStroke()`/`setFill()` with explicit `context.setStrokeColor()`/`context.setFillColor()`. Removed iOS-only `debugQuickLookObject()`.
+
+2. **MathView.swift** (new): SwiftUI view using `Canvas` + `withCGContext` for rendering. Supports all previous properties via modifier-style API: `.font()`, `.fontSize()`, `.textColor()`, `.labelMode()`, `.textAlignment()`, `.contentInsets()`, `.maxLayoutWidth()`.
+
+3. **MathImage.swift**: Changed return type from `PlatformImage` to `CGImage`. Removed platform-branching image creation — now uses `CGContext` directly. Updated to use `CGColor` for `textColor` and `SwiftUI.EdgeInsets` for `contentInsets`.
+
+4. **Platform types consolidated**: 
+   - `PlatformTypes.swift` reduced to only `MathColor` typealias (UIColor/NSColor)
+   - Deleted: `MathBezierPath.swift`, `MathLabel.swift`, `MathUILabel.swift`
+   - Removed typealiases: `MathView`, `MathBezierPath`, `MathLabel`, `MathEdgeInsets`, `MathRect`, `PlatformImage`, `MathEdgeInsetsZero`, `graphicsGetCurrentContext()`
+
+5. **Renamed**: `MathUILabelMode` → `MathLabelMode`, `MathTextAlignment` moved to `MathView.swift`
+
+6. **Tests migrated**: All ~50 `MathUILabel` usages across 5 test files replaced with `TypesetterHelper` (direct Typesetter calls). MathImageTests updated for CGImage API. ExamplesImageGenerationTests updated for CGColor API. All 549 tests pass.

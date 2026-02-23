@@ -1,12 +1,8 @@
+import CoreGraphics
+import Foundation
 import Testing
 
 @testable import MathViews
-
-#if os(macOS)
-  import AppKit
-#else
-  import UIKit
-#endif
 
 // MARK: - EXAMPLES.md Image Generation Tests
 
@@ -51,6 +47,9 @@ struct ExamplesImageGenerationTests {
     }
   }
 
+  static let blackColor = CGColor(red: 0, green: 0, blue: 0, alpha: 1)
+  static let whiteColor = CGColor(red: 1, green: 1, blue: 1, alpha: 1)
+
   static let exampleCases: [RenderCase] = [
     RenderCase(name: "dirac", latex: #"\bra{\psi} \ket{\phi} = \braket{\psi}{\phi}"#),
     RenderCase(
@@ -71,7 +70,7 @@ struct ExamplesImageGenerationTests {
       latex: renderCase.latex,
       font: font,
       fontSize: fontSize,
-      textColor: MathColor.black
+      textColor: Self.blackColor
     )
 
     #expect(
@@ -89,7 +88,7 @@ struct ExamplesImageGenerationTests {
       latex: renderCase.latex,
       font: font,
       fontSize: fontSize,
-      textColor: MathColor.white
+      textColor: Self.whiteColor
     )
 
     #expect(

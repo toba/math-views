@@ -1,11 +1,11 @@
 ---
 # riu-8fh
 title: Implement \overbrace and \underbrace
-status: ready
+status: completed
 type: feature
 priority: normal
 created_at: 2026-02-22T17:52:01Z
-updated_at: 2026-02-22T17:52:01Z
+updated_at: 2026-02-23T05:04:13Z
 sync:
     github:
         issue_number: "13"
@@ -89,10 +89,22 @@ Add cases around line 669:
 
 ## Checklist
 
-- [ ] Add `OverBrace` and `UnderBrace` classes to `MathList.swift`
-- [ ] Add `case overbrace` and `case underbrace` to `MathAtomType`
-- [ ] Add parser support in `MathListBuilder.swift` (both parse paths)
-- [ ] Add `mathListToString` round-trip support
-- [ ] Add typesetter rendering in `Typesetter.swift`
-- [ ] Add display support for stretchy horizontal brace glyph
-- [ ] Add tests for basic parsing, annotation, nesting, and round-trip
+- [x] Add `OverBrace` and `UnderBrace` classes to `Atom+Subclasses.swift`
+- [x] Add `case overbrace` and `case underbrace` to `MathAtomType`
+- [x] Add parser support in `Builder+Commands.swift`
+- [x] Add `mathListToString` round-trip support
+- [x] Add typesetter rendering in `Typesetter+Accents.swift`
+- [x] Add display support via GlyphDisplay with scaleX + LargeOpLimitsDisplay
+- [x] Add tests for basic parsing, annotation, nesting, and round-trip (11 tests)
+
+
+## Summary of Changes
+
+- Added `OverBrace` and `UnderBrace` atom subclasses with `innerList` and finalization support
+- Added `.overbrace` and `.underbrace` cases to `MathAtomType` with descriptions and spacing
+- Added parser support for `\overbrace{...}` and `\underbrace{...}` commands
+- Added round-trip serialization in `mathListToString`
+- Added typesetter methods `makeOverBrace`/`makeUnderBrace` using horizontally-scaled brace glyphs (U+23DE/U+23DF) and `LargeOpLimitsDisplay` for annotation positioning
+- Added tokenizer support in `AtomTokenizer`
+- Created 11 tests covering parsing, annotations, round-trip, typesetting, and nesting
+- Fixed pre-existing test compilation issues (duplicate CGPoint extension, missing CoreGraphics import)

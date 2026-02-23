@@ -22,15 +22,15 @@ Reference files in this skill's `references/` directory:
 
 | File | Purpose |
 |------|---------|
-| `Sources/SwiftMath/MathRender/MTMathAtomFactory.swift` | Symbol tables: `supportedLatexSymbols`, `aliases`, `delimiters`, `accents`, `fontStyles`, `matrixEnvs` |
-| `Sources/SwiftMath/MathRender/MTMathListBuilder.swift` | LaTeX parser: `atomForCommand()` handles structural commands |
-| `Sources/SwiftMath/MathRender/MTMathList.swift` | AST: `MTMathAtomType` enum, `MTMathAtom` and subclasses |
-| `Sources/SwiftMath/MathRender/MTTypesetter.swift` | Typesetting: spacing matrix, script positioning, layout |
-| `Sources/SwiftMath/MathRender/MTMathListDisplay.swift` | Display tree: `MTDisplay` subclasses for rendering |
-| `Sources/SwiftMath/MathRender/MTMathUILabel.swift` | View layer: `MTMathUILabel` (UIView/NSView) |
-| `Sources/SwiftMath/MathRender/Tokenization/` | Line breaking subsystem: tokenizer, line fitter, element width calculator |
-| `Tests/SwiftMathTests/MTMathListBuilderTests.swift` | Parser tests: round-trip and atom type verification |
-| `Tests/SwiftMathTests/MTTypesetterTests.swift` | Typesetter tests: spacing, multiline, line breaking (97 tests) |
+| `Sources/MathViews/Atoms/Factory.swift`, `Atoms/SymbolTable.swift` | Symbol tables: `supportedLatexSymbols`, `aliases`, `delimiters`, `accents`, `fontStyles`, `matrixEnvs` |
+| `Sources/MathViews/Parser/Builder.swift` | LaTeX parser: `atomForCommand()` handles structural commands |
+| `Sources/MathViews/Atoms/` (`AtomType.swift`, `Atom.swift`, `Atom+Subclasses.swift`, `List.swift`) | AST: `MathAtomType` enum, `MathAtom` and subclasses |
+| `Sources/MathViews/Typesetter/Typesetter.swift` | Typesetting: spacing matrix, script positioning, layout |
+| `Sources/MathViews/Display/Display.swift`, `Display/Displays.swift` | Display tree: `Display` subclasses for rendering |
+| `Sources/MathViews/UI/View.swift` | View layer: `MathUILabel` (UIView/NSView) |
+| `Sources/MathViews/Typesetter/Tokenization/` | Line breaking subsystem: tokenizer, line fitter, element width calculator |
+| `Tests/MathViewsTests/MathListBuilderTests.swift` | Parser tests: round-trip and atom type verification |
+| `Tests/MathViewsTests/TypesetterTests.swift` | Typesetter tests: spacing, multiline, line breaking (97 tests) |
 
 ## Atom Types and Their Meaning
 
@@ -58,7 +58,7 @@ Symbol commands map a LaTeX name to a Unicode character with a specific atom typ
 
 1. **Identify the correct atom type** — See table above and `references/tex-spacing.md`
 2. **Find the Unicode code point** — See `references/latex-math-commands.md`
-3. **Add to `supportedLatexSymbols`** in `MTMathAtomFactory.swift`:
+3. **Add to `supportedLatexSymbols`** in `Factory.swift`:
    ```swift
    "commandname" : MTMathAtom(type: .relation, value: "\u{XXXX}"),
    ```
@@ -99,7 +99,7 @@ Users can also create custom operators at runtime with `\operatorname{name}` or 
 ## Workflow: Adding an Accent
 
 1. **Find the combining Unicode character** for the accent
-2. **Add to `accents`** dictionary in `MTMathAtomFactory.swift`:
+2. **Add to `accents`** dictionary in `Factory.swift`:
    ```swift
    "accentname" : "\u{XXXX}",  // combining character
    ```
@@ -111,7 +111,7 @@ Current accents: `grave`, `acute`, `hat`/`widehat`, `tilde`/`widetilde`, `bar`, 
 
 ## Workflow: Adding a Structural Command
 
-Structural commands require parsing logic in `MTMathListBuilder.swift:atomForCommand()`.
+Structural commands require parsing logic in `Builder.swift:atomForCommand()`.
 
 1. **Add a new `else if` branch** in `atomForCommand()` for the command name
 2. **Create the appropriate atom subclass**:
@@ -121,11 +121,11 @@ Structural commands require parsing logic in `MTMathListBuilder.swift:atomForCom
    - `MTMathTable` — for matrix/tabular environments
 3. **Parse arguments** using `self.buildInternal(true)` for `{...}` args
 4. **Handle optional arguments** by checking for `[` and parsing with `buildInternal(false, stopChar: "]")`
-5. **Add typesetting support** in `MTTypesetter.swift` if the atom needs custom layout
+5. **Add typesetting support** in `Typesetter.swift` if the atom needs custom layout
 
 ## Workflow: Adding an Environment
 
-1. **For matrix-style environments**: Add to `matrixEnvs` in `MTMathAtomFactory.swift`:
+1. **For matrix-style environments**: Add to `matrixEnvs` in `Factory.swift`:
    ```swift
    "envname": ["leftDelim", "rightDelim"],  // or [] for no delimiters
    ```
@@ -171,11 +171,11 @@ Line spacing is computed from actual content height (max ascent + descent + padd
 - `maxWidth` is propagated to all nested `createLineForMathList()` calls (color, inner, delimiters)
 - Height threshold for large operators: `fontSize × 2.5`
 - Early exit optimization skips breaking checks when remaining content clearly fits
-- Tests: 97 typesetter tests in `MTTypesetterTests.swift`
+- Tests: 97 typesetter tests in `TypesetterTests.swift`
 
 ## Writing Tests
 
-Tests live in `Tests/SwiftMathTests/MTMathListBuilderTests.swift`.
+Tests live in `Tests/MathViewsTests/MathListBuilderTests.swift`.
 
 Standard test pattern:
 ```swift
@@ -207,5 +207,5 @@ func testFracCommand() throws {
 Build and test:
 ```bash
 swift build
-swift test --filter MTMathListBuilderTests
+swift test --filter MathListBuilderTests
 ```

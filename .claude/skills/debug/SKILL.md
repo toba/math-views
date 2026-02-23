@@ -43,7 +43,7 @@ mcp__xc-debug__debug_attach_sim(bundle_id: "com.example.myapp")
 
 **Parser entry:**
 ```
-debug_breakpoint_add(bundle_id: "...", file: "MathRender/MathListBuilder.swift", line: 42)
+debug_breakpoint_add(bundle_id: "...", file: "Parser/Builder.swift", line: 42)
 ```
 
 **Typesetter entry:**
@@ -53,7 +53,7 @@ debug_breakpoint_add(bundle_id: "...", symbol: "Typesetter.createLineForMathList
 
 **Font loading:**
 ```
-debug_breakpoint_add(bundle_id: "...", file: "MathRender/FontInstance.swift", line: 25)
+debug_breakpoint_add(bundle_id: "...", file: "Font/Instance.swift", line: 25)
 ```
 
 ### Inspect state when paused
@@ -72,7 +72,7 @@ debug_evaluate(expression: "display.width")
 3. Check `InterElementSpaceType` for the atom pair
 
 ### Missing or wrong glyph
-1. Set breakpoint in font glyph lookup (`FontMathTable`)
+1. Set breakpoint in font glyph lookup (`MathTable`)
 2. Inspect the glyph ID, construction variants, and assembly parts
 3. Check the `.plist` math table for the expected entries
 
@@ -85,8 +85,8 @@ debug_evaluate(expression: "display.width")
 
 | Stage | Key File | What to Inspect |
 |-------|----------|-----------------|
-| Parse | MathListBuilder.swift | Token stream, error recovery |
-| AST | MathList.swift | Atom types, nucleus values, scripts |
-| Typeset | Typesetter.swift | Spacing, positions, line metrics |
-| Display | Display.swift | Bounding boxes, draw calls |
-| Render | MathUILabel.swift | View frame, content scale |
+| Parse | Parser/Builder.swift | Token stream, error recovery |
+| AST | Atoms/ (Atom.swift, List.swift) | Atom types, nucleus values, scripts |
+| Typeset | Typesetter/Typesetter.swift | Spacing, positions, line metrics |
+| Display | Display/Display.swift | Bounding boxes, draw calls |
+| Render | UI/View.swift | View frame, content scale |

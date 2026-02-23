@@ -26,43 +26,45 @@ MathViews is a Swift implementation of LaTeX math rendering for iOS (11+) and ma
 
 **LaTeX String → MathList → Display → Rendered Output**
 
-1. **MathListBuilder** (`MathRender/MathListBuilder.swift`) - Parses LaTeX strings into an abstract syntax tree (`MathList`). Handles math delimiters (`$...$`, `$$...$$`, `\(...\)`, `\[...\]`), commands, environments.
+Source code is organized into pipeline-stage folders under `Sources/MathViews/`:
 
-2. **MathList** (`MathRender/MathList.swift`) - The AST representation. Contains `MathAtom` objects representing mathematical elements (variables, operators, fractions, radicals, etc.). Each atom has a `MathAtomType` that determines rendering and spacing.
+1. **Parser/** (`Builder.swift`, `Builder+Commands.swift`, `Builder+Environments.swift`, `ParseError.swift`) - Parses LaTeX strings into an abstract syntax tree (`MathList`). Handles math delimiters (`$...$`, `$$...$$`, `\(...\)`, `\[...\]`), commands, environments.
 
-3. **Typesetter** (`MathRender/Typesetter.swift`) - Converts `MathList` to `Display` tree using TeX typesetting rules. Handles inter-element spacing, script positioning, and line breaking.
+2. **Atoms/** (`Atom.swift`, `Atom+Subclasses.swift`, `AtomType.swift`, `FontStyle.swift`, `List.swift`, `ListIndex.swift`, `Table.swift`, `Factory.swift`, `SymbolTable.swift`) - The AST representation. Contains `MathAtom` objects representing mathematical elements (variables, operators, fractions, radicals, etc.). Each atom has a `MathAtomType` that determines rendering and spacing.
 
-4. **Display** (`MathRender/Display.swift`) - The display tree that knows how to draw itself via CoreText/CoreGraphics.
+3. **Typesetter/** (`Typesetter.swift`, `Spacing.swift`, `Italics.swift`, `Typesetter+Accents.swift`, `Typesetter+Fractions.swift`, `Typesetter+LargeOps.swift`, `Typesetter+Radicals.swift`, `Typesetter+Tables.swift`, `Typesetter+Tokenization.swift`) - Converts `MathList` to `Display` tree using TeX typesetting rules. Handles inter-element spacing, script positioning, and line breaking.
 
-5. **MathUILabel** (`MathRender/MathUILabel.swift`) - The UIView/NSView that hosts the rendered math. Entry point for most usage.
+4. **Display/** (`Display.swift`, `Displays.swift`) - The display tree that knows how to draw itself via CoreText/CoreGraphics.
+
+5. **Font/** (`Font.swift`, `Instance.swift`, `MathTable.swift`, `Image.swift`) - Font loading, math metrics, and OpenType MATH table parsing.
+
+6. **UI/** (`View.swift`, `Color.swift`, `Symbol.swift`) - Platform view (`MathView`/`MathUILabel`), color abstraction, and Unicode symbol constants.
 
 ### Font System
 
-Located in `MathBundle/`:
+Located in `Font/`:
 
-- **MathFont** (`MathFont.swift`) - Enum of 12 bundled OTF math fonts with thread-safe loading via `BundleManager`
-- **FontInstance** (`MathRender/FontInstance.swift`) - Font wrapper with math metrics access
-- **FontMathTable** (`MathRender/FontMathTable.swift`) - Parses OpenType MATH table data from `.plist` files
+- **MathFont** (`Font/Font.swift`) - Enum of 12 bundled OTF math fonts with thread-safe loading via `BundleManager`
+- **FontInstance** (`Font/Instance.swift`) - Font wrapper with math metrics access
+- **FontMathTable** (`Font/MathTable.swift`) - Parses OpenType MATH table data from `.plist` files
 
 Each font has a `.otf` file and a companion `.plist` containing math metrics (generated via included Python script).
 
 ### Key Classes
 
-- **MathAtomFactory** (`MathRender/MathAtomFactory.swift`) - Factory for creating atoms, includes command mappings (`aliases`, `delimiters`, `accents`, `supportedLatexSymbols`)
-- **FontManager** (`MathRender/FontManager.swift`) - Manages font instances and defaults
+- **MathAtomFactory** (`Atoms/Factory.swift`, `Atoms/SymbolTable.swift`) - Factory for creating atoms, includes command mappings (`aliases`, `delimiters`, `accents`, `supportedLatexSymbols`)
 
 ### Platform Abstraction
 
-Cross-platform types defined in `MathRender/`:
-- `MathBezierPath` - UIBezierPath/NSBezierPath
-- `MathColor` - UIColor/NSColor
-- `MathView` - UIView/NSView (via `#if os(iOS)` conditionals)
+Cross-platform types defined in `UI/`:
+- `PlatformColor` - UIColor/NSColor (`UI/Color.swift`)
+- `MathView` - UIView/NSView (`UI/View.swift`, via `#if os(iOS)` conditionals)
 
 ### Line Wrapping / Tokenization
 
 The typesetter supports automatic line breaking via `preferredMaxLayoutWidth` on `MathUILabel`. Uses interatom breaking (breaks between atoms) as primary mechanism, with Unicode word boundary breaking as fallback.
 
-The tokenization subsystem lives in `MathRender/Tokenization/` and handles:
+The tokenization subsystem lives in `Typesetter/Tokenization/` and handles:
 - **AtomTokenizer** - Converts atoms into breakable elements
 - **LineFitter** - Fits elements into lines respecting width constraints
 - **DisplayGenerator** - Produces final display objects from fitted lines

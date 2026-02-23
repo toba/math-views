@@ -54,6 +54,9 @@ The typesetter walks the finalized ``MathList`` and creates a tree of
 - **Inter-element spacing** — The typesetter looks up spacing between each pair
   of atom types in a matrix derived from TeX. For example, there is thick space
   around relation operators (=, <, >) but no space after an open parenthesis.
+  Radicals receive a dedicated row in the spacing matrix so that expressions
+  like `\sqrt{4}4` insert a thin space after the radical sign — a departure
+  from standard LaTeX, which treats radicals as ordinary atoms for spacing.
 
 - **Script positioning** — Superscripts and subscripts are positioned using font
   metrics from the OpenType MATH table (see <doc:FontSystem>). The typesetter

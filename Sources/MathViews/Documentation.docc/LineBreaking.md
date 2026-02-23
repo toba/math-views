@@ -45,7 +45,7 @@ This produces tighter vertical spacing than using a fixed line height.
 
 ## Architecture
 
-The line-breaking subsystem lives in `MathRender/Tokenization/` and consists of:
+The line-breaking subsystem lives in `Typesetter/Tokenization/` and consists of:
 
 - `AtomTokenizer` — Converts atoms into ``BreakableElement`` values, each with
   width, break permissions, and penalty scores.

@@ -21,7 +21,7 @@ Six bundled OpenType math fonts are included — see ``MathFont``.
 
 - ``MathView``
 - ``MathImage``
-- ``MathLabelMode``
+- ``RenderingStyle``
 - ``MathTextAlignment``
 
 ### Fonts
@@ -65,6 +65,12 @@ Six bundled OpenType math fonts are included — see ``MathFont``.
 - ``CTLineDisplay``
 - ``MathListDisplay``
 - ``FractionDisplay``
+- ``AccentDisplay``
+- ``GlyphDisplay``
+- ``GlyphConstructionDisplay``
+- ``RadicalDisplay``
+- ``LargeOpLimitsDisplay``
+- ``LineDisplay``
 
 ### Indexing
 

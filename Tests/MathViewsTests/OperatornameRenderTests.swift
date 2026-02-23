@@ -10,7 +10,7 @@ import UIKit
 // MARK: - Operatorname Render Tests
 
 struct OperatornameRenderTests {
-    let font = MathFont.latinModernFont
+    let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
     static let operatornameCases: [RenderCase] = [

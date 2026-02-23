@@ -6,7 +6,7 @@ struct RelationOperatorSpacingTests {
     let font: FontInstance
 
     init() {
-        font = MathFont.termesFont.fontInstance(size: 20)
+        font = MathFont.termes.fontInstance(size: 20)
     }
 
     /// Test that relation operators (=) have proper spacing
@@ -17,8 +17,8 @@ struct RelationOperatorSpacingTests {
         #expect(mathList != nil, "Should parse LaTeX")
 
         // Use tokenization path
-        let display = Typesetter.createLineForMathListWithTokenization(
-            mathList,
+        let display = Typesetter.makeLineDisplayWithTokenization(
+            for: mathList,
             font: font,
             style: .text,
             cramped: false,
@@ -60,8 +60,8 @@ struct RelationOperatorSpacingTests {
         let mathList = MathListBuilder.build(fromString: latex)
         #expect(mathList != nil)
 
-        let display = Typesetter.createLineForMathListWithTokenization(
-            mathList,
+        let display = Typesetter.makeLineDisplayWithTokenization(
+            for: mathList,
             font: font,
             style: .text,
             cramped: false,

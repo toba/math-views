@@ -6,7 +6,7 @@ struct TokenizationRealWorldTests {
     let font: FontInstance
 
     init() {
-        font = MathFont.latinModernFont.fontInstance(size: 20)
+        font = MathFont.latinModern.fontInstance(size: 20)
     }
 
     // MARK: - Spec Example 1: Radical with Long Text
@@ -22,8 +22,8 @@ struct TokenizationRealWorldTests {
         let mathList = MathListBuilder.build(fromString: latex)
 
         // Width chosen to match spec scenario
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 235,
@@ -51,8 +51,8 @@ struct TokenizationRealWorldTests {
         let latex = "\\text{Integrate each term of the integrand }x^2+v\\text{ separately}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 350,
@@ -71,8 +71,8 @@ struct TokenizationRealWorldTests {
         let latex = "a+b-c\\times d\\div e"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 100,
@@ -88,8 +88,8 @@ struct TokenizationRealWorldTests {
         let latex = "x=y<z>w\\leq a\\geq b\\neq c"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 120,
@@ -107,8 +107,8 @@ struct TokenizationRealWorldTests {
         let latex = "x^{2}+y^{3}+z^{4}+a^{5}+b^{6}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 100,
@@ -124,8 +124,8 @@ struct TokenizationRealWorldTests {
         let latex = "x_{i}^{2}+y_{j}^{3}+z_{k}^{4}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 120,
@@ -142,8 +142,8 @@ struct TokenizationRealWorldTests {
         let latex = "\\frac{a}{b}+\\frac{c}{d}+\\frac{e}{f}+\\frac{g}{h}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 150,
@@ -159,8 +159,8 @@ struct TokenizationRealWorldTests {
         let latex = "\\frac{a}{b}^{n}+c+d+e"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 100,
@@ -178,8 +178,8 @@ struct TokenizationRealWorldTests {
         let latex = "\\sqrt{a}+\\sqrt{b}+\\sqrt{c}+\\sqrt{d}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 120,
@@ -197,8 +197,8 @@ struct TokenizationRealWorldTests {
         let latex = "(a+b)+(c-d)+(e\\times f)"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 120,
@@ -216,8 +216,8 @@ struct TokenizationRealWorldTests {
         let latex = "\\text{The quick brown fox jumps over }x+y=z\\text{ lazily}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 250,
@@ -233,8 +233,8 @@ struct TokenizationRealWorldTests {
     @Test func widthUtilization() throws {
         let latex = "\\text{Calculate }\\sqrt{x^2+y^2}\\text{ and simplify the result}"
 
-        let display = Typesetter.createLineForMathList(
-            MathListBuilder.build(fromString: latex),
+        let display = Typesetter.makeLineDisplay(
+            for: MathListBuilder.build(fromString: latex),
             font: font,
             style: .display,
             maxWidth: 250,
@@ -254,8 +254,8 @@ struct TokenizationRealWorldTests {
 
     @Test func emptyExpression() {
         let mathList = MathList()
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 100,
@@ -276,8 +276,8 @@ struct TokenizationRealWorldTests {
         let latex = "x"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 100,
@@ -299,8 +299,8 @@ struct TokenizationRealWorldTests {
         }
 
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 200,

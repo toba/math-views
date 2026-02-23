@@ -124,7 +124,7 @@ struct MathListBuilderDiracTests {
         #expect(op != nil)
         #expect(op?.type == .largeOperator)
         #expect(op?.nucleus == "lcm")
-        #expect(!(op?.limits ?? true))
+        #expect(!(op?.hasLimits ?? true))
     }
 
     @Test func operatornameStarCommand() {
@@ -138,7 +138,7 @@ struct MathListBuilderDiracTests {
         #expect(op != nil)
         #expect(op?.type == .largeOperator)
         #expect(op?.nucleus == "argmax")
-        #expect(op?.limits ?? false)
+        #expect(op?.hasLimits ?? false)
     }
 
     @Test func operatornameInExpression() {

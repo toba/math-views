@@ -10,32 +10,32 @@ public import AppKit
 public enum MathFont: String, CaseIterable, Identifiable, Sendable {
     public var id: Self { self } // Makes things simpler for SwiftUI
 
-    case latinModernFont = "latinmodern-math"
-    case xitsFont = "xits-math"
-    case termesFont = "texgyretermes-math"
-    case notoSansFont = "NotoSansMath-Regular"
-    case libertinusFont = "LibertinusMath-Regular"
-    case garamondFont = "Garamond-Math"
+    case latinModern = "latinmodern-math"
+    case xits = "xits-math"
+    case termes = "texgyretermes-math"
+    case notoSans = "NotoSansMath-Regular"
+    case libertinus = "LibertinusMath-Regular"
+    case garamond = "Garamond-Math"
 
     var fontFamilyName: String {
         switch self {
-            case .latinModernFont: "Latin Modern Math"
-            case .xitsFont: "XITS Math"
-            case .termesFont: "TeX Gyre Termes Math"
-            case .notoSansFont: "Noto Sans Math"
-            case .libertinusFont: "Libertinus Math"
-            case .garamondFont: "Garamond-Math"
+            case .latinModern: "Latin Modern Math"
+            case .xits: "XITS Math"
+            case .termes: "TeX Gyre Termes Math"
+            case .notoSans: "Noto Sans Math"
+            case .libertinus: "Libertinus Math"
+            case .garamond: "Garamond-Math"
         }
     }
 
     var postScriptName: String {
         switch self {
-            case .latinModernFont: "LatinModernMath-Regular"
-            case .xitsFont: "XITSMath"
-            case .termesFont: "TeXGyreTermesMath-Regular"
-            case .notoSansFont: "NotoSansMath-Regular"
-            case .libertinusFont: "LibertinusMath-Regular"
-            case .garamondFont: "Garamond-Math"
+            case .latinModern: "LatinModernMath-Regular"
+            case .xits: "XITSMath"
+            case .termes: "TeXGyreTermesMath-Regular"
+            case .notoSans: "NotoSansMath-Regular"
+            case .libertinus: "LibertinusMath-Regular"
+            case .garamond: "Garamond-Math"
         }
     }
 
@@ -45,8 +45,8 @@ public enum MathFont: String, CaseIterable, Identifiable, Sendable {
         BundleManager.manager.obtainCGFont(font: self)
     }
 
-    public func ctFont(withSize size: CGFloat) -> CTFont {
-        BundleManager.manager.obtainCTFont(font: self, withSize: size)
+    public func ctFont(size: CGFloat) -> CTFont {
+        BundleManager.manager.obtainCTFont(font: self, size: size)
     }
 
     func rawMathTable() -> [String: Any] {
@@ -192,7 +192,7 @@ private final class BundleManager: @unchecked Sendable {
         }
     }
 
-    fileprivate func obtainCTFont(font: MathFont, withSize size: CGFloat) -> CTFont {
+    fileprivate func obtainCTFont(font: MathFont, size: CGFloat) -> CTFont {
         onDemandRegistration(mathFont: font)
         let fontSizePair = CTFontSizePair(font: font, size: size)
 

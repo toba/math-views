@@ -10,7 +10,7 @@ import UIKit
 // MARK: - Trig Function Render Tests
 
 struct TrigFunctionRenderTests {
-    let font = MathFont.latinModernFont
+    let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
     static let inverseTrigCases: [RenderCase] = [

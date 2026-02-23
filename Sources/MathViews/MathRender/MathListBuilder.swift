@@ -104,7 +104,7 @@ public struct MathListBuilder {
     var hasCharacters: Bool { currentCharIndex < string.endIndex }
 
     // gets the next character and increments the index
-    mutating func getNextCharacter() -> Character {
+    mutating func nextCharacter() -> Character {
         assert(
             hasCharacters,
             "Retrieving character at index \(currentCharIndex) beyond length \(string.count)",
@@ -131,7 +131,7 @@ public struct MathListBuilder {
             return ""
         }
 
-        let char = getNextCharacter()
+        let char = nextCharacter()
         let command: String
 
         if char == "\\" {
@@ -151,7 +151,7 @@ public struct MathListBuilder {
 
         guard hasCharacters else { return }
 
-        let char = getNextCharacter()
+        let char = nextCharacter()
         if char == "\\" {
             _ = readCommand()
         }
@@ -162,7 +162,7 @@ public struct MathListBuilder {
         skipSpaces()
 
         if hasCharacters {
-            let nextChar = getNextCharacter()
+            let nextChar = nextCharacter()
             assertNotSpace(nextChar)
             if nextChar == ch {
                 return true
@@ -421,7 +421,7 @@ public struct MathListBuilder {
             if error != nil { return nil } // If there is an error thus far then bail out.
 
             var atom: MathAtom?
-            let char = getNextCharacter()
+            let char = nextCharacter()
 
             if oneCharOnly {
                 if char == "^" || char == "}" || char == "_" || char == "&" {
@@ -497,7 +497,7 @@ public struct MathListBuilder {
                     continue
                 }
 
-                if let fontStyle = MathAtomFactory.fontStyleWithName(command) {
+                if let fontStyle = MathAtomFactory.fontStyle(named: command) {
                     let oldSpacesAllowed = spacesAllowed
                     // Text has special consideration where it allows spaces without escaping.
                     spacesAllowed = command == "text"
@@ -650,7 +650,7 @@ public struct MathListBuilder {
                     if let inner = atom as? Inner {
                         if inner.leftBoundary != nil || inner.rightBoundary != nil {
                             if inner.leftBoundary != nil {
-                                str += "\\left\(delimToString(delim: inner.leftBoundary!)) "
+                                str += "\\left\(delimiterString( inner.leftBoundary!)) "
                             } else {
                                 str += "\\left. "
                             }
@@ -658,7 +658,7 @@ public struct MathListBuilder {
                             str += mathListToString(inner.innerList!)
 
                             if inner.rightBoundary != nil {
-                                str += "\\right\(delimToString(delim: inner.rightBoundary!)) "
+                                str += "\\right\(delimiterString( inner.rightBoundary!)) "
                             } else {
                                 str += "\\right. "
                             }
@@ -728,8 +728,8 @@ public struct MathListBuilder {
                        .atom(forLatexSymbol: command) as? LargeOperator
                     {
                         str += "\\\(command) "
-                        if originalOp.limits != op.limits {
-                            if op.limits {
+                        if originalOp.hasLimits != op.hasLimits {
+                            if op.hasLimits {
                                 str += "\\limits "
                             } else {
                                 str += "\\nolimits "
@@ -781,8 +781,8 @@ public struct MathListBuilder {
         return str
     }
 
-    public static func delimToString(delim: MathAtom) -> String {
-        if let command = MathAtomFactory.getDelimiterName(of: delim) {
+    public static func delimiterString(_ delim: MathAtom) -> String {
+        if let command = MathAtomFactory.delimiterName(of: delim) {
             let singleChars = ["(", ")", "[", "]", "<", ">", "|", ".", "/"]
             if singleChars.contains(command) {
                 return command
@@ -799,7 +799,7 @@ public struct MathListBuilder {
         if let atom = MathAtomFactory.atom(forLatexSymbol: command) {
             return atom
         }
-        if let accent = MathAtomFactory.accent(withName: command) {
+        if let accent = MathAtomFactory.accent(named: command) {
             // The command is an accent
             accent.innerList = buildInternal(true)
             return accent
@@ -817,16 +817,16 @@ public struct MathListBuilder {
             // Parse optional alignment parameter [l], [r], [c]
             skipSpaces()
             if hasCharacters, string[currentCharIndex] == "[" {
-                _ = getNextCharacter() // consume '['
+                _ = nextCharacter() // consume '['
                 if hasCharacters {
-                    let alignmentChar = getNextCharacter()
+                    let alignmentChar = nextCharacter()
                     if alignmentChar == "l" || alignmentChar == "r" || alignmentChar == "c" {
                         frac.alignment = String(alignmentChar)
                     }
                 }
                 // Consume closing ']'
                 if hasCharacters, string[currentCharIndex] == "]" {
-                    _ = getNextCharacter()
+                    _ = nextCharacter()
                 }
             }
 
@@ -928,7 +928,7 @@ public struct MathListBuilder {
                 return nil
             }
 
-            return LargeOperator(value: operatorName, limits: hasLimits)
+            return LargeOperator(value: operatorName, hasLimits: hasLimits)
         } else if command == "sqrt" {
             // A sqrt command with one argument
             let rad = Radical()
@@ -936,7 +936,7 @@ public struct MathListBuilder {
                 rad.radicand = buildInternal(true)
                 return rad
             }
-            let ch = getNextCharacter()
+            let ch = nextCharacter()
             if ch == "[" {
                 // special handling for sqrt[degree]{radicand}
                 rad.degree = buildInternal(false, stopChar: "]")
@@ -950,7 +950,7 @@ public struct MathListBuilder {
             // Save the current inner while a new one gets built.
             let oldInner = currentInnerAtom
             currentInnerAtom = Inner()
-            currentInnerAtom!.leftBoundary = getBoundaryAtom("left")
+            currentInnerAtom!.leftBoundary = boundaryAtom(for: "left")
             if currentInnerAtom!.leftBoundary == nil {
                 return nil
             }
@@ -1138,7 +1138,7 @@ public struct MathListBuilder {
         // a string of all upper and lower case characters.
         var mutable = ""
         while hasCharacters {
-            let ch = getNextCharacter()
+            let ch = nextCharacter()
             if ch == "#" || (ch >= "A" && ch <= "Z") || (ch >= "a" && ch <= "z")
                 || (ch >= "0" && ch <= "9")
             {
@@ -1160,7 +1160,7 @@ public struct MathListBuilder {
 
     mutating func skipSpaces() {
         while hasCharacters {
-            let ch = getNextCharacter().utf32Char
+            let ch = nextCharacter().utf32Char
             if ch < 0x21 || ch > 0x7E {
                 // skip non ascii characters and spaces
                 continue
@@ -1192,7 +1192,7 @@ public struct MathListBuilder {
                 setError(.missingLeft(errorMessage))
                 return nil
             }
-            currentInnerAtom!.rightBoundary = getBoundaryAtom("right")
+            currentInnerAtom!.rightBoundary = boundaryAtom(for: "right")
             if currentInnerAtom!.rightBoundary == nil {
                 return nil
             }
@@ -1255,14 +1255,14 @@ public struct MathListBuilder {
     mutating func applyModifier(_ modifier: String, atom: MathAtom?) -> Bool {
         if modifier == "limits" {
             if let op = atom as? LargeOperator {
-                op.limits = true
+                op.hasLimits = true
             } else {
                 setError(.invalidLimits("Limits can only be applied to an operator."))
             }
             return true
         } else if modifier == "nolimits" {
             if let op = atom as? LargeOperator {
-                op.limits = false
+                op.hasLimits = false
             } else {
                 setError(.invalidLimits("No limits can only be applied to an operator."))
             }
@@ -1282,7 +1282,7 @@ public struct MathListBuilder {
         if let atom = MathAtomFactory.atom(forLatexSymbol: command) {
             return atom
         }
-        if let accent = MathAtomFactory.accent(withName: command) {
+        if let accent = MathAtomFactory.accent(named: command) {
             accent.innerList = buildInternal(true)
             return accent
         } else if command == "frac" {
@@ -1297,16 +1297,16 @@ public struct MathListBuilder {
             // Parse optional alignment parameter [l], [r], [c]
             skipSpaces()
             if hasCharacters, string[currentCharIndex] == "[" {
-                _ = getNextCharacter() // consume '['
+                _ = nextCharacter() // consume '['
                 if hasCharacters {
-                    let alignmentChar = getNextCharacter()
+                    let alignmentChar = nextCharacter()
                     if alignmentChar == "l" || alignmentChar == "r" || alignmentChar == "c" {
                         frac.alignment = String(alignmentChar)
                     }
                 }
                 // Consume closing ']'
                 if hasCharacters, string[currentCharIndex] == "]" {
-                    _ = getNextCharacter()
+                    _ = nextCharacter()
                 }
             }
 
@@ -1399,14 +1399,14 @@ public struct MathListBuilder {
                 setError(.invalidCommand("Missing operator name for \\operatorname"))
                 return nil
             }
-            return LargeOperator(value: operatorName, limits: hasLimits)
+            return LargeOperator(value: operatorName, hasLimits: hasLimits)
         } else if command == "sqrt" {
             let rad = Radical()
             guard hasCharacters else {
                 rad.radicand = buildInternal(true)
                 return rad
             }
-            let char = getNextCharacter()
+            let char = nextCharacter()
             if char == "[" {
                 rad.degree = buildInternal(false, stopChar: "]")
                 rad.radicand = buildInternal(true)
@@ -1418,7 +1418,7 @@ public struct MathListBuilder {
         } else if command == "left" {
             let oldInner = currentInnerAtom
             currentInnerAtom = Inner()
-            currentInnerAtom?.leftBoundary = getBoundaryAtom("left")
+            currentInnerAtom?.leftBoundary = boundaryAtom(for: "left")
             if currentInnerAtom?.leftBoundary == nil {
                 return nil
             }
@@ -1500,7 +1500,7 @@ public struct MathListBuilder {
             return nil
         }
 
-        _ = getNextCharacter() // consume '['
+        _ = nextCharacter() // consume '['
         skipSpaces()
 
         guard hasCharacters else {
@@ -1508,7 +1508,7 @@ public struct MathListBuilder {
             return nil
         }
 
-        let alignChar = getNextCharacter()
+        let alignChar = nextCharacter()
         let alignment: ColumnAlignment?
 
         switch alignChar {
@@ -1596,7 +1596,7 @@ public struct MathListBuilder {
         }
     }
 
-    mutating func getBoundaryAtom(_ delimiterType: String) -> MathAtom? {
+    mutating func boundaryAtom(for delimiterType: String) -> MathAtom? {
         let delim = readDelimiter()
         if delim == nil {
             let errorMessage = "Missing delimiter for \\\(delimiterType)"
@@ -1615,7 +1615,7 @@ public struct MathListBuilder {
     mutating func readDelimiter() -> String? {
         skipSpaces()
         while hasCharacters {
-            let char = getNextCharacter()
+            let char = nextCharacter()
             assertNotSpace(char)
             if char == "\\" {
                 let command = readCommand()
@@ -1633,7 +1633,7 @@ public struct MathListBuilder {
     mutating func readCommand() -> String {
         let singleChars = "{}$#%_| ,>;!\\"
         if hasCharacters {
-            let char = getNextCharacter()
+            let char = nextCharacter()
             if singleChars.contains(char) {
                 return String(char)
             } else {
@@ -1647,7 +1647,7 @@ public struct MathListBuilder {
         // a string of all upper and lower case characters (and asterisks for starred environments)
         var output = ""
         while hasCharacters {
-            let char = getNextCharacter()
+            let char = nextCharacter()
             if char.isLowercase || char.isUppercase || char == "*" {
                 output.append(char)
             } else {

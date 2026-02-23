@@ -7,7 +7,7 @@ import CoreGraphics
 /// Test helper that replicates the typesetting pipeline without UIKit/AppKit views.
 struct TypesetterHelper {
     var latex: String = ""
-    var font: MathFont = .latinModernFont
+    var font: MathFont = .latinModern
     var fontSize: CGFloat = 20
     var labelMode: MathLabelMode = .display
     var maxWidth: CGFloat = 0
@@ -37,8 +37,8 @@ struct TypesetterHelper {
     var displayList: MathListDisplay? {
         guard let ml = mathList else { return nil }
         let fontInst = font.fontInstance(size: fontSize)
-        return Typesetter.createLineForMathList(
-            ml, font: fontInst, style: currentStyle, maxWidth: maxWidth,
+        return Typesetter.makeLineDisplay(
+            for: ml, font: fontInst, style: currentStyle, maxWidth: maxWidth,
         )
     }
 

@@ -10,7 +10,7 @@ import UIKit
 // MARK: - Delimiter Render Tests
 
 struct DelimiterRenderTests {
-    let font = MathFont.latinModernFont
+    let font = MathFont.latinModern
     let fontSize: CGFloat = 24.0
 
     static let delimiterSizeCases: [RenderCase] = [
@@ -54,7 +54,7 @@ struct DelimiterRenderTests {
 
     /// Test that delimiter sizes increase progressively
     @Test func delimiterSizeProgression() {
-        let font = MathFont.latinModernFont
+        let font = MathFont.latinModern
         let fontSize: CGFloat = 24.0
 
         // Render each size and compare heights

@@ -90,7 +90,7 @@ struct SymbolRenderTests {
     func priority1SymbolRendering(_ renderCase: RenderCase) {
         let result = MathImageResult.useMathImage(
             latex: renderCase.latex,
-            font: .latinModernFont,
+            font: .latinModern,
             fontSize: 30,
         )
 
@@ -111,7 +111,7 @@ struct SymbolRenderTests {
     func negatedRelationRendering(_ renderCase: RenderCase) {
         let result = MathImageResult.useMathImage(
             latex: renderCase.latex,
-            font: .latinModernFont,
+            font: .latinModern,
             fontSize: 30,
         )
 

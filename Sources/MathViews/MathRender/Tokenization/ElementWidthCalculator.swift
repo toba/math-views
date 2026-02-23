@@ -37,12 +37,12 @@ final class ElementWidthCalculator {
     /// Measure width of operator with appropriate spacing
     func measureOperator(_ op: String, type: MathAtomType) -> CGFloat {
         let baseWidth = measureText(op)
-        let spacing = getOperatorSpacing(type)
+        let spacing = operatorSpacing(for: type)
         return baseWidth + spacing
     }
 
     /// Get spacing for an operator (both sides)
-    private func getOperatorSpacing(_ type: MathAtomType) -> CGFloat {
+    private func operatorSpacing(for type: MathAtomType) -> CGFloat {
         guard let mathTable = font.mathTable else { return 0 }
         let muUnit = mathTable.muUnit
 
@@ -106,9 +106,9 @@ final class ElementWidthCalculator {
     // MARK: - Inter-element Spacing
 
     /// Get inter-element spacing between two atom types
-    func getInterElementSpacing(left: MathAtomType, right: MathAtomType) -> CGFloat {
-        let leftIndex = getInterElementSpaceArrayIndexForType(left, row: true)
-        let rightIndex = getInterElementSpaceArrayIndexForType(right, row: false)
+    func interElementSpacing(left: MathAtomType, right: MathAtomType) -> CGFloat {
+        let leftIndex = interElementSpaceIndex(for: left, row: true)
+        let rightIndex = interElementSpaceIndex(for: right, row: false)
         let spaceArray = interElementSpaces[Int(leftIndex)]
         let spaceType = spaceArray[Int(rightIndex)]
 
@@ -117,7 +117,7 @@ final class ElementWidthCalculator {
             return 0
         }
 
-        let spaceMultiplier = getSpacingInMu(spaceType)
+        let spaceMultiplier = spacingInMu(spaceType)
         if spaceMultiplier > 0, let mathTable = font.mathTable {
             return CGFloat(spaceMultiplier) * mathTable.muUnit
         }
@@ -125,7 +125,7 @@ final class ElementWidthCalculator {
     }
 
     /// Get spacing multiplier in mu units
-    private func getSpacingInMu(_ spaceType: InterElementSpaceType) -> Int {
+    private func spacingInMu(_ spaceType: InterElementSpaceType) -> Int {
         switch style {
             case .display, .text:
                 switch spaceType {
@@ -133,12 +133,12 @@ final class ElementWidthCalculator {
                         return 0
                     case .thin:
                         return 3
-                    case .nsThin, .nsMedium, .nsThick:
+                    case .nonScriptThin, .nonScriptMedium, .nonScriptThick:
                         // ns = non-script, same as regular in display/text mode
                         switch spaceType {
-                            case .nsThin: return 3
-                            case .nsMedium: return 4
-                            case .nsThick: return 5
+                            case .nonScriptThin: return 3
+                            case .nonScriptMedium: return 4
+                            case .nonScriptThick: return 5
                             default: return 0
                         }
                 }
@@ -149,7 +149,7 @@ final class ElementWidthCalculator {
                         return 0
                     case .thin:
                         return 3
-                    case .nsThin, .nsMedium, .nsThick:
+                    case .nonScriptThin, .nonScriptMedium, .nonScriptThick:
                         // In script mode, ns types don't add space
                         return 0
                 }

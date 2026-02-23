@@ -8,7 +8,7 @@ import CoreGraphics
 /// Generates PNG images for EXAMPLES.md examples that are missing images
 /// Run this test to regenerate all example images in the img/ directory
 struct ExamplesImageGenerationTests {
-    let font = MathFont.latinModernFont
+    let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
     /// Get the path to the project's img/ directory

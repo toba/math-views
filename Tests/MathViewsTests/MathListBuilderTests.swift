@@ -1232,7 +1232,7 @@ struct MathListBuilderTests {
         #expect(table.numColumns == 2)
 
         for i in 0 ..< 2 {
-            let alignment = table.get(alignmentForColumn: i)
+            let alignment = table.alignment(forColumn: i)
             #expect(alignment == .center)
             for j in 0 ..< 2 {
                 let cell = table.cells[j][i]
@@ -1283,7 +1283,7 @@ struct MathListBuilderTests {
         #expect(table.numColumns == 2)
 
         for i in 0 ..< 2 {
-            let alignment = table.get(alignmentForColumn: i)
+            let alignment = table.alignment(forColumn: i)
             #expect(alignment == .center)
             for j in 0 ..< 2 {
                 let cell = table.cells[j][i]
@@ -1318,7 +1318,7 @@ struct MathListBuilderTests {
         #expect(table.numColumns == 1)
 
         for i in 0 ..< 1 {
-            let alignment = table.get(alignmentForColumn: i)
+            let alignment = table.alignment(forColumn: i)
             #expect(alignment == .left)
             for j in 0 ..< 2 {
                 let cell = table.cells[j][i]
@@ -1349,7 +1349,7 @@ struct MathListBuilderTests {
         #expect(table.numColumns == 2)
 
         for i in 0 ..< 2 {
-            let alignment = table.get(alignmentForColumn: i)
+            let alignment = table.alignment(forColumn: i)
             #expect(alignment == .left)
             for j in 0 ..< 2 {
                 let cell = table.cells[j][i]
@@ -1382,7 +1382,7 @@ struct MathListBuilderTests {
             #expect(table.numColumns == 2)
 
             for i in 0 ..< 2 {
-                let alignment = table.get(alignmentForColumn: i)
+                let alignment = table.alignment(forColumn: i)
                 #expect(alignment == ((i == 0) ? .right : .left))
                 for j in 0 ..< 2 {
                     let cell = table.cells[j][i]
@@ -1420,7 +1420,7 @@ struct MathListBuilderTests {
             #expect(table.numColumns == 1)
 
             for i in 0 ..< 1 {
-                let alignment = table.get(alignmentForColumn: i)
+                let alignment = table.alignment(forColumn: i)
                 #expect(alignment == .center)
                 for j in 0 ..< 2 {
                     let cell = table.cells[j][i]
@@ -1460,7 +1460,7 @@ struct MathListBuilderTests {
         #expect(failedList == nil)
 
         MathAtomFactory.add(
-            latexSymbol: "lcm", value: MathAtomFactory.operatorWithName("lcm", limits: false),
+            latexSymbol: "lcm", value: MathAtomFactory.`operator`(named: "lcm", hasLimits: false),
         )
         let list = try MathListBuilder.buildChecked(fromString: str)
         let atomTypes = [
@@ -1649,7 +1649,7 @@ struct MathListBuilderTests {
         #expect(op != nil, "\(desc)")
         #expect(op?.type == .largeOperator, "\(desc)")
         #expect(op?.nucleus == "dim", "\(desc)")
-        #expect(!(op?.limits ?? true), "desc")
+        #expect(!(op?.hasLimits ?? true), "desc")
 
         // convert it back to latex
         let latex = MathListBuilder.mathListToString(list)
@@ -1667,7 +1667,7 @@ struct MathListBuilderTests {
         #expect((list.atoms.count) == 1, "desc")
         var op = try #require(list.atoms[0] as? LargeOperator)
         #expect(op.type == .largeOperator, "\(desc)")
-        #expect(!(op.limits))
+        #expect(!(op.hasLimits))
 
         // convert it back to latex
         var latex = MathListBuilder.mathListToString(list)
@@ -1682,7 +1682,7 @@ struct MathListBuilderTests {
         #expect((list.atoms.count) == 1, "desc")
         op = try #require(list.atoms[0] as? LargeOperator)
         #expect(op.type == .largeOperator, "\(desc)")
-        #expect(op.limits)
+        #expect(op.hasLimits)
 
         // convert it back to latex
         latex = MathListBuilder.mathListToString(list)
@@ -1699,7 +1699,7 @@ struct MathListBuilderTests {
         #expect((list.atoms.count) == 1, "desc")
         var op = try #require(list.atoms[0] as? LargeOperator)
         #expect(op.type == .largeOperator, "\(desc)")
-        #expect(op.limits)
+        #expect(op.hasLimits)
 
         // convert it back to latex
         var latex = MathListBuilder.mathListToString(list)
@@ -1714,7 +1714,7 @@ struct MathListBuilderTests {
         #expect(list.atoms.count == 1, "\(desc)")
         op = try #require(list.atoms[0] as? LargeOperator)
         #expect(op.type == .largeOperator, "\(desc)")
-        #expect(!(op.limits))
+        #expect(!(op.hasLimits))
 
         // convert it back to latex
         latex = MathListBuilder.mathListToString(list)

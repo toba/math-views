@@ -930,8 +930,8 @@ final class AtomTokenizer {
         if radical.degree != nil {
             // Use .script style (71% size) instead of .scriptOfScript (50% size)
             // This matches TeX standard for radical degrees
-            let degree = Typesetter.createLineForMathList(
-                radical.degree,
+            let degree = Typesetter.makeLineDisplay(
+                for: radical.degree,
                 font: font,
                 style: .script,
             )
@@ -953,7 +953,7 @@ final class AtomTokenizer {
         //   → makeLargeOp() would create scripts via makeScripts(), causing duplication
         //   → We MUST clear scripts and let tokenizeAtomWithScripts() handle them separately
 
-        let limits = op.limits && (style == .display || style == .text)
+        let limits = op.hasLimits && (style == .display || style == .text)
 
         let originalSuperScript = op.superScript
         let originalSubScript = op.subScript
@@ -995,7 +995,7 @@ final class AtomTokenizer {
             if let glyphDisplay = operatorDisplay as? GlyphDisplay,
                let mathTable = font.mathTable
             {
-                let delta = mathTable.getItalicCorrection(glyphDisplay.glyph)
+                let delta = mathTable.italicCorrection(for: glyphDisplay.glyph)
                 finalWidth -= delta
             }
         }

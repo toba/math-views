@@ -3,10 +3,10 @@ import CoreGraphics
 
 extension Typesetter {
     /// Create a line for a math list using the new tokenization approach
-    /// This is an alternative to the existing createLineForMathList that uses
+    /// This is an alternative to the existing makeLineDisplay(for:) that uses
     /// pre-tokenization and greedy line fitting
-    static func createLineForMathListWithTokenization(
-        _ mathList: MathList?,
+    static func makeLineDisplayWithTokenization(
+        for mathList: MathList?,
         font: FontInstance?,
         style: LineStyle,
         cramped: Bool,
@@ -17,7 +17,7 @@ extension Typesetter {
         guard let font else { return nil }
         guard !mathList.atoms.isEmpty else {
             // Return empty display instead of nil (matches KaTeX behavior)
-            return MathListDisplay(withDisplays: [], range: 0 ..< 0)
+            return MathListDisplay(displays: [], range: 0 ..< 0)
         }
 
         // Phase 0: Preprocess atoms to fuse ordinary characters
@@ -54,6 +54,6 @@ extension Typesetter {
         }
 
         // Create and return the math list display
-        return MathListDisplay(withDisplays: displays, range: range)
+        return MathListDisplay(displays: displays, range: range)
     }
 }

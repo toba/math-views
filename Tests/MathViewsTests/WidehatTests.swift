@@ -6,7 +6,7 @@ struct WidehatTests {
     let font: FontInstance
 
     init() {
-        font = MathFont.termesFont.fontInstance(size: 20)
+        font = MathFont.termes.fontInstance(size: 20)
     }
 
     // MARK: - Basic Functionality Tests
@@ -19,9 +19,9 @@ struct WidehatTests {
         let hatMathList = MathListBuilder.build(fromString: hatLatex)
         let widehatMathList = MathListBuilder.build(fromString: widehatLatex)
 
-        let hatDisplay = Typesetter.createLineForMathList(hatMathList, font: font, style: .display)
-        let widehatDisplay = Typesetter.createLineForMathList(
-            widehatMathList, font: font, style: .display,
+        let hatDisplay = Typesetter.makeLineDisplay(for: hatMathList, font: font, style: .display)
+        let widehatDisplay = Typesetter.makeLineDisplay(
+            for: widehatMathList, font: font, style: .display,
         )
 
         #expect(hatDisplay != nil, "\\hat should render")
@@ -52,13 +52,13 @@ struct WidehatTests {
         let tildeMathList = MathListBuilder.build(fromString: tildeLatex)
         let widetildeMathList = MathListBuilder.build(fromString: widetildeLatex)
 
-        let tildeDisplay = Typesetter.createLineForMathList(
-            tildeMathList,
+        let tildeDisplay = Typesetter.makeLineDisplay(
+            for: tildeMathList,
             font: font,
             style: .display,
         )
-        let widetildeDisplay = Typesetter.createLineForMathList(
-            widetildeMathList, font: font, style: .display,
+        let widetildeDisplay = Typesetter.makeLineDisplay(
+            for: widetildeMathList, font: font, style: .display,
         )
 
         #expect(tildeDisplay != nil, "\\tilde should render")
@@ -85,7 +85,7 @@ struct WidehatTests {
         // Test that \widehat covers a single character
         let latex = "\\widehat{x}"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         guard let accentDisp = display?.subDisplays.first as? AccentDisplay,
               let accentee = accentDisp.accentee,
@@ -126,7 +126,7 @@ struct WidehatTests {
     func widehatMultiCharCoverage(_ testCase: WidehatCase) {
         // Test that \widehat covers multiple characters
         let mathList = MathListBuilder.build(fromString: testCase.latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         guard let accentDisp = display?.subDisplays.first as? AccentDisplay,
               let accentee = accentDisp.accentee,
@@ -154,7 +154,7 @@ struct WidehatTests {
         // Test that \widetilde covers content properly
         let latex = "\\widetilde{ABC}"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         guard let accentDisp = display?.subDisplays.first as? AccentDisplay,
               let accentee = accentDisp.accentee,
@@ -180,10 +180,10 @@ struct WidehatTests {
 
     @Test func isWideFlagSet() {
         // Test that isWide flag is set correctly by factory
-        let widehat = MathAtomFactory.accent(withName: "widehat")
-        let widetilde = MathAtomFactory.accent(withName: "widetilde")
-        let hat = MathAtomFactory.accent(withName: "hat")
-        let tilde = MathAtomFactory.accent(withName: "tilde")
+        let widehat = MathAtomFactory.accent(named: "widehat")
+        let widetilde = MathAtomFactory.accent(named: "widetilde")
+        let hat = MathAtomFactory.accent(named: "hat")
+        let tilde = MathAtomFactory.accent(named: "tilde")
 
         #expect(widehat?.isWide ?? false, "\\widehat should have isWide=true")
         #expect(widetilde?.isWide ?? false, "\\widetilde should have isWide=true")
@@ -197,7 +197,7 @@ struct WidehatTests {
         // Test widehat over a fraction
         let latex = "\\widehat{\\frac{a}{b}}"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         #expect(display != nil, "\\widehat with fraction should render")
 
@@ -222,7 +222,7 @@ struct WidehatTests {
         // Test widehat with subscripted content
         let latex = "\\widehat{x_i}"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         #expect(display != nil, "\\widehat with subscript should render")
     }
@@ -231,7 +231,7 @@ struct WidehatTests {
         // Test widehat with superscripted content
         let latex = "\\widehat{x^2}"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         #expect(display != nil, "\\widehat with superscript should render")
     }
@@ -242,7 +242,7 @@ struct WidehatTests {
         // Test that widehat has proper vertical spacing
         let latex = "\\widehat{ABC}"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         guard let accentDisp = display?.subDisplays.first as? AccentDisplay else {
             Issue.record("Could not extract accent display")
@@ -262,7 +262,7 @@ struct WidehatTests {
         // Test that \hat still works as before
         let latex = "\\hat{x}"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         #expect(display != nil, "\\hat should still render")
     }
@@ -271,7 +271,7 @@ struct WidehatTests {
         // Test that \tilde still works as before
         let latex = "\\tilde{x}"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         #expect(display != nil, "\\tilde should still render")
     }
@@ -282,7 +282,7 @@ struct WidehatTests {
         // Test widehat with empty content
         let latex = "\\widehat{}"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         // Should handle empty content gracefully
         #expect(display != nil, "\\widehat with empty content should not crash")
@@ -292,7 +292,7 @@ struct WidehatTests {
         // Test widehat with very long content
         let latex = "\\widehat{abcdefghijk}"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         #expect(display != nil, "\\widehat with long content should render")
 

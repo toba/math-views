@@ -6,7 +6,7 @@ struct TokenizationImprovementTests {
     let font: FontInstance
 
     init() {
-        font = MathFont.latinModernFont.fontInstance(size: 20)
+        font = MathFont.latinModern.fontInstance(size: 20)
     }
 
     // MARK: - Real-World Scenario 1: Radical with Long Text
@@ -15,8 +15,8 @@ struct TokenizationImprovementTests {
         let latex = "\\text{Approximate }\\sqrt{61}\\text{ and compute the two decimal solutions}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 235,
@@ -40,8 +40,8 @@ struct TokenizationImprovementTests {
         let latex = "\\text{Integrate each term of the integrand }x^2+v"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 300,
@@ -64,8 +64,8 @@ struct TokenizationImprovementTests {
         let latex = "a+b+c+d+e+f+g+h+i+j+k"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 150,
@@ -86,8 +86,8 @@ struct TokenizationImprovementTests {
         let latex = "\\frac{a}{b}^{n}+c+d+e+f"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 150,
@@ -102,8 +102,8 @@ struct TokenizationImprovementTests {
         let latex = "\\text{The answer is }x=\\frac{a+b}{c}\\text{ approximately}"
         let mathList = MathListBuilder.build(fromString: latex)
 
-        let display = Typesetter.createLineForMathList(
-            mathList,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
             maxWidth: 200,

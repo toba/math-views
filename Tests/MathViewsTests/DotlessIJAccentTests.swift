@@ -9,7 +9,7 @@ struct DotlessIJAccentTests {
     let font: FontInstance
 
     init() {
-        font = MathFont.termesFont.fontInstance(size: 20)
+        font = MathFont.termes.fontInstance(size: 20)
     }
 
     // MARK: - Accented i Tests
@@ -193,7 +193,7 @@ struct DotlessIJAccentTests {
         // Test that ĵ renders without crashing
         let latex = "ĵ"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         #expect(display != nil, "ĵ should render successfully")
     }
@@ -225,7 +225,7 @@ struct DotlessIJAccentTests {
         // Verify that the rendered output doesn't have a double dot
         let latex = "î"
         let mathList = MathListBuilder.build(fromString: latex)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
         #expect(display != nil, "î should render successfully")
 
@@ -578,7 +578,7 @@ struct DotlessIJAccentTests {
         #expect(mathList?.atoms.count == 1, "\(char) should produce 1 atom")
 
         // Test rendering - this should not crash
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
         #expect(display != nil, "\(char) should render without crashing")
     }
 
@@ -590,7 +590,7 @@ struct DotlessIJAccentTests {
         #expect(mathList != nil, "Text with special chars should parse")
 
         // Test rendering - should not crash
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
         #expect(display != nil, "Special chars in text mode should render")
     }
 
@@ -620,7 +620,7 @@ struct DotlessIJAccentTests {
         #expect(mathList != nil, "\(char) should parse")
 
         // Render in math mode - should not crash
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
         #expect(display != nil, "\(char) should render in math mode without crashing")
     }
 
@@ -638,7 +638,7 @@ struct DotlessIJAccentTests {
         #expect(mathList != nil, "\\text{\(char)} should parse")
 
         // Render - should not crash
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
         #expect(display != nil, "\\text{\(char)} should render without crashing")
     }
 }

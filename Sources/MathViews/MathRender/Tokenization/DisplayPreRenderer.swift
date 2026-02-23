@@ -21,16 +21,15 @@ final class DisplayPreRenderer {
 
     /// Render a script (superscript or subscript) as a display
     func renderScript(_ mathList: MathList, isSuper: Bool) -> Display? {
-        let scriptStyle = getScriptStyle()
         let scriptCramped = isSuper ? cramped : true // Subscripts are always cramped
 
         // Scale the font for the script style
-        let scriptFontSize = Typesetter.getStyleSize(scriptStyle, font: font)
-        let scriptFont = font.copy(withSize: scriptFontSize)
+        let scriptFontSize = Typesetter.styleSize(scriptStyle, font: font)
+        let scriptFont = font.withSize( scriptFontSize)
 
         guard
-            let display = Typesetter.createLineForMathList(
-                mathList,
+            let display = Typesetter.makeLineDisplay(
+                for: mathList,
                 font: scriptFont,
                 style: scriptStyle,
                 cramped: scriptCramped,
@@ -52,7 +51,7 @@ final class DisplayPreRenderer {
     }
 
     /// Get the appropriate style for scripts
-    private func getScriptStyle() -> LineStyle {
+    private var scriptStyle: LineStyle {
         switch style {
             case .display, .text:
                 return .script
@@ -75,8 +74,8 @@ final class DisplayPreRenderer {
         let actualStyle = renderStyle ?? style
         let actualCramped = renderCramped ?? cramped
 
-        return Typesetter.createLineForMathList(
-            mathList,
+        return Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: actualStyle,
             cramped: actualCramped,

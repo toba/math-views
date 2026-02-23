@@ -25,14 +25,14 @@ extension CGPoint {
     let font: FontInstance
 
     init() {
-        font = MathFont.latinModernFont.fontInstance(size: 20)
+        font = MathFont.latinModern.fontInstance(size: 20)
     }
 
     @Test func simpleVariable() throws {
         let mathList = MathList()
         mathList.add(MathAtomFactory.atom(forCharacter: "x"))
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -68,7 +68,7 @@ extension CGPoint {
     @Test func multipleVariables() throws {
         let mathList = MathAtomFactory.mathListForCharacters("xyzw")
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -87,7 +87,7 @@ extension CGPoint {
     @Test func variablesAndNumbers() throws {
         let mathList = MathAtomFactory.mathListForCharacters("xy2w")
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -106,7 +106,7 @@ extension CGPoint {
     @Test func equationWithOperatorsAndRelations() throws {
         let mathList = MathAtomFactory.mathListForCharacters("2x+3=y")
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display.type == .regular)
         #expect(CGPointEqualToPoint(display.position, CGPoint.zero))
@@ -142,7 +142,7 @@ extension CGPoint {
         mathList.add(x)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
 
         #expect(display.type == .regular)
@@ -198,7 +198,7 @@ extension CGPoint {
         mathList.add(x)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display.type == .regular)
         #expect(CGPointEqualToPoint(display.position, CGPoint.zero))
@@ -219,7 +219,7 @@ extension CGPoint {
         let sub1 = display.subDisplays[1]
         #expect(sub1 is MathListDisplay)
         let display2 = try #require(sub1 as? MathListDisplay)
-        #expect(display2.type == .ssubscript)
+        #expect(display2.type == .`subscript`)
         #expect(CGPointEqualToPoint(display2.position, CGPoint(x: 11.44, y: -4.94)))
         #expect(display2.range == 0 ..< 1)
         #expect(!display2.hasScript)
@@ -252,7 +252,7 @@ extension CGPoint {
         mathList.add(x)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display.type == .regular)
         #expect(CGPointEqualToPoint(display.position, CGPoint.zero))
@@ -291,7 +291,7 @@ extension CGPoint {
         let sub2 = display.subDisplays[2]
         #expect(sub2 is MathListDisplay)
         let display3 = try #require(sub2 as? MathListDisplay)
-        #expect(display3.type == .ssubscript)
+        #expect(display3.type == .`subscript`)
         // Positioned differently when both subscript and superscript present.
         #expect(CGPointEqualToPoint(display3.position, CGPoint(x: 11.44, y: -5.264)))
         #expect(display3.range == 0 ..< 1)
@@ -322,7 +322,7 @@ extension CGPoint {
         mathList.add(rad)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -379,7 +379,7 @@ extension CGPoint {
         mathList.add(rad)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -457,7 +457,7 @@ extension CGPoint {
         mathList.add(frac)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -531,7 +531,7 @@ extension CGPoint {
         mathList.add(frac)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -607,7 +607,7 @@ extension CGPoint {
         mathList.add(frac)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display.type == .regular)
         #expect(CGPointEqualToPoint(display.position, CGPoint.zero))
@@ -635,7 +635,7 @@ extension CGPoint {
         mathList.add(MathAtomFactory.atom(forCharacter: "x"))
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -680,8 +680,8 @@ extension CGPoint {
         mathList.add(MathAtomFactory.atom(forLatexSymbol: "int"))
         mathList.add(MathAtomFactory.atom(forCharacter: "x"))
 
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
         ))
@@ -731,7 +731,7 @@ extension CGPoint {
         mathList.add(MathAtomFactory.atom(forCharacter: "x"))
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display.type == .regular)
         #expect(CGPointEqualToPoint(display.position, CGPoint.zero))
@@ -775,7 +775,7 @@ extension CGPoint {
         mathList.add(MathAtom(type: .variable, value: "x"))
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -851,7 +851,7 @@ extension CGPoint {
         mathList.add(MathAtom(type: .variable, value: "x"))
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -938,8 +938,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         // Use .text style to simulate inline mode \(...\)
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .text,
         ))
@@ -972,8 +972,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         // Use .text style to simulate inline mode \(...\)
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .text,
         ))
@@ -1008,8 +1008,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         // Use .text style to simulate inline mode \(...\)
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .text,
         ))
@@ -1044,8 +1044,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         // Create display without any style forcing
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
         ))
@@ -1083,8 +1083,8 @@ extension CGPoint {
         let mathList1 = MathListBuilder.build(fromString: latex1)
         #expect(mathList1 != nil, "Should parse LaTeX with delimiters")
 
-        let display1 = try #require(Typesetter.createLineForMathList(
-            mathList1,
+        let display1 = try #require(Typesetter.makeLineDisplay(
+            for: mathList1,
             font: font,
             style: .display,
         ))
@@ -1111,8 +1111,8 @@ extension CGPoint {
         let mathList = MathListBuilder.build(fromString: latex)
         #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .display,
         ))
@@ -1149,7 +1149,7 @@ extension CGPoint {
         mathList.add(inner)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display.type == .regular)
         #expect(CGPointEqualToPoint(display.position, CGPoint.zero))
@@ -1176,7 +1176,7 @@ extension CGPoint {
         mathList.add(over)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -1228,7 +1228,7 @@ extension CGPoint {
         mathList.add(under)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -1278,7 +1278,7 @@ extension CGPoint {
         mathList.add(MathAtomFactory.atom(forCharacter: "y"))
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -1296,7 +1296,7 @@ extension CGPoint {
         noSpace.add(MathAtomFactory.atom(forCharacter: "y"))
 
         let noSpaceDisplay = try #require(
-            Typesetter.createLineForMathList(noSpace, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: noSpace, font: font, style: .display),
         )
 
         // dimensions (relaxed accuracy for tokenization)
@@ -1310,8 +1310,8 @@ extension CGPoint {
         let list = MathListBuilder.build(
             fromString: "\\sqrt{\\frac{\\sqrt{\\frac{1}{2}} + 3}{\\sqrt{5}^x}}",
         )
-        let display = try #require(Typesetter.createLineForMathList(
-            list,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: list,
             font: font,
             style: .display,
         ))
@@ -1335,17 +1335,17 @@ extension CGPoint {
         let c22 = MathAtomFactory.mathListForCharacters("12")
 
         let table = MathTable()
-        try table.set(cell: #require(c00), forRow: 0, column: 0)
-        try table.set(cell: #require(c01), forRow: 0, column: 1)
-        try table.set(cell: #require(c02), forRow: 0, column: 2)
-        table.set(cell: c11, forRow: 1, column: 1)
-        try table.set(cell: #require(c12), forRow: 1, column: 2)
-        try table.set(cell: #require(c20), forRow: 2, column: 0)
-        try table.set(cell: #require(c22), forRow: 2, column: 2)
+        try table.setCell(#require(c00), row: 0, column: 0)
+        try table.setCell(#require(c01), row: 0, column: 1)
+        try table.setCell(#require(c02), row: 0, column: 2)
+        table.setCell(c11, row: 1, column: 1)
+        try table.setCell(#require(c12), row: 1, column: 2)
+        try table.setCell(#require(c20), row: 2, column: 0)
+        try table.setCell(#require(c22), row: 2, column: 2)
 
         // alignments
-        table.set(alignment: .right, forColumn: 0)
-        table.set(alignment: .left, forColumn: 2)
+        table.setAlignment(.right, forColumn: 0)
+        table.setAlignment(.left, forColumn: 2)
 
         table.interColumnSpacing = 18 // 1 quad
 
@@ -1353,7 +1353,7 @@ extension CGPoint {
         mathList.add(table)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -1384,7 +1384,7 @@ extension CGPoint {
 
             list.add(atom)
 
-            guard let display = Typesetter.createLineForMathList(list, font: font, style: .display)
+            guard let display = Typesetter.makeLineDisplay(for: list, font: font, style: .display)
             else {
                 Issue.record("Failed to create display for symbol \(symName)")
                 continue
@@ -1454,7 +1454,7 @@ extension CGPoint {
             copy.fontStyle = style
             let list = MathList(atom: copy)
 
-            let display = Typesetter.createLineForMathList(list, font: font, style: .display)!
+            let display = Typesetter.makeLineDisplay(for: list, font: font, style: .display)!
             #expect(display != nil, "Symbol \(atom.nucleus)")
 
             #expect(display.type == .regular)
@@ -1511,18 +1511,18 @@ extension CGPoint {
         let textList = MathList(atoms: [style, frac])
 
         // This should make the display same as text.
-        let display = try #require(Typesetter.createLineForMathList(
-            textList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: textList,
             font: font,
             style: .display,
         ))
-        let textDisplay = try #require(Typesetter.createLineForMathList(
-            list,
+        let textDisplay = try #require(Typesetter.makeLineDisplay(
+            for: list,
             font: font,
             style: .text,
         ))
-        let originalDisplay = try #require(Typesetter.createLineForMathList(
-            list,
+        let originalDisplay = try #require(Typesetter.makeLineDisplay(
+            for: list,
             font: font,
             style: .display,
         ))
@@ -1554,7 +1554,7 @@ extension CGPoint {
         let list = MathList(atoms: [atom1, style1, atom2, style2, atom3])
 
         let display = try #require(
-            Typesetter.createLineForMathList(list, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: list, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -1601,14 +1601,14 @@ extension CGPoint {
 
     @Test func accent() throws {
         let mathList = MathList()
-        let accent = MathAtomFactory.accent(withName: "hat")
+        let accent = MathAtomFactory.accent(named: "hat")
         let inner = MathList()
         inner.add(MathAtomFactory.atom(forCharacter: "x"))
         accent?.innerList = inner
         mathList.add(accent)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -1662,12 +1662,12 @@ extension CGPoint {
 
     @Test func wideAccent() throws {
         let mathList = MathList()
-        let accent = MathAtomFactory.accent(withName: "hat")
+        let accent = MathAtomFactory.accent(named: "hat")
         accent?.innerList = MathAtomFactory.mathListForCharacters("xyzw")
         mathList.add(accent)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
         #expect(display != nil)
         #expect(display.type == .regular)
@@ -1723,14 +1723,14 @@ extension CGPoint {
 
         for cmd in commands {
             let mathList = MathList()
-            let accent = MathAtomFactory.accent(withName: cmd)
+            let accent = MathAtomFactory.accent(named: cmd)
             let inner = MathList()
             inner.add(MathAtomFactory.atom(forCharacter: "v"))
             accent?.innerList = inner
             mathList.add(accent)
 
             let display = try #require(
-                Typesetter.createLineForMathList(mathList, font: font, style: .display),
+                Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
             )
 
             // Should have accent display
@@ -1773,12 +1773,12 @@ extension CGPoint {
 
         for cmd in commands {
             let mathList = MathList()
-            let accent = MathAtomFactory.accent(withName: cmd)
+            let accent = MathAtomFactory.accent(named: cmd)
             accent?.innerList = MathAtomFactory.mathListForCharacters("ABCDEF")
             mathList.add(accent)
 
             let display = try #require(
-                Typesetter.createLineForMathList(mathList, font: font, style: .display),
+                Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
             )
 
             let accentDisp = try #require(display.subDisplays[0] as? AccentDisplay)
@@ -1797,14 +1797,14 @@ extension CGPoint {
 
     @Test func vectorArrowDimensions() throws {
         let mathList = MathList()
-        let accent = MathAtomFactory.accent(withName: "overrightarrow")
+        let accent = MathAtomFactory.accent(named: "overrightarrow")
         let inner = MathList()
         inner.add(MathAtomFactory.atom(forCharacter: "x"))
         accent?.innerList = inner
         mathList.add(accent)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
 
         // Should have positive dimensions
@@ -1813,8 +1813,8 @@ extension CGPoint {
         #expect(display.width > 0, "Should have positive width")
 
         // Ascent should be larger than normal 'x' due to arrow above
-        let normalX = Typesetter.createLineForMathList(
-            MathAtomFactory.mathListForCharacters("x"),
+        let normalX = Typesetter.makeLineDisplay(
+            for: MathAtomFactory.mathListForCharacters("x"),
             font: font,
             style: .display,
         )
@@ -1833,12 +1833,12 @@ extension CGPoint {
 
         for (cmd, content) in testCases {
             let mathList = MathList()
-            let accent = MathAtomFactory.accent(withName: cmd)
+            let accent = MathAtomFactory.accent(named: cmd)
             accent?.innerList = MathAtomFactory.mathListForCharacters(content)
             mathList.add(accent)
 
             let display = try #require(
-                Typesetter.createLineForMathList(mathList, font: font, style: .display),
+                Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
             )
 
             // Should create AccentDisplay (not inline text)
@@ -1861,15 +1861,15 @@ extension CGPoint {
     @Test func singleCharacterAccentsWithLineWrapping() throws {
         // Test that single-character accents still work with Unicode composition when line wrapping
         let mathList = MathList()
-        let accent = MathAtomFactory.accent(withName: "bar")
+        let accent = MathAtomFactory.accent(named: "bar")
         accent?.innerList = MathAtomFactory.mathListForCharacters("x")
         mathList.add(accent)
 
         // Create with line wrapping enabled
         let maxWidth: CGFloat = 200
         let display = try #require(
-            Typesetter.createLineForMathList(
-                mathList, font: font, style: .display, maxWidth: maxWidth,
+            Typesetter.makeLineDisplay(
+                for: mathList, font: font, style: .display, maxWidth: maxWidth,
             ),
         )
 
@@ -1881,15 +1881,15 @@ extension CGPoint {
     @Test func multiCharacterAccentsWithLineWrapping() throws {
         // Test that multi-character arrow accents work correctly with line wrapping enabled
         let mathList = MathList()
-        let accent = MathAtomFactory.accent(withName: "overrightarrow")
+        let accent = MathAtomFactory.accent(named: "overrightarrow")
         accent?.innerList = MathAtomFactory.mathListForCharacters("DA")
         mathList.add(accent)
 
         // Create with line wrapping enabled
         let maxWidth: CGFloat = 200
         let display = try #require(
-            Typesetter.createLineForMathList(
-                mathList, font: font, style: .display, maxWidth: maxWidth,
+            Typesetter.makeLineDisplay(
+                for: mathList, font: font, style: .display, maxWidth: maxWidth,
             ),
         )
 
@@ -1924,8 +1924,8 @@ extension CGPoint {
 
         // Create display with narrow width constraint (should force multiple lines)
         let maxWidth: CGFloat = 100
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -1963,8 +1963,8 @@ extension CGPoint {
 
         // Create display with width constraint of 235 as specified by user
         let maxWidth: CGFloat = 235
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2003,8 +2003,8 @@ extension CGPoint {
 
         // Create display with narrow width that should force breaking
         let maxWidth: CGFloat = 120
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2031,8 +2031,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 100
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2052,8 +2052,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 200
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2073,8 +2073,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 80
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2097,8 +2097,8 @@ extension CGPoint {
 
         // Wide enough to fit everything on one line
         let maxWidth: CGFloat = 200
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2129,8 +2129,8 @@ extension CGPoint {
 
         // Narrow width should force breaking
         let maxWidth: CGFloat = 80
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2157,8 +2157,8 @@ extension CGPoint {
 
         // Wide enough to fit everything on one line
         let maxWidth: CGFloat = 150
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2189,8 +2189,8 @@ extension CGPoint {
 
         // Narrow width should force breaking
         let maxWidth: CGFloat = 100
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2217,8 +2217,8 @@ extension CGPoint {
 
         // Medium width
         let maxWidth: CGFloat = 150
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2235,8 +2235,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 150
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2254,8 +2254,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 150
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2273,7 +2273,7 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         // No width constraint (maxWidth = 0)
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
         #expect(display != nil)
 
         // Should not artificially break when no constraint
@@ -2301,8 +2301,8 @@ extension CGPoint {
 
         // Very narrow width - each element might need its own line
         let maxWidth: CGFloat = 30
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2329,8 +2329,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 100
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2349,8 +2349,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 120
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2371,8 +2371,8 @@ extension CGPoint {
 
         // Very narrow to force many breaks
         let maxWidth: CGFloat = 60
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2404,8 +2404,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 150
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2429,8 +2429,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 150
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2448,8 +2448,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 300
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2465,8 +2465,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 200
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2482,8 +2482,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 200
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2499,8 +2499,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 300
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2516,8 +2516,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 200
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2533,8 +2533,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 150
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2550,8 +2550,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 180
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2578,8 +2578,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 250
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .text, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .text, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2603,8 +2603,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 80 // Very narrow
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2628,8 +2628,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 300
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .text, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .text, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2656,8 +2656,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 200
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2680,8 +2680,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 100 // Narrow
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2705,8 +2705,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 120
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2729,8 +2729,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 250
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2755,8 +2755,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 200
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2779,8 +2779,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 100 // Narrow
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2806,8 +2806,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 250
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2832,8 +2832,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 250
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2856,8 +2856,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 120 // Narrow
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2880,8 +2880,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 200
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2906,8 +2906,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 300
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2934,8 +2934,8 @@ extension CGPoint {
         #expect(mathList != nil, "Failed to parse LaTeX")
 
         let maxWidth: CGFloat = 250
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -2961,7 +2961,7 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         // Create display without width constraint first to check ordering
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
         #expect(display != nil, "Should create display")
 
         // Get the subdisplays to check ordering
@@ -3032,10 +3032,10 @@ extension CGPoint {
 
         // Create display with width constraint matching MathView preview (235)
         // Use .text mode and font size 17 to match MathView settings
-        let testFont = MathFont.latinModernFont.fontInstance(size: 17)
+        let testFont = MathFont.latinModern.fontInstance(size: 17)
         let maxWidth: CGFloat = 235 // Same width as MathView preview
-        let display = Typesetter.createLineForMathList(
-            mathList, font: testFont, style: .text, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: testFont, style: .text, maxWidth: maxWidth,
         )
         #expect(display != nil, "Should create display")
 
@@ -3126,8 +3126,8 @@ extension CGPoint {
 
         // Wide enough to fit everything on one line
         let maxWidth: CGFloat = 200
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3160,8 +3160,8 @@ extension CGPoint {
 
         // Narrow width should force breaking
         let maxWidth: CGFloat = 100
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3191,8 +3191,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 180
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3218,8 +3218,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 200
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3242,8 +3242,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 250
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3266,8 +3266,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 180
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3290,8 +3290,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         // No width constraint (maxWidth = 0)
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: 0,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: 0,
         )
         #expect(display != nil)
 
@@ -3315,8 +3315,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 220
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3343,8 +3343,8 @@ extension CGPoint {
 
         // Set width to force a break somewhere between + and end
         let maxWidth: CGFloat = 100
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3374,8 +3374,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 90
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3405,8 +3405,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 100
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3438,8 +3438,8 @@ extension CGPoint {
 
         // Width set so that "aaabbb" slightly exceeds, but look-ahead should find + as better break
         let maxWidth: CGFloat = 60
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3468,8 +3468,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 60
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3499,8 +3499,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 120
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3523,8 +3523,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 200 // Wide enough to fit everything
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3550,8 +3550,8 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let maxWidth: CGFloat = 70
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3583,8 +3583,8 @@ extension CGPoint {
 
         // Force multiple lines
         let maxWidth: CGFloat = 80
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3621,8 +3621,8 @@ extension CGPoint {
 
         // Force multiple lines
         let maxWidth: CGFloat = 60
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3660,8 +3660,8 @@ extension CGPoint {
 
         // Force breaks to create multiple lines
         let maxWidth: CGFloat = 50
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3681,8 +3681,8 @@ extension CGPoint {
 
         // Force line break between operators
         let maxWidth: CGFloat = 80
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3714,8 +3714,8 @@ extension CGPoint {
 
         // Force multiple lines with similar content
         let maxWidth: CGFloat = 40
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3749,7 +3749,7 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse LaTeX")
 
         // No width constraint
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
         #expect(display != nil)
 
         // Should be on single line
@@ -3765,8 +3765,8 @@ extension CGPoint {
 
         // Force line breaks
         let maxWidth: CGFloat = 70
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3786,8 +3786,8 @@ extension CGPoint {
 
         // Force line breaks
         let maxWidth: CGFloat = 70
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil)
 
@@ -3816,8 +3816,8 @@ extension CGPoint {
 
         // Use narrow width to force line breaking within table cells
         let maxWidth: CGFloat = 235.0
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil, "Should create display")
 
@@ -3857,8 +3857,8 @@ extension CGPoint {
 
         // Use narrow width to force line breaking
         let maxWidth: CGFloat = 200.0
-        let display = Typesetter.createLineForMathList(
-            mathList, font: font, style: .display, maxWidth: maxWidth,
+        let display = Typesetter.makeLineDisplay(
+            for: mathList, font: font, style: .display, maxWidth: maxWidth,
         )
         #expect(display != nil, "Should create display without assertion failure")
 
@@ -3951,7 +3951,7 @@ extension CGPoint {
         #expect(mathList != nil, "Should parse fraction")
 
         // Create display which triggers fraction range validation
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
         #expect(display != nil, "Should create display for fraction")
 
         // The display should not crash even if internal ranges are invalid
@@ -3961,8 +3961,8 @@ extension CGPoint {
         // Test with nested fractions which are more likely to have range issues
         let nestedLatex = #"\frac{\frac{a}{b}}{c}"#
         let nestedMathList = MathListBuilder.build(fromString: nestedLatex)
-        let nestedDisplay = Typesetter.createLineForMathList(
-            nestedMathList, font: font, style: .display,
+        let nestedDisplay = Typesetter.makeLineDisplay(
+            for: nestedMathList, font: font, style: .display,
         )
         #expect(nestedDisplay != nil, "Should create display for nested fraction without crash")
         #expect(
@@ -3973,8 +3973,8 @@ extension CGPoint {
         // Test fraction in table cell (where range issues were most common)
         let tableLatex = #"\[ \frac{a}{b} \\ \frac{c}{d} \]"#
         let tableMathList = MathListBuilder.build(fromString: tableLatex)
-        let tableDisplay = Typesetter.createLineForMathList(
-            tableMathList, font: font, style: .display, maxWidth: 200,
+        let tableDisplay = Typesetter.makeLineDisplay(
+            for: tableMathList, font: font, style: .display, maxWidth: 200,
         )
         #expect(tableDisplay != nil, "Should create display for fractions in table without crash")
     }
@@ -3986,8 +3986,8 @@ extension CGPoint {
         // Test atom with superscript
         let superscriptLatex = "x^{2}"
         let superscriptMathList = MathListBuilder.build(fromString: superscriptLatex)
-        let superscriptDisplay = Typesetter.createLineForMathList(
-            superscriptMathList, font: font, style: .text, maxWidth: 100,
+        let superscriptDisplay = Typesetter.makeLineDisplay(
+            for: superscriptMathList, font: font, style: .text, maxWidth: 100,
         )
 
         #expect(superscriptDisplay != nil, "Should create display with superscript")
@@ -3996,8 +3996,8 @@ extension CGPoint {
         // A simple 'x' would be much narrower than 'x^2'
         let baseOnlyLatex = "x"
         let baseOnlyMathList = MathListBuilder.build(fromString: baseOnlyLatex)
-        let baseOnlyDisplay = Typesetter.createLineForMathList(
-            baseOnlyMathList, font: font, style: .text,
+        let baseOnlyDisplay = Typesetter.makeLineDisplay(
+            for: baseOnlyMathList, font: font, style: .text,
         )
 
         #expect(
@@ -4008,8 +4008,8 @@ extension CGPoint {
         // Test atom with subscript
         let subscriptLatex = "x_{i}"
         let subscriptMathList = MathListBuilder.build(fromString: subscriptLatex)
-        let subscriptDisplay = Typesetter.createLineForMathList(
-            subscriptMathList, font: font, style: .text,
+        let subscriptDisplay = Typesetter.makeLineDisplay(
+            for: subscriptMathList, font: font, style: .text,
         )
         #expect(
             try #require(subscriptDisplay?.width) > baseOnlyDisplay!.width,
@@ -4019,7 +4019,7 @@ extension CGPoint {
         // Test atom with both superscript and subscript
         let bothLatex = "x_{i}^{2}"
         let bothMathList = MathListBuilder.build(fromString: bothLatex)
-        let bothDisplay = Typesetter.createLineForMathList(bothMathList, font: font, style: .text)
+        let bothDisplay = Typesetter.makeLineDisplay(for: bothMathList, font: font, style: .text)
         #expect(
             try #require(bothDisplay?.width) > baseOnlyDisplay!.width,
             "Width with both scripts should be greater than base alone",
@@ -4029,8 +4029,8 @@ extension CGPoint {
         // If scripts aren't included in width calculation, this could break between base and script
         let longLatex = "a^{2} + b^{2} + c^{2} + d^{2}"
         let longMathList = MathListBuilder.build(fromString: longLatex)
-        let longDisplay = Typesetter.createLineForMathList(
-            longMathList, font: font, style: .text, maxWidth: 150,
+        let longDisplay = Typesetter.makeLineDisplay(
+            for: longMathList, font: font, style: .text, maxWidth: 150,
         )
 
         #expect(longDisplay != nil, "Should handle multiple scripted atoms with width constraints")
@@ -4051,38 +4051,38 @@ extension CGPoint {
         let mathList = try MathListBuilder.buildChecked(fromString: latex)
 
         // Create display - this triggers makeScripts calls with UInt conversions
-        let display = Typesetter.createLineForMathList(mathList, font: font, style: .text)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .text)
         #expect(display != nil, "Should create display without crash from UInt conversion")
 
         // Test with fractions that have scripts
         let fractionLatex = #"\frac{a}{b}^{2}"#
         let fractionMathList = MathListBuilder.build(fromString: fractionLatex)
-        let fractionDisplay = Typesetter.createLineForMathList(
-            fractionMathList, font: font, style: .display,
+        let fractionDisplay = Typesetter.makeLineDisplay(
+            for: fractionMathList, font: font, style: .display,
         )
         #expect(fractionDisplay != nil, "Should handle fraction with scripts without crash")
 
         // Test with radicals that have scripts
         let radicalLatex = #"\sqrt{x}^{2}"#
         let radicalMathList = MathListBuilder.build(fromString: radicalLatex)
-        let radicalDisplay = Typesetter.createLineForMathList(
-            radicalMathList, font: font, style: .display,
+        let radicalDisplay = Typesetter.makeLineDisplay(
+            for: radicalMathList, font: font, style: .display,
         )
         #expect(radicalDisplay != nil, "Should handle radical with scripts without crash")
 
         // Test with accents that have scripts
         let accentLatex = #"\hat{x}^{2}"#
         let accentMathList = MathListBuilder.build(fromString: accentLatex)
-        let accentDisplay = Typesetter.createLineForMathList(
-            accentMathList, font: font, style: .text,
+        let accentDisplay = Typesetter.makeLineDisplay(
+            for: accentMathList, font: font, style: .text,
         )
         #expect(accentDisplay != nil, "Should handle accent with scripts without crash")
 
         // Test complex expression with multiple scripted display types
         let complexLatex = #"\frac{a^{2}}{b_{i}} + \sqrt{x^{2}} + \hat{y}_{j}"#
         let complexMathList = MathListBuilder.build(fromString: complexLatex)
-        let complexDisplay = Typesetter.createLineForMathList(
-            complexMathList, font: font, style: .display,
+        let complexDisplay = Typesetter.makeLineDisplay(
+            for: complexMathList, font: font, style: .display,
         )
         #expect(
             complexDisplay != nil,
@@ -4103,8 +4103,8 @@ extension CGPoint {
         let simpleLatex = "x=-2"
         let simpleMathList = try MathListBuilder.buildChecked(fromString: simpleLatex)
 
-        let simpleDisplay = Typesetter.createLineForMathList(
-            simpleMathList, font: font, style: .display,
+        let simpleDisplay = Typesetter.makeLineDisplay(
+            for: simpleMathList, font: font, style: .display,
         )
         #expect(simpleDisplay != nil, "Should create display for 'x=-2' without assertion")
         #expect(try #require(simpleDisplay?.width) > 0, "Display should have positive width")
@@ -4112,8 +4112,8 @@ extension CGPoint {
         // Test with decimal negative number
         let decimalLatex = "y=-1.5"
         let decimalMathList = MathListBuilder.build(fromString: decimalLatex)
-        let decimalDisplay = Typesetter.createLineForMathList(
-            decimalMathList, font: font, style: .display,
+        let decimalDisplay = Typesetter.makeLineDisplay(
+            for: decimalMathList, font: font, style: .display,
         )
         #expect(decimalDisplay != nil, "Should create display for 'y=-1.5' without assertion")
 
@@ -4122,8 +4122,8 @@ extension CGPoint {
         let complexMathList = MathListBuilder.build(fromString: complexLatex)
         #expect(complexMathList != nil, "Should parse complex expression with negative numbers")
 
-        let complexDisplay = Typesetter.createLineForMathList(
-            complexMathList, font: font, style: .display, maxWidth: 300,
+        let complexDisplay = Typesetter.makeLineDisplay(
+            for: complexMathList, font: font, style: .display, maxWidth: 300,
         )
         #expect(
             complexDisplay != nil,
@@ -4134,16 +4134,16 @@ extension CGPoint {
         // Test multiple negative numbers in sequence
         let multipleLatex = "a=-1, b=-2, c=-3"
         let multipleMathList = MathListBuilder.build(fromString: multipleLatex)
-        let multipleDisplay = Typesetter.createLineForMathList(
-            multipleMathList, font: font, style: .text,
+        let multipleDisplay = Typesetter.makeLineDisplay(
+            for: multipleMathList, font: font, style: .text,
         )
         #expect(multipleDisplay != nil, "Should handle multiple negative numbers after relations")
 
         // Test negative in other relation contexts
         let relationLatex = #"x \leq -5"#
         let relationMathList = MathListBuilder.build(fromString: relationLatex)
-        let relationDisplay = Typesetter.createLineForMathList(
-            relationMathList, font: font, style: .text,
+        let relationDisplay = Typesetter.makeLineDisplay(
+            for: relationMathList, font: font, style: .text,
         )
         #expect(relationDisplay != nil, "Should handle negative number after inequality relation")
     }

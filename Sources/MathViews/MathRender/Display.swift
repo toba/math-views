@@ -8,8 +8,8 @@ import UIKit
 import AppKit
 #endif
 
-// The Downshift protocol allows an Display to be shifted down by a given amount.
-protocol DownShift {
+// The Shiftable protocol allows a Display to be shifted down by a given amount.
+protocol Shiftable {
     var shiftDown: CGFloat { get set }
 }
 
@@ -59,8 +59,8 @@ public class Display: @unchecked Sendable {
     var localBackgroundColor: PlatformColor?
 }
 
-/// Special class to be inherited from that implements the DownShift protocol
-class DisplayDS: Display, DownShift {
+/// Special class to be inherited from that implements the Shiftable protocol
+class ShiftableDisplay: Display, Shiftable {
     var shiftDown: CGFloat = 0
 }
 
@@ -82,7 +82,7 @@ public final class CTLineDisplay: Display {
     public fileprivate(set) var atoms = [MathAtom]()
 
     init(
-        withString attrString: NSAttributedString?,
+        attributedString attrString: NSAttributedString?,
         position: CGPoint,
         range: Range<Int>,
         font _: FontInstance?,
@@ -148,7 +148,7 @@ public final class MathListDisplay: Display {
         /// Regular
         case regular
         /// Positioned at a subscript
-        case ssubscript
+        case `subscript`
         /// Positioned at a superscript
         case superscript
     }
@@ -162,7 +162,7 @@ public final class MathListDisplay: Display {
     /// regular list this is NSNotFound
     public var index: Int = 0
 
-    init(withDisplays displays: [Display], range: Range<Int>) {
+    init(displays: [Display], range: Range<Int>) {
         super.init()
         subDisplays = displays
         position = CGPoint.zero
@@ -244,7 +244,7 @@ public final class FractionDisplay: Display {
     var lineThickness: CGFloat = 0
 
     init(
-        withNumerator numerator: MathListDisplay?,
+        numerator: MathListDisplay?,
         denominator: MathListDisplay?,
         position: CGPoint,
         range: Range<Int>,
@@ -374,7 +374,7 @@ final class RadicalDisplay: Display {
     var lineThickness: CGFloat = 0
 
     init(
-        withRadicand radicand: MathListDisplay?,
+        radicand: MathListDisplay?,
         glyph: Display,
         position: CGPoint,
         range: Range<Int>,
@@ -470,13 +470,13 @@ final class RadicalDisplay: Display {
 // MARK: - GlyphDisplay
 
 /// Rendering a glyph as a display
-final class GlyphDisplay: DisplayDS {
+final class GlyphDisplay: ShiftableDisplay {
     var glyph: CGGlyph!
     var font: FontInstance?
     /// Horizontal scale factor for stretching glyphs (1.0 = no scaling)
     var scaleX: CGFloat = 1.0
 
-    init(withGlpyh glyph: CGGlyph, range: Range<Int>, font: FontInstance?) {
+    init(glyph: CGGlyph, range: Range<Int>, font: FontInstance?) {
         super.init()
         self.font = font
         self.glyph = glyph
@@ -520,13 +520,13 @@ final class GlyphDisplay: DisplayDS {
 
 // MARK: - GlyphConstructionDisplay
 
-final class GlyphConstructionDisplay: DisplayDS {
+final class GlyphConstructionDisplay: ShiftableDisplay {
     var glyphs = [CGGlyph]()
     var positions = [CGPoint]()
     var font: FontInstance?
     var numGlyphs: Int = 0
 
-    init(withGlyphs glyphs: [CGGlyph], offsets: [CGFloat], font: FontInstance?) {
+    init(glyphs: [CGGlyph], offsets: [CGFloat], font: FontInstance?) {
         super.init()
         assert(glyphs.count == offsets.count, "Glyphs and offsets need to match")
         numGlyphs = glyphs.count
@@ -582,7 +582,7 @@ final class LargeOpLimitsDisplay: Display {
     var nucleus: Display?
 
     init(
-        withNucleus nucleus: Display?,
+        nucleus: Display?,
         upperLimit: MathListDisplay?,
         lowerLimit: MathListDisplay?,
         limitShift: CGFloat,
@@ -704,7 +704,7 @@ final class LineDisplay: Display {
     var lineShiftUp: CGFloat = 0
     var lineThickness: CGFloat = 0
 
-    init(withInner inner: MathListDisplay?, position: CGPoint, range: Range<Int>) {
+    init(inner: MathListDisplay?, position: CGPoint, range: Range<Int>) {
         super.init()
         self.inner = inner
 
@@ -763,7 +763,7 @@ final class AccentDisplay: Display {
     /// A display representing the accent. Its position is relative to the current display.
     var accent: GlyphDisplay?
 
-    init(withAccent glyph: GlyphDisplay?, accentee: MathListDisplay?, range: Range<Int>) {
+    init(accent glyph: GlyphDisplay?, accentee: MathListDisplay?, range: Range<Int>) {
         super.init()
         accent = glyph
         self.accentee = accentee

@@ -372,74 +372,74 @@ public enum MathAtomFactory {
         "centerdot": MathAtom(type: .binaryOperator, value: "\u{22C5}"), // alias for cdot
 
         // No limit operators
-        "log": MathAtomFactory.operatorWithName("log", limits: false),
-        "lg": MathAtomFactory.operatorWithName("lg", limits: false),
-        "ln": MathAtomFactory.operatorWithName("ln", limits: false),
-        "sin": MathAtomFactory.operatorWithName("sin", limits: false),
-        "arcsin": MathAtomFactory.operatorWithName("arcsin", limits: false),
-        "sinh": MathAtomFactory.operatorWithName("sinh", limits: false),
-        "cos": MathAtomFactory.operatorWithName("cos", limits: false),
-        "arccos": MathAtomFactory.operatorWithName("arccos", limits: false),
-        "cosh": MathAtomFactory.operatorWithName("cosh", limits: false),
-        "tan": MathAtomFactory.operatorWithName("tan", limits: false),
-        "arctan": MathAtomFactory.operatorWithName("arctan", limits: false),
-        "tanh": MathAtomFactory.operatorWithName("tanh", limits: false),
-        "cot": MathAtomFactory.operatorWithName("cot", limits: false),
-        "coth": MathAtomFactory.operatorWithName("coth", limits: false),
-        "sec": MathAtomFactory.operatorWithName("sec", limits: false),
-        "csc": MathAtomFactory.operatorWithName("csc", limits: false),
+        "log": MathAtomFactory.`operator`(named: "log", hasLimits: false),
+        "lg": MathAtomFactory.`operator`(named: "lg", hasLimits: false),
+        "ln": MathAtomFactory.`operator`(named: "ln", hasLimits: false),
+        "sin": MathAtomFactory.`operator`(named: "sin", hasLimits: false),
+        "arcsin": MathAtomFactory.`operator`(named: "arcsin", hasLimits: false),
+        "sinh": MathAtomFactory.`operator`(named: "sinh", hasLimits: false),
+        "cos": MathAtomFactory.`operator`(named: "cos", hasLimits: false),
+        "arccos": MathAtomFactory.`operator`(named: "arccos", hasLimits: false),
+        "cosh": MathAtomFactory.`operator`(named: "cosh", hasLimits: false),
+        "tan": MathAtomFactory.`operator`(named: "tan", hasLimits: false),
+        "arctan": MathAtomFactory.`operator`(named: "arctan", hasLimits: false),
+        "tanh": MathAtomFactory.`operator`(named: "tanh", hasLimits: false),
+        "cot": MathAtomFactory.`operator`(named: "cot", hasLimits: false),
+        "coth": MathAtomFactory.`operator`(named: "coth", hasLimits: false),
+        "sec": MathAtomFactory.`operator`(named: "sec", hasLimits: false),
+        "csc": MathAtomFactory.`operator`(named: "csc", hasLimits: false),
         // Additional inverse trig functions
-        "arccot": MathAtomFactory.operatorWithName("arccot", limits: false),
-        "arcsec": MathAtomFactory.operatorWithName("arcsec", limits: false),
-        "arccsc": MathAtomFactory.operatorWithName("arccsc", limits: false),
+        "arccot": MathAtomFactory.`operator`(named: "arccot", hasLimits: false),
+        "arcsec": MathAtomFactory.`operator`(named: "arcsec", hasLimits: false),
+        "arccsc": MathAtomFactory.`operator`(named: "arccsc", hasLimits: false),
         // Additional hyperbolic functions
-        "sech": MathAtomFactory.operatorWithName("sech", limits: false),
-        "csch": MathAtomFactory.operatorWithName("csch", limits: false),
+        "sech": MathAtomFactory.`operator`(named: "sech", hasLimits: false),
+        "csch": MathAtomFactory.`operator`(named: "csch", hasLimits: false),
         // Inverse hyperbolic functions
-        "arcsinh": MathAtomFactory.operatorWithName("arcsinh", limits: false),
-        "arccosh": MathAtomFactory.operatorWithName("arccosh", limits: false),
-        "arctanh": MathAtomFactory.operatorWithName("arctanh", limits: false),
-        "arccoth": MathAtomFactory.operatorWithName("arccoth", limits: false),
-        "arcsech": MathAtomFactory.operatorWithName("arcsech", limits: false),
-        "arccsch": MathAtomFactory.operatorWithName("arccsch", limits: false),
-        "arg": MathAtomFactory.operatorWithName("arg", limits: false),
-        "ker": MathAtomFactory.operatorWithName("ker", limits: false),
-        "dim": MathAtomFactory.operatorWithName("dim", limits: false),
-        "hom": MathAtomFactory.operatorWithName("hom", limits: false),
-        "exp": MathAtomFactory.operatorWithName("exp", limits: false),
-        "deg": MathAtomFactory.operatorWithName("deg", limits: false),
-        "mod": MathAtomFactory.operatorWithName("mod", limits: false),
+        "arcsinh": MathAtomFactory.`operator`(named: "arcsinh", hasLimits: false),
+        "arccosh": MathAtomFactory.`operator`(named: "arccosh", hasLimits: false),
+        "arctanh": MathAtomFactory.`operator`(named: "arctanh", hasLimits: false),
+        "arccoth": MathAtomFactory.`operator`(named: "arccoth", hasLimits: false),
+        "arcsech": MathAtomFactory.`operator`(named: "arcsech", hasLimits: false),
+        "arccsch": MathAtomFactory.`operator`(named: "arccsch", hasLimits: false),
+        "arg": MathAtomFactory.`operator`(named: "arg", hasLimits: false),
+        "ker": MathAtomFactory.`operator`(named: "ker", hasLimits: false),
+        "dim": MathAtomFactory.`operator`(named: "dim", hasLimits: false),
+        "hom": MathAtomFactory.`operator`(named: "hom", hasLimits: false),
+        "exp": MathAtomFactory.`operator`(named: "exp", hasLimits: false),
+        "deg": MathAtomFactory.`operator`(named: "deg", hasLimits: false),
+        "mod": MathAtomFactory.`operator`(named: "mod", hasLimits: false),
 
         // Limit operators
-        "lim": MathAtomFactory.operatorWithName("lim", limits: true),
-        "limsup": MathAtomFactory.operatorWithName("lim sup", limits: true),
-        "liminf": MathAtomFactory.operatorWithName("lim inf", limits: true),
-        "max": MathAtomFactory.operatorWithName("max", limits: true),
-        "min": MathAtomFactory.operatorWithName("min", limits: true),
-        "sup": MathAtomFactory.operatorWithName("sup", limits: true),
-        "inf": MathAtomFactory.operatorWithName("inf", limits: true),
-        "det": MathAtomFactory.operatorWithName("det", limits: true),
-        "Pr": MathAtomFactory.operatorWithName("Pr", limits: true),
-        "gcd": MathAtomFactory.operatorWithName("gcd", limits: true),
+        "lim": MathAtomFactory.`operator`(named: "lim", hasLimits: true),
+        "limsup": MathAtomFactory.`operator`(named: "lim sup", hasLimits: true),
+        "liminf": MathAtomFactory.`operator`(named: "lim inf", hasLimits: true),
+        "max": MathAtomFactory.`operator`(named: "max", hasLimits: true),
+        "min": MathAtomFactory.`operator`(named: "min", hasLimits: true),
+        "sup": MathAtomFactory.`operator`(named: "sup", hasLimits: true),
+        "inf": MathAtomFactory.`operator`(named: "inf", hasLimits: true),
+        "det": MathAtomFactory.`operator`(named: "det", hasLimits: true),
+        "Pr": MathAtomFactory.`operator`(named: "Pr", hasLimits: true),
+        "gcd": MathAtomFactory.`operator`(named: "gcd", hasLimits: true),
 
         // Large operators
-        "prod": MathAtomFactory.operatorWithName("\u{220F}", limits: true),
-        "coprod": MathAtomFactory.operatorWithName("\u{2210}", limits: true),
-        "sum": MathAtomFactory.operatorWithName("\u{2211}", limits: true),
-        "int": MathAtomFactory.operatorWithName("\u{222B}", limits: false),
-        "iint": MathAtomFactory.operatorWithName("\u{222C}", limits: false),
-        "iiint": MathAtomFactory.operatorWithName("\u{222D}", limits: false),
-        "iiiint": MathAtomFactory.operatorWithName("\u{2A0C}", limits: false),
-        "oint": MathAtomFactory.operatorWithName("\u{222E}", limits: false),
-        "bigwedge": MathAtomFactory.operatorWithName("\u{22C0}", limits: true),
-        "bigvee": MathAtomFactory.operatorWithName("\u{22C1}", limits: true),
-        "bigcap": MathAtomFactory.operatorWithName("\u{22C2}", limits: true),
-        "bigcup": MathAtomFactory.operatorWithName("\u{22C3}", limits: true),
-        "bigodot": MathAtomFactory.operatorWithName("\u{2A00}", limits: true),
-        "bigoplus": MathAtomFactory.operatorWithName("\u{2A01}", limits: true),
-        "bigotimes": MathAtomFactory.operatorWithName("\u{2A02}", limits: true),
-        "biguplus": MathAtomFactory.operatorWithName("\u{2A04}", limits: true),
-        "bigsqcup": MathAtomFactory.operatorWithName("\u{2A06}", limits: true),
+        "prod": MathAtomFactory.`operator`(named: "\u{220F}", hasLimits: true),
+        "coprod": MathAtomFactory.`operator`(named: "\u{2210}", hasLimits: true),
+        "sum": MathAtomFactory.`operator`(named: "\u{2211}", hasLimits: true),
+        "int": MathAtomFactory.`operator`(named: "\u{222B}", hasLimits: false),
+        "iint": MathAtomFactory.`operator`(named: "\u{222C}", hasLimits: false),
+        "iiint": MathAtomFactory.`operator`(named: "\u{222D}", hasLimits: false),
+        "iiiint": MathAtomFactory.`operator`(named: "\u{2A0C}", hasLimits: false),
+        "oint": MathAtomFactory.`operator`(named: "\u{222E}", hasLimits: false),
+        "bigwedge": MathAtomFactory.`operator`(named: "\u{22C0}", hasLimits: true),
+        "bigvee": MathAtomFactory.`operator`(named: "\u{22C1}", hasLimits: true),
+        "bigcap": MathAtomFactory.`operator`(named: "\u{22C2}", hasLimits: true),
+        "bigcup": MathAtomFactory.`operator`(named: "\u{22C3}", hasLimits: true),
+        "bigodot": MathAtomFactory.`operator`(named: "\u{2A00}", hasLimits: true),
+        "bigoplus": MathAtomFactory.`operator`(named: "\u{2A01}", hasLimits: true),
+        "bigotimes": MathAtomFactory.`operator`(named: "\u{2A02}", hasLimits: true),
+        "biguplus": MathAtomFactory.`operator`(named: "\u{2A04}", hasLimits: true),
+        "bigsqcup": MathAtomFactory.`operator`(named: "\u{2A06}", hasLimits: true),
 
         // Latex command characters
         "{": MathAtom(type: .open, value: "{"),
@@ -618,7 +618,7 @@ public enum MathAtomFactory {
         // Note: operatorname is handled specially in MathListBuilder to create proper operators
     ]
 
-    public static func fontStyleWithName(_ fontName: String) -> FontStyle? {
+    public static func fontStyle(named fontName: String) -> FontStyle? {
         fontStyles[fontName]
     }
 
@@ -692,7 +692,7 @@ public enum MathAtomFactory {
                 return atom
             }
 
-            if let accent = MathAtomFactory.accent(withName: symbol.0) {
+            if let accent = MathAtomFactory.accent(named: symbol.0) {
                 // The command is an accent
                 let list = MathList()
                 let baseChar = Array(symbol.1)[0]
@@ -807,7 +807,7 @@ public enum MathAtomFactory {
     /// Define a latex symbol for rendering. This function allows defining custom symbols that are
     /// not already present in the default set, or override existing symbols with new meaning.
     /// e.g. to define a symbol for "lcm" one can call:
-    /// `MathAtomFactory.add(latexSymbol:"lcm", value:MathAtomFactory.operatorWithName("lcm", limits: false))`
+    /// `MathAtomFactory.add(latexSymbol:"lcm", value:MathAtomFactory.`operator`(named: "lcm", hasLimits: false))`
     public static func add(latexSymbol name: String, value: MathAtom) {
         symbolState.withLock { state in
             // Ensure textToLatex is initialized before mutating
@@ -834,14 +834,14 @@ public enum MathAtomFactory {
 
     /// Returns a large opertor for the given name. If limits is true, limits are set up on
     /// the operator and displayed differently.
-    public static func operatorWithName(_ name: String, limits: Bool) -> LargeOperator {
-        LargeOperator(value: name, limits: limits)
+    public static func `operator`(named name: String, hasLimits: Bool) -> LargeOperator {
+        LargeOperator(value: name, hasLimits: hasLimits)
     }
 
     /// Returns an accent with the given name. The name of the accent is the LaTeX name
     /// such as `grave`, `hat` etc. If the name is not a recognized accent name, this
     /// returns nil. The `innerList` of the returned `Accent` is nil.
-    public static func accent(withName name: String) -> Accent? {
+    public static func accent(named name: String) -> Accent? {
         if let accentValue = accents[name] {
             let accent = Accent(value: accentValue)
             // Mark stretchy arrow accents (\overleftarrow, \overrightarrow, \overleftrightarrow)
@@ -887,7 +887,7 @@ public enum MathAtomFactory {
     /// If the atom is not a boundary atom or if the delimiter value is unknown this returns `nil`.
     /// @note This is not an exact reverse of the above function. Some delimiters have two names (e.g.
     /// `<` and `langle`) and this function always returns the shorter name.
-    public static func getDelimiterName(of boundary: MathAtom) -> String? {
+    public static func delimiterName(of boundary: MathAtom) -> String? {
         guard boundary.type == .boundary else { return nil }
         return delimValueToName[boundary.nucleus]
     }
@@ -960,7 +960,7 @@ public enum MathAtomFactory {
         for i in 0 ..< rows.count {
             let row = rows[i]
             for j in 0 ..< row.count {
-                table.set(cell: row[j], forRow: i, column: j)
+                table.setCell( row[j], row: i, column: j)
             }
         }
 
@@ -968,7 +968,7 @@ public enum MathAtomFactory {
             table.interColumnSpacing = 0
             table.interRowAdditionalSpacing = 1
             for i in 0 ..< table.numColumns {
-                table.set(alignment: .left, forColumn: i)
+                table.setAlignment( .left, forColumn: i)
             }
             return table
         } else if let env {
@@ -992,7 +992,7 @@ public enum MathAtomFactory {
                 // Apply alignment for starred matrix environments
                 if let align = alignment {
                     for col in 0 ..< table.numColumns {
-                        table.set(alignment: align, forColumn: col)
+                        table.setAlignment( align, forColumn: col)
                     }
                 }
 
@@ -1024,7 +1024,7 @@ public enum MathAtomFactory {
                 table.interColumnSpacing = 0
 
                 for col in 0 ..< table.numColumns {
-                    table.set(alignment: col.isMultiple(of: 2) ? .right : .left, forColumn: col)
+                    table.setAlignment( col.isMultiple(of: 2) ? .right : .left, forColumn: col)
                 }
 
                 return table
@@ -1036,7 +1036,7 @@ public enum MathAtomFactory {
                 table.interRowAdditionalSpacing = 1
                 table.interColumnSpacing = 0
 
-                table.set(alignment: .center, forColumn: 0)
+                table.setAlignment( .center, forColumn: 0)
 
                 return table
             } else if env == "eqnarray" {
@@ -1047,9 +1047,9 @@ public enum MathAtomFactory {
                 table.interRowAdditionalSpacing = 1
                 table.interColumnSpacing = 18
 
-                table.set(alignment: .right, forColumn: 0)
-                table.set(alignment: .center, forColumn: 1)
-                table.set(alignment: .left, forColumn: 2)
+                table.setAlignment( .right, forColumn: 0)
+                table.setAlignment( .center, forColumn: 1)
+                table.setAlignment( .left, forColumn: 2)
 
                 return table
             } else if env == "cases" {
@@ -1060,9 +1060,9 @@ public enum MathAtomFactory {
                 table.interRowAdditionalSpacing = 0
                 table.interColumnSpacing = 18
 
-                table.set(alignment: .left, forColumn: 0)
+                table.setAlignment( .left, forColumn: 0)
                 if table.numColumns == 2 {
-                    table.set(alignment: .left, forColumn: 1)
+                    table.setAlignment( .left, forColumn: 1)
                 }
 
                 let style = MathStyle(style: .text)

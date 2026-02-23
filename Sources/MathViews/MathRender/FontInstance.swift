@@ -17,11 +17,11 @@ public final class FontInstance: @unchecked Sendable {
     /// (e.g., Chinese, Japanese, Korean, emoji, etc.)
     public var fallbackFont: CTFont?
 
-    init(font: MathFont = .latinModernFont, size: CGFloat) {
+    init(font: MathFont = .latinModern, size: CGFloat) {
         self.font = font
         self.size = size
         _cgFont = font.cgFont()
-        _ctFont = font.ctFont(withSize: size)
+        _ctFont = font.ctFont(size: size)
         unitsPerEm = _ctFont.unitsPerEm
     }
 
@@ -38,16 +38,16 @@ public final class FontInstance: @unchecked Sendable {
     }
 
     /// Returns a copy of this font but with a different size.
-    public func copy(withSize size: CGFloat) -> FontInstance {
+    public func withSize(_ size: CGFloat) -> FontInstance {
         FontInstance(font: font, size: size)
     }
 
-    func get(nameForGlyph glyph: CGGlyph) -> String {
+    func glyphName(for glyph: CGGlyph) -> String {
         let name = defaultCGFont.name(for: glyph) as? String
         return name ?? ""
     }
 
-    func get(glyphWithName name: String) -> CGGlyph {
+    func glyph(named name: String) -> CGGlyph {
         defaultCGFont.getGlyphWithGlyphName(name: name as CFString)
     }
 

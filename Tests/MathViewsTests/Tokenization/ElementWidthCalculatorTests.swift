@@ -7,7 +7,7 @@ struct ElementWidthCalculatorTests {
     let calculator: ElementWidthCalculator
 
     init() {
-        font = MathFont.latinModernFont.fontInstance(size: 20)
+        font = MathFont.latinModern.fontInstance(size: 20)
         calculator = ElementWidthCalculator(font: font, style: .display)
     }
 
@@ -80,27 +80,27 @@ struct ElementWidthCalculatorTests {
 
     @Test func interElementSpacingOrdinaryToOrdinary() {
         // Ordinary to ordinary: no space
-        let spacing = calculator.getInterElementSpacing(left: .ordinary, right: .ordinary)
+        let spacing = calculator.interElementSpacing(left: .ordinary, right: .ordinary)
         #expect(spacing == 0)
     }
 
     @Test func interElementSpacingOrdinaryToBinary() throws {
         // Ordinary to binary: medium space (4mu in display mode)
-        let spacing = calculator.getInterElementSpacing(left: .ordinary, right: .binaryOperator)
+        let spacing = calculator.interElementSpacing(left: .ordinary, right: .binaryOperator)
         let expected = try #require(font.mathTable?.muUnit) * 4
         #expect(abs(spacing - expected) <= 0.1)
     }
 
     @Test func interElementSpacingOrdinaryToRelation() throws {
         // Ordinary to relation: thick space (5mu in display mode)
-        let spacing = calculator.getInterElementSpacing(left: .ordinary, right: .relation)
+        let spacing = calculator.interElementSpacing(left: .ordinary, right: .relation)
         let expected = try #require(font.mathTable?.muUnit) * 5
         #expect(abs(spacing - expected) <= 0.1)
     }
 
     @Test func interElementSpacingBinaryToBinary() {
         // Binary to binary: invalid (should return 0)
-        let spacing = calculator.getInterElementSpacing(
+        let spacing = calculator.interElementSpacing(
             left: .binaryOperator,
             right: .binaryOperator,
         )
@@ -110,7 +110,7 @@ struct ElementWidthCalculatorTests {
     @Test func interElementSpacingInScriptMode() {
         // In script mode, nsMedium spacing should be 0
         let scriptCalculator = ElementWidthCalculator(font: font, style: .script)
-        let spacing = scriptCalculator.getInterElementSpacing(
+        let spacing = scriptCalculator.interElementSpacing(
             left: .ordinary,
             right: .binaryOperator,
         )
@@ -119,7 +119,7 @@ struct ElementWidthCalculatorTests {
 
     @Test func interElementSpacingOpenToClose() {
         // Open to close: no space
-        let spacing = calculator.getInterElementSpacing(left: .open, right: .close)
+        let spacing = calculator.interElementSpacing(left: .open, right: .close)
         #expect(spacing == 0)
     }
 

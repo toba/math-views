@@ -7,7 +7,7 @@ struct AccentSpacingComparisonTest {
     let font: FontInstance
 
     init() {
-        font = MathFont.termesFont.fontInstance(size: 20)
+        font = MathFont.termes.fontInstance(size: 20)
     }
 
     @Test func compareSpacing() {
@@ -20,11 +20,11 @@ struct AccentSpacingComparisonTest {
         let widehatMathList = MathListBuilder.build(fromString: widehatLatex)
         let arrowMathList = MathListBuilder.build(fromString: overrightarrowLatex)
 
-        let widehatDisplay = Typesetter.createLineForMathList(
-            widehatMathList, font: font, style: .display,
+        let widehatDisplay = Typesetter.makeLineDisplay(
+            for: widehatMathList, font: font, style: .display,
         )
-        let arrowDisplay = Typesetter.createLineForMathList(
-            arrowMathList,
+        let arrowDisplay = Typesetter.makeLineDisplay(
+            for: arrowMathList,
             font: font,
             style: .display,
         )

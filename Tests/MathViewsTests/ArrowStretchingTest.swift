@@ -6,18 +6,18 @@ struct ArrowStretchingTest {
     let font: FontInstance
 
     init() {
-        font = MathFont.termesFont.fontInstance(size: 20)
+        font = MathFont.termes.fontInstance(size: 20)
     }
 
     @Test func vecSingleCharacter() throws {
         // Test that \vec{v} produces an arrow (not a bar)
         let mathList = MathList()
-        let vec = MathAtomFactory.accent(withName: "vec")
+        let vec = MathAtomFactory.accent(named: "vec")
         vec?.innerList = MathAtomFactory.mathListForCharacters("v")
         mathList.add(vec)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
 
         #expect(display.subDisplays.count == 1, "Should have 1 subdisplay")
@@ -37,12 +37,12 @@ struct ArrowStretchingTest {
     @Test func vecMultipleCharacters() throws {
         // Test that \vec{AB} uses small arrow (NOT stretchy like \overrightarrow{AB})
         let mathList = MathList()
-        let vec = MathAtomFactory.accent(withName: "vec")
+        let vec = MathAtomFactory.accent(named: "vec")
         vec?.innerList = MathAtomFactory.mathListForCharacters("AB")
         mathList.add(vec)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
 
         #expect(display.subDisplays.count == 1, "Should have 1 subdisplay")
@@ -60,12 +60,12 @@ struct ArrowStretchingTest {
     @Test func arrowStretchingForDA() throws {
         // Test the reported issue: arrow should stretch to match "DA" width
         let mathList = MathList()
-        let accent = MathAtomFactory.accent(withName: "overrightarrow")
+        let accent = MathAtomFactory.accent(named: "overrightarrow")
         accent?.innerList = MathAtomFactory.mathListForCharacters("DA")
         mathList.add(accent)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
 
         #expect(display.subDisplays.count == 1, "Should have 1 subdisplay")
@@ -100,12 +100,12 @@ struct ArrowStretchingTest {
     func arrowStretchingComparison(_ testCase: ArrowCase) throws {
         // Compare arrow stretching for different content widths
         let mathList = MathList()
-        let accent = MathAtomFactory.accent(withName: testCase.command)
+        let accent = MathAtomFactory.accent(named: testCase.command)
         accent?.innerList = MathAtomFactory.mathListForCharacters(testCase.content)
         mathList.add(accent)
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
 
         let accentDisp = try #require(display.subDisplays[0] as? AccentDisplay)
@@ -124,12 +124,12 @@ struct ArrowStretchingTest {
 
         // Test \bar{DA} - regular accent
         let barList = MathList()
-        let barAccent = MathAtomFactory.accent(withName: "bar")
+        let barAccent = MathAtomFactory.accent(named: "bar")
         barAccent?.innerList = MathAtomFactory.mathListForCharacters("DA")
         barList.add(barAccent)
 
         let barDisplay = try #require(
-            Typesetter.createLineForMathList(barList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: barList, font: font, style: .display),
         )
 
         let barAccentDisp = try #require(barDisplay.subDisplays[0] as? AccentDisplay)
@@ -138,12 +138,12 @@ struct ArrowStretchingTest {
 
         // Test \overrightarrow{DA} - arrow accent
         let arrowList = MathList()
-        let arrowAccent = MathAtomFactory.accent(withName: "overrightarrow")
+        let arrowAccent = MathAtomFactory.accent(named: "overrightarrow")
         arrowAccent?.innerList = MathAtomFactory.mathListForCharacters("DA")
         arrowList.add(arrowAccent)
 
         let arrowDisplay = try #require(
-            Typesetter.createLineForMathList(arrowList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: arrowList, font: font, style: .display),
         )
 
         let arrowAccentDisp = try #require(arrowDisplay.subDisplays[0] as? AccentDisplay)

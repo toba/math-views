@@ -7,7 +7,7 @@ struct LineFitterTests {
     let font: FontInstance
 
     init() {
-        font = MathFont.latinModernFont.fontInstance(size: 20)
+        font = MathFont.latinModern.fontInstance(size: 20)
     }
 
     // MARK: - Basic Fitting Tests

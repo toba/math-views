@@ -6,7 +6,7 @@ struct TypesetterTokenizationTests {
     let font: FontInstance
 
     init() {
-        font = MathFont.latinModernFont.fontInstance(size: 20)
+        font = MathFont.latinModern.fontInstance(size: 20)
     }
 
     // MARK: - Integration Tests
@@ -18,8 +18,8 @@ struct TypesetterTokenizationTests {
         mathList.add(MathAtom(type: .binaryOperator, value: "+"))
         mathList.add(MathAtom(type: .variable, value: "y"))
 
-        let display = Typesetter.createLineForMathListWithTokenization(
-            mathList,
+        let display = Typesetter.makeLineDisplayWithTokenization(
+            for: mathList,
             font: font,
             style: .display,
             cramped: false,
@@ -42,8 +42,8 @@ struct TypesetterTokenizationTests {
             }
         }
 
-        let display = Typesetter.createLineForMathListWithTokenization(
-            mathList,
+        let display = Typesetter.makeLineDisplayWithTokenization(
+            for: mathList,
             font: font,
             style: .display,
             cramped: false,
@@ -70,8 +70,8 @@ struct TypesetterTokenizationTests {
         mathList.add(MathAtom(type: .binaryOperator, value: "+"))
         mathList.add(MathAtom(type: .variable, value: "y"))
 
-        let display = Typesetter.createLineForMathListWithTokenization(
-            mathList,
+        let display = Typesetter.makeLineDisplayWithTokenization(
+            for: mathList,
             font: font,
             style: .display,
             cramped: false,
@@ -96,8 +96,8 @@ struct TypesetterTokenizationTests {
         mathList.add(MathAtom(type: .binaryOperator, value: "+"))
         mathList.add(MathAtom(type: .variable, value: "c"))
 
-        let display = Typesetter.createLineForMathListWithTokenization(
-            mathList,
+        let display = Typesetter.makeLineDisplayWithTokenization(
+            for: mathList,
             font: font,
             style: .display,
             cramped: false,
@@ -112,8 +112,8 @@ struct TypesetterTokenizationTests {
     @Test func emptyMathList() {
         let mathList = MathList()
 
-        let display = Typesetter.createLineForMathListWithTokenization(
-            mathList,
+        let display = Typesetter.makeLineDisplayWithTokenization(
+            for: mathList,
             font: font,
             style: .display,
             cramped: false,
@@ -133,8 +133,8 @@ struct TypesetterTokenizationTests {
     }
 
     @Test func nilMathList() {
-        let display = Typesetter.createLineForMathListWithTokenization(
-            nil,
+        let display = Typesetter.makeLineDisplayWithTokenization(
+            for: nil,
             font: font,
             style: .display,
             cramped: false,

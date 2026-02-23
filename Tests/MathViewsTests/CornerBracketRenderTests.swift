@@ -10,7 +10,7 @@ import UIKit
 // MARK: - Corner Bracket Render Tests
 
 struct CornerBracketRenderTests {
-    let font = MathFont.latinModernFont
+    let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
     static let cornerBracketCases: [RenderCase] = [

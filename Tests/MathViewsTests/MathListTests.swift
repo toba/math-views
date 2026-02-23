@@ -382,13 +382,13 @@ struct MathListTests {
     }
 
     @Test func copyLargeOperator() throws {
-        let lg = LargeOperator(value: "lim", limits: true)
+        let lg = LargeOperator(value: "lim", hasLimits: true)
         #expect(lg.type == .largeOperator)
-        #expect(lg.limits)
+        #expect(lg.hasLimits)
 
         let copy = LargeOperator(lg)
         try checkAtomCopy(copy, original: lg, forTest: "MathListTests")
-        #expect(copy.limits == lg.limits)
+        #expect(copy.hasLimits == lg.hasLimits)
     }
 
     @Test func copyInner() throws {
@@ -526,11 +526,11 @@ struct MathListTests {
         list2.add(atom3)
         list2.add(atom2)
 
-        table.set(cell: list, forRow: 3, column: 2)
-        table.set(cell: list2, forRow: 1, column: 0)
+        table.setCell(list, row: 3, column: 2)
+        table.setCell(list2, row: 1, column: 0)
 
-        table.set(alignment: .left, forColumn: 2)
-        table.set(alignment: .right, forColumn: 1)
+        table.setAlignment(.left, forColumn: 2)
+        table.setAlignment(.right, forColumn: 1)
 
         // Verify that everything is created correctly
         #expect(table.cells.count == 4) // 4 rows
@@ -581,11 +581,11 @@ struct MathListTests {
         list2.add(atom3)
         list2.add(atom2)
 
-        table.set(cell: list, forRow: 0, column: 1)
-        table.set(cell: list2, forRow: 0, column: 2)
+        table.setCell(list, row: 0, column: 1)
+        table.setCell(list2, row: 0, column: 2)
 
-        table.set(alignment: .left, forColumn: 2)
-        table.set(alignment: .right, forColumn: 1)
+        table.setAlignment(.left, forColumn: 2)
+        table.setAlignment(.right, forColumn: 1)
         table.interRowAdditionalSpacing = 3
         table.interColumnSpacing = 10
 

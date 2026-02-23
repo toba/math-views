@@ -10,7 +10,7 @@ import UIKit
 // MARK: - Dirac Notation Render Tests
 
 struct DiracRenderTests {
-    let font = MathFont.latinModernFont
+    let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
     static let diracExpressionCases: [RenderCase] = [

@@ -7,14 +7,14 @@ struct GlyphBoundsTest {
     let font: FontInstance
 
     init() {
-        font = MathFont.termesFont.fontInstance(size: 20)
+        font = MathFont.termes.fontInstance(size: 20)
     }
 
     @Test func glyphBounds() {
         // Get the actual glyph objects
-        let circumflexGlyph = font.get(glyphWithName: "circumflex")
+        let circumflexGlyph = font.glyph(named: "circumflex")
         let arrowGlyph = font
-            .get(glyphWithName: "arrowright") // rightarrow for stretchy overrightarrow
+            .glyph(named: "arrowright") // rightarrow for stretchy overrightarrow
 
         print("\n=== Detailed Glyph Bounds Analysis ===\n")
 

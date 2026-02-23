@@ -12,7 +12,7 @@ struct LimitOperatorRegressionTests {
     let font: FontInstance
 
     init() {
-        font = MathFont.latinModernFont.fontInstance(size: 20)
+        font = MathFont.latinModern.fontInstance(size: 20)
     }
 
     // MARK: - Limit Operator Tests
@@ -24,8 +24,8 @@ struct LimitOperatorRegressionTests {
         let mathList = MathListBuilder.build(fromString: latex)
         #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .text,
         ))
@@ -61,14 +61,14 @@ struct LimitOperatorRegressionTests {
         // Regression test: Subscript should use script-sized font (~70% of base)
         // Bug: Subscript was rendering at full size (not scaled to script style)
         let baseFontSize: CGFloat = 20.0
-        let testFont = MathFont.termesFont.fontInstance(size: baseFontSize)
+        let testFont = MathFont.termes.fontInstance(size: baseFontSize)
 
         let latex = "\\lim_{x\\to\\infty}f(x)"
         let mathList = MathListBuilder.build(fromString: latex)
         #expect(mathList != nil, "Should parse LaTeX")
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: testFont, style: .text),
+            Typesetter.makeLineDisplay(for: mathList, font: testFont, style: .text),
         )
 
         // Find the limit operator display
@@ -116,14 +116,14 @@ struct LimitOperatorRegressionTests {
         // Regression test: Vertical spacing between lim and subscript should match OpenType MATH metrics
         // Bug: Originally had 50% reduction in text mode, making spacing too tight
         let baseFontSize: CGFloat = 20.0
-        let testFont = MathFont.termesFont.fontInstance(size: baseFontSize)
+        let testFont = MathFont.termes.fontInstance(size: baseFontSize)
 
         let latex = "\\lim_{x\\to\\infty}f(x)"
         let mathList = MathListBuilder.build(fromString: latex)
         #expect(mathList != nil, "Should parse LaTeX")
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: testFont, style: .text),
+            Typesetter.makeLineDisplay(for: mathList, font: testFont, style: .text),
         )
 
         // Find the limit operator display
@@ -171,8 +171,8 @@ struct LimitOperatorRegressionTests {
         let mathList = MathListBuilder.build(fromString: latex)
         #expect(mathList != nil, "Should parse \\\(op)")
 
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .text,
         ))
@@ -213,8 +213,8 @@ struct LimitOperatorRegressionTests {
         let mathList = MathListBuilder.build(fromString: latex)
         #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .text,
         ))
@@ -263,8 +263,8 @@ struct LimitOperatorRegressionTests {
 
         mathList.add(op)
 
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .text,
         ))
@@ -305,7 +305,7 @@ struct LimitOperatorRegressionTests {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
 
         // Find the integral glyph
@@ -347,14 +347,14 @@ struct LimitOperatorRegressionTests {
         // Regression test: Integrals in text mode should be taller than surrounding text
         // Bug: Integrals in inline mode were not higher than f(x)
         let baseFontSize: CGFloat = 20.0
-        let testFont = MathFont.termesFont.fontInstance(size: baseFontSize)
+        let testFont = MathFont.termes.fontInstance(size: baseFontSize)
 
         let latex = "\\int f(x) dx"
         let mathList = MathListBuilder.build(fromString: latex)
         #expect(mathList != nil, "Should parse LaTeX")
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: testFont, style: .text),
+            Typesetter.makeLineDisplay(for: mathList, font: testFont, style: .text),
         )
 
         // Find the integral glyph
@@ -400,7 +400,7 @@ struct LimitOperatorRegressionTests {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
 
         // Integral with scripts should have reasonable dimensions
@@ -421,7 +421,7 @@ struct LimitOperatorRegressionTests {
         #expect(mathList != nil, "Should parse LaTeX")
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
 
         // Find all integral glyphs
@@ -457,7 +457,7 @@ struct LimitOperatorRegressionTests {
         #expect(mathList != nil, "Should parse \\\(op)")
 
         let display = try #require(
-            Typesetter.createLineForMathList(mathList, font: font, style: .display),
+            Typesetter.makeLineDisplay(for: mathList, font: font, style: .display),
         )
 
         // Find the integral glyph
@@ -489,8 +489,8 @@ struct LimitOperatorRegressionTests {
         let mathList = MathListBuilder.build(fromString: latex)
         #expect(mathList != nil, "Should parse LaTeX")
 
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .text,
         ))
@@ -520,8 +520,8 @@ struct LimitOperatorRegressionTests {
         let mathList = MathListBuilder.build(fromString: latex)
         #expect(mathList != nil, "Should parse complex LaTeX")
 
-        let display = try #require(Typesetter.createLineForMathList(
-            mathList,
+        let display = try #require(Typesetter.makeLineDisplay(
+            for: mathList,
             font: font,
             style: .text,
         ))

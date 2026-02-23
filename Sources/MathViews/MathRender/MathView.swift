@@ -28,12 +28,12 @@ public enum MathTextAlignment: UInt {
 ///
 /// ```swift
 /// MathView(latex: "x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}")
-///     .font(.latinModernFont)
+///     .font(.latinModern)
 ///     .fontSize(24)
 /// ```
 public struct MathView: View {
     private let latex: String
-    private var font: MathFont = .latinModernFont
+    private var font: MathFont = .latinModern
     private var fontSize: CGFloat = 20
     private var textColor: Color = .primary
     private var labelMode: MathLabelMode = .display
@@ -149,13 +149,13 @@ public struct MathView: View {
         }
 
         guard
-            let displayList = Typesetter.createLineForMathList(
-                mathList, font: fontInst, style: currentStyle, maxWidth: maxWidth,
+            let displayList = Typesetter.makeLineDisplay(
+                for: mathList, font: fontInst, style: currentStyle, maxWidth: maxWidth,
             )
         else {
             return .success(
                 RenderInfo(
-                    displayList: MathListDisplay(withDisplays: [], range: 0 ..< 0),
+                    displayList: MathListDisplay(displays: [], range: 0 ..< 0),
                     size: .zero,
                 ),
             )

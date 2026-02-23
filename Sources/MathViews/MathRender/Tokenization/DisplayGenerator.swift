@@ -224,8 +224,8 @@ final class DisplayGenerator {
             // Get script font metrics for display-based positioning
             let scriptStyle: LineStyle =
                 (style == .display || style == .text) ? .script : .scriptOfScript
-            let scriptFontSize = Typesetter.getStyleSize(scriptStyle, font: font)
-            let scriptFont = font.copy(withSize: scriptFontSize)
+            let scriptFontSize = Typesetter.styleSize(scriptStyle, font: font)
+            let scriptFont = font.withSize( scriptFontSize)
 
             if let scriptFontMetrics = scriptFont.mathTable {
                 // Position scripts relative to the glyph's edges (matches Typesetter line 571-572)
@@ -307,7 +307,7 @@ final class DisplayGenerator {
                 if let glyphDisplay = disp as? GlyphDisplay,
                    let mathTable = font.mathTable
                 {
-                    delta = mathTable.getItalicCorrection(glyphDisplay.glyph)
+                    delta = mathTable.italicCorrection(for: glyphDisplay.glyph)
                     break
                 }
             }
@@ -317,7 +317,7 @@ final class DisplayGenerator {
         for element in groupElements {
             if case let .script(scriptDisplay, isSuper) = element.content {
                 let scriptShift = isSuper ? superScriptShiftUp : -subscriptShiftDown
-                let scriptType: MathListDisplay.LinePosition = isSuper ? .superscript : .ssubscript
+                let scriptType: MathListDisplay.LinePosition = isSuper ? .superscript : .subscript
                 // Superscripts get delta added, subscripts don't (matches Typesetter line 622, 624)
                 let deltaOffset = isSuper ? delta : 0
                 let scriptPosition = CGPoint(
@@ -329,7 +329,7 @@ final class DisplayGenerator {
                 mutableScript.position = CGPoint.zero
 
                 let wrappedScript = MathListDisplay(
-                    withDisplays: [mutableScript],
+                    displays: [mutableScript],
                     range: scriptDisplay.range,
                 )
                 wrappedScript.type = scriptType
@@ -396,7 +396,7 @@ final class DisplayGenerator {
         }
 
         let display = CTLineDisplay(
-            withString: attrString,
+            attributedString: attrString,
             position: position,
             range: element.indexRange,
             font: font,

@@ -13,9 +13,9 @@ struct MathFontTests {
         let size = Int.random(in: 20 ... 40)
         for font in MathFont.allCases {
             #expect(font.cgFont() != nil)
-            #expect(font.ctFont(withSize: CGFloat(size)) != nil)
+            #expect(font.ctFont(size: CGFloat(size)) != nil)
             #expect(
-                font.ctFont(withSize: CGFloat(size)).fontSize == CGFloat(size),
+                font.ctFont(size: CGFloat(size)).fontSize == CGFloat(size),
                 "ctFont fontSize != size.",
             )
             #expect(
@@ -23,7 +23,7 @@ struct MathFontTests {
                 "cgFont.postScriptName != postScriptName",
             )
             #expect(
-                CTFontCopyFamilyName(font.ctFont(withSize: CGFloat(size))) as String == font
+                CTFontCopyFamilyName(font.ctFont(size: CGFloat(size))) as String == font
                     .fontFamilyName,
                 "ctfont.family != familyName",
             )
@@ -48,9 +48,9 @@ struct MathFontTests {
         let size = Int.random(in: 20 ... 40)
         let mathFont = try #require(MathFont.allCases.randomElement())
         #expect(mathFont.cgFont() != nil)
-        #expect(mathFont.ctFont(withSize: CGFloat(size)) != nil)
+        #expect(mathFont.ctFont(size: CGFloat(size)) != nil)
         #expect(
-            mathFont.ctFont(withSize: CGFloat(size)).fontSize == CGFloat(size),
+            mathFont.ctFont(size: CGFloat(size)).fontSize == CGFloat(size),
             "ctFont fontSize test",
         )
     }
@@ -78,7 +78,7 @@ struct MathFontTests {
                         #expect(font != nil, "font != nil")
                     case 1:
                         let size = CGFloat.random(in: 20 ... 40)
-                        let font = mathFont.ctFont(withSize: size)
+                        let font = mathFont.ctFont(size: size)
                         #expect(font != nil, "font != nil")
                     case 2:
                         let mathtable = mathFont.rawMathTable()
@@ -100,7 +100,7 @@ struct MathFontTests {
         let systemCTFont = CTFontCreateWithName(systemFont.fontName as CFString, 20, nil)
         #endif
 
-        let mathFont = MathFont.latinModernFont.fontInstance(size: 20)
+        let mathFont = MathFont.latinModern.fontInstance(size: 20)
         mathFont.fallbackFont = systemCTFont
 
         let mathList = try MathListBuilder.buildChecked(fromString: "\\text{中文测试}")
@@ -111,7 +111,7 @@ struct MathFontTests {
             #expect(atom.fontStyle == .roman, "Text atoms should have roman font style")
         }
 
-        let display = Typesetter.createLineForMathList(mathList, font: mathFont, style: .text)
+        let display = Typesetter.makeLineDisplay(for: mathList, font: mathFont, style: .text)
 
         #expect(display != nil, "Display should be created with fallback font")
         #expect((display?.width ?? 0) > 0, "Display should have non-zero width with fallback font")

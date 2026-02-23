@@ -3,7 +3,7 @@ import Foundation
 public import SwiftUI
 
 public struct MathImage {
-    public var font: MathFont = .latinModernFont
+    public var font: MathFont = .latinModern
     public var fontSize: CGFloat
     public var textColor: CGColor
 
@@ -88,8 +88,8 @@ extension MathImage {
             return (error, nil, nil)
         }
         guard
-            let displayList = Typesetter.createLineForMathList(
-                mathList, font: fontInst, style: currentStyle,
+            let displayList = Typesetter.makeLineDisplay(
+                for: mathList, font: fontInst, style: currentStyle,
             )
         else {
             return (nil, nil, nil)

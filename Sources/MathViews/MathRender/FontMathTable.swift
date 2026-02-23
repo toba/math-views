@@ -192,29 +192,29 @@ final class FontMathTable: @unchecked Sendable {
 
     /// Returns an Array of all the vertical variants of the glyph if any. If
     /// there are no variants for the glyph, the array contains the given glyph.
-    func getVerticalVariantsForGlyph(_ glyph: CGGlyph) -> [CGGlyph] {
+    func verticalVariants(for glyph: CGGlyph) -> [CGGlyph] {
         guard let variants = _mathTable[kVertVariants] as? [String: Any] else { return [] }
-        return getVariantsForGlyph(glyph, inDictionary: variants)
+        return self.variants(for: glyph, in: variants)
     }
 
     /// Returns an Array of all the horizontal variants of the glyph if any. If
     /// there are no variants for the glyph, the array contains the given glyph.
-    func getHorizontalVariantsForGlyph(_ glyph: CGGlyph) -> [CGGlyph] {
+    func horizontalVariants(for glyph: CGGlyph) -> [CGGlyph] {
         guard let variants = _mathTable[kHorizVariants] as? [String: Any] else { return [] }
-        return getVariantsForGlyph(glyph, inDictionary: variants)
+        return self.variants(for: glyph, in: variants)
     }
 
-    func getVariantsForGlyph(_ glyph: CGGlyph, inDictionary variants: [String: Any]) -> [CGGlyph] {
+    func variants(for glyph: CGGlyph, in variants: [String: Any]) -> [CGGlyph] {
         let font = mathFont.fontInstance(size: fontSize)
-        let glyphName = font.get(nameForGlyph: glyph)
+        let glyphName = font.glyphName(for: glyph)
 
         guard let variantGlyphs = variants[glyphName] as? [String], !variantGlyphs.isEmpty else {
-            let glyph = font.get(glyphWithName: glyphName)
+            let glyph = font.glyph(named: glyphName)
             return [glyph]
         }
         var glyphArray = [CGGlyph]()
         for glyphVariantName in variantGlyphs {
-            let variantGlyph = font.get(glyphWithName: glyphVariantName)
+            let variantGlyph = font.glyph(named: glyphVariantName)
             glyphArray.append(variantGlyph)
         }
         return glyphArray
@@ -227,9 +227,9 @@ final class FontMathTable: @unchecked Sendable {
     /// - Parameter forDisplayStyle: If true, selects the largest appropriate variant for display style.
     ///                             If false, selects the next larger variant (incremental sizing).
     /// - Returns: A larger glyph variant, or the original glyph if no variants exist
-    func getLargerGlyph(_ glyph: CGGlyph, forDisplayStyle: Bool = false) -> CGGlyph {
+    func largerGlyph(_ glyph: CGGlyph, displayStyle: Bool = false) -> CGGlyph {
         let font = mathFont.fontInstance(size: fontSize)
-        let glyphName = font.get(nameForGlyph: glyph)
+        let glyphName = font.glyphName(for: glyph)
 
         guard let variants = _mathTable[kVertVariants] as? [String: Any],
               let variantGlyphs = variants[glyphName] as? [String], !variantGlyphs.isEmpty
@@ -237,7 +237,7 @@ final class FontMathTable: @unchecked Sendable {
             return glyph
         }
 
-        if forDisplayStyle {
+        if displayStyle {
             let count = variantGlyphs.count
 
             let targetIndex: Int
@@ -250,10 +250,10 @@ final class FontMathTable: @unchecked Sendable {
             }
 
             let glyphVariantName = variantGlyphs[targetIndex]
-            return font.get(glyphWithName: glyphVariantName)
+            return font.glyph(named: glyphVariantName)
         } else {
             for glyphVariantName in variantGlyphs where glyphVariantName != glyphName {
-                return font.get(glyphWithName: glyphVariantName)
+                return font.glyph(named: glyphVariantName)
             }
         }
 
@@ -266,9 +266,9 @@ final class FontMathTable: @unchecked Sendable {
 
     /// Returns the italic correction for the given glyph if any. If there
     /// isn't any this returns 0.
-    func getItalicCorrection(_ glyph: CGGlyph) -> CGFloat {
+    func italicCorrection(for glyph: CGGlyph) -> CGFloat {
         let font = mathFont.fontInstance(size: fontSize)
-        let glyphName = font.get(nameForGlyph: glyph)
+        let glyphName = font.glyphName(for: glyph)
 
         guard let italics = _mathTable[kItalic] as? [String: Any],
               let val = italics[glyphName] as? Int
@@ -284,9 +284,9 @@ final class FontMathTable: @unchecked Sendable {
 
     /// Returns the adjustment to the top accent for the given glyph if any.
     /// If there isn't any this returns the center of the advance width.
-    func getTopAccentAdjustment(_ glyph: CGGlyph) -> CGFloat {
+    func topAccentAdjustment(for glyph: CGGlyph) -> CGFloat {
         let font = mathFont.fontInstance(size: fontSize)
-        let glyphName = font.get(nameForGlyph: glyph)
+        let glyphName = font.glyphName(for: glyph)
 
         guard let accents = _mathTable[kAccents] as? [String: Any],
               let val = accents[glyphName] as? Int
@@ -309,9 +309,9 @@ final class FontMathTable: @unchecked Sendable {
 
     /// Returns an array of the glyph parts to be used for constructing vertical variants
     /// of this glyph. If there is no glyph assembly defined, returns an empty array.
-    func getVerticalGlyphAssembly(forGlyph glyph: CGGlyph) -> [GlyphPart] {
+    func verticalGlyphAssembly(for glyph: CGGlyph) -> [GlyphPart] {
         let font = mathFont.fontInstance(size: fontSize)
-        let glyphName = font.get(nameForGlyph: glyph)
+        let glyphName = font.glyphName(for: glyph)
 
         guard let assemblyTable = _mathTable[kVertAssembly] as? [String: Any],
               let assemblyInfo = assemblyTable[glyphName] as? [String: Any],
@@ -332,7 +332,7 @@ final class FontMathTable: @unchecked Sendable {
             let endConnectorLength = fontUnitsToPt(end)
             let startConnectorLength = fontUnitsToPt(start)
             let isExtender = ext != 0
-            let glyph = font.get(glyphWithName: glyphName)
+            let glyph = font.glyph(named: glyphName)
             let part = GlyphPart(
                 glyph: glyph, fullAdvance: fullAdvance,
                 startConnectorLength: startConnectorLength,

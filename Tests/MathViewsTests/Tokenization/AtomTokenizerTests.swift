@@ -7,7 +7,7 @@ struct AtomTokenizerTests {
     let tokenizer: AtomTokenizer
 
     init() {
-        font = MathFont.latinModernFont.fontInstance(size: 20)
+        font = MathFont.latinModern.fontInstance(size: 20)
         tokenizer = AtomTokenizer(font: font, style: .display, cramped: false)
     }
 

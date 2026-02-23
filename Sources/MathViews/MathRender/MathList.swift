@@ -64,7 +64,7 @@ public enum MathAtomType: Int, CustomStringConvertible, Comparable, Sendable {
     /// math typesetting to handle matrices and other tables.
     case table = 1001
 
-    func isNotBinaryOperator() -> Bool {
+    func isBinaryOperator() -> Bool {
         switch self {
             case .binaryOperator, .relation, .open, .punctuation, .largeOperator: return true
             default: return false
@@ -261,13 +261,13 @@ public class MathAtom: CustomStringConvertible, Equatable, @unchecked Sendable {
         return finalized
     }
 
-    public var string: String {
+    public var latexString: String {
         var str = nucleus
         if let superScript {
-            str.append("^{\(superScript.string)}")
+            str.append("^{\(superScript.latexString)}")
         }
         if let subScript {
-            str.append("_{\(subScript.string)}")
+            str.append("_{\(subScript.latexString)}")
         }
         return str
     }
@@ -305,12 +305,12 @@ public class MathAtom: CustomStringConvertible, Equatable, @unchecked Sendable {
     /// Returns true if this atom allows scripts (sub or super).
     func isScriptAllowed() -> Bool { type.isScriptAllowed() }
 
-    func isNotBinaryOperator() -> Bool { type.isNotBinaryOperator() }
+    func isBinaryOperator() -> Bool { type.isBinaryOperator() }
 }
 
-func isNotBinaryOperator(_ prevNode: MathAtom?) -> Bool {
+func isBinaryOperator(_ prevNode: MathAtom?) -> Bool {
     guard let prevNode else { return true }
-    return prevNode.type.isNotBinaryOperator()
+    return prevNode.type.isBinaryOperator()
 }
 
 // MARK: - Fraction
@@ -430,17 +430,17 @@ public final class LargeOperator: MathAtom {
     /// Indicates whether the limits (if present) should be displayed
     /// above and below the operator in display mode. If limits is false
     /// then the limits (if present) are displayed like a regular subscript/superscript.
-    public var limits: Bool = false
+    public var hasLimits: Bool = false
 
     init(_ op: LargeOperator?) {
         super.init(op)
         type = .largeOperator
-        limits = op!.limits
+        hasLimits = op!.hasLimits
     }
 
-    init(value: String, limits: Bool) {
+    init(value: String, hasLimits: Bool) {
         super.init(type: .largeOperator, value: value)
-        self.limits = limits
+        self.hasLimits = hasLimits
     }
 }
 
@@ -633,13 +633,13 @@ public enum LineStyle: Int, Comparable, Sendable {
     /// Script script style (for scripts of scripts)
     case scriptOfScript
 
-    public func inc() -> LineStyle {
+    public func incremented() -> LineStyle {
         let raw = rawValue + 1
         if let style = LineStyle(rawValue: raw) { return style }
         return .display
     }
 
-    public var isNotScript: Bool { self < .script }
+    public var isAboveScript: Bool { self < .script }
     public static func < (lhs: LineStyle, rhs: LineStyle) -> Bool { lhs.rawValue < rhs.rawValue }
 }
 
@@ -687,8 +687,8 @@ public final class MathColorAtom: MathAtom {
         type = .color
     }
 
-    override public var string: String {
-        "\\color{\(colorString)}{\(innerList!.string)}"
+    override public var latexString: String {
+        "\\color{\(colorString)}{\(innerList!.latexString)}"
     }
 
     override public var finalized: MathAtom {
@@ -720,8 +720,8 @@ public final class MathTextColor: MathAtom {
         type = .textColor
     }
 
-    override public var string: String {
-        "\\textcolor{\(colorString)}{\(innerList!.string)}"
+    override public var latexString: String {
+        "\\textcolor{\(colorString)}{\(innerList!.latexString)}"
     }
 
     override public var finalized: MathAtom {
@@ -753,8 +753,8 @@ public final class MathColorbox: MathAtom {
         type = .colorBox
     }
 
-    override public var string: String {
-        "\\colorbox{\(colorString)}{\(innerList!.string)}"
+    override public var latexString: String {
+        "\\colorbox{\(colorString)}{\(innerList!.latexString)}"
     }
 
     override public var finalized: MathAtom {
@@ -836,7 +836,7 @@ public final class MathTable: MathAtom {
     }
 
     /// Set the value of a given cell. The table is automatically resized to contain this cell.
-    public func set(cell list: MathList, forRow row: Int, column: Int) {
+    public func setCell(_ list: MathList, row: Int, column: Int) {
         if cells.count <= row {
             for _ in cells.count ... row {
                 cells.append([])
@@ -853,7 +853,7 @@ public final class MathTable: MathAtom {
 
     /// Set the alignment of a particular column. The table is automatically resized to
     /// contain this column and any new columns added have their alignment set to center.
-    public func set(alignment: ColumnAlignment, forColumn col: Int) {
+    public func setAlignment(_ alignment: ColumnAlignment, forColumn col: Int) {
         if alignments.count <= col {
             for _ in alignments.count ... col {
                 alignments.append(ColumnAlignment.center)
@@ -865,7 +865,7 @@ public final class MathTable: MathAtom {
 
     /// Gets the alignment for a given column. If the alignment is not specified it defaults
     /// to center.
-    public func get(alignmentForColumn col: Int) -> ColumnAlignment {
+    public func alignment(forColumn col: Int) -> ColumnAlignment {
         if alignments.count <= col {
             return ColumnAlignment.center
         } else {
@@ -889,7 +889,7 @@ public final class MathTable: MathAtom {
 extension MathList: CustomStringConvertible {
     public var description: String { atoms.description }
     /// converts the MathList to a string form. Note: This is not the LaTeX form.
-    public var string: String { description }
+    public var latexString: String { description }
 }
 
 /// A representation of a list of math objects.
@@ -929,7 +929,7 @@ public final class MathList: Equatable, @unchecked Sendable {
 
             switch newNode.type {
                 case .binaryOperator:
-                    if isNotBinaryOperator(prevNode) {
+                    if isBinaryOperator(prevNode) {
                         newNode.type = .unaryOperator
                     }
                 case .relation, .punctuation, .close:

@@ -8,7 +8,7 @@ struct WidehatGlyphTest {
     let font: FontInstance
 
     init() {
-        font = MathFont.termesFont.fontInstance(size: 20)
+        font = MathFont.termes.fontInstance(size: 20)
     }
 
     @Test func widehatGlyphAvailability() {
@@ -16,8 +16,8 @@ struct WidehatGlyphTest {
         print("\n=== Widehat Glyph Analysis ===")
 
         let circumflexChar = "\u{0302}" // COMBINING CIRCUMFLEX ACCENT
-        let baseGlyph = font.get(glyphWithName: circumflexChar)
-        let glyphName = font.get(nameForGlyph: baseGlyph)
+        let baseGlyph = font.glyph(named: circumflexChar)
+        let glyphName = font.glyphName(for: baseGlyph)
 
         print("Base circumflex character: U+0302")
         print("  Glyph ID: \(baseGlyph)")
@@ -25,11 +25,11 @@ struct WidehatGlyphTest {
 
         // Check for horizontal variants
         if let mathTable = font.mathTable {
-            let variants = mathTable.getHorizontalVariantsForGlyph(baseGlyph)
+            let variants = mathTable.horizontalVariants(for: baseGlyph)
             print("  Found \(variants.count) horizontal variant(s)")
 
             for (index, variantGlyph) in variants.enumerated() {
-                let variantName = font.get(nameForGlyph: variantGlyph)
+                let variantName = font.glyphName(for: variantGlyph)
 
                 var glyph = variantGlyph
                 var advances = CGSize.zero
@@ -50,9 +50,9 @@ struct WidehatGlyphTest {
         ]
 
         for name in namedGlyphs {
-            let glyph = font.get(glyphWithName: name)
+            let glyph = font.glyph(named: name)
             if glyph != 0 {
-                let actualName = font.get(nameForGlyph: glyph)
+                let actualName = font.glyphName(for: glyph)
                 print("  \(name) -> \(actualName) (glyph \(glyph))")
             } else {
                 print("  \(name) -> NOT FOUND")
@@ -65,8 +65,8 @@ struct WidehatGlyphTest {
         print("\n=== Widetilde Glyph Analysis ===")
 
         let tildeChar = "\u{0303}" // COMBINING TILDE
-        let baseGlyph = font.get(glyphWithName: tildeChar)
-        let glyphName = font.get(nameForGlyph: baseGlyph)
+        let baseGlyph = font.glyph(named: tildeChar)
+        let glyphName = font.glyphName(for: baseGlyph)
 
         print("Base tilde character: U+0303")
         print("  Glyph ID: \(baseGlyph)")
@@ -74,11 +74,11 @@ struct WidehatGlyphTest {
 
         // Check for horizontal variants
         if let mathTable = font.mathTable {
-            let variants = mathTable.getHorizontalVariantsForGlyph(baseGlyph)
+            let variants = mathTable.horizontalVariants(for: baseGlyph)
             print("  Found \(variants.count) horizontal variant(s)")
 
             for (index, variantGlyph) in variants.enumerated() {
-                let variantName = font.get(nameForGlyph: variantGlyph)
+                let variantName = font.glyphName(for: variantGlyph)
 
                 var glyph = variantGlyph
                 var advances = CGSize.zero
@@ -99,9 +99,9 @@ struct WidehatGlyphTest {
         ]
 
         for name in namedGlyphs {
-            let glyph = font.get(glyphWithName: name)
+            let glyph = font.glyph(named: name)
             if glyph != 0 {
-                let actualName = font.get(nameForGlyph: glyph)
+                let actualName = font.glyphName(for: glyph)
                 print("  \(name) -> \(actualName) (glyph \(glyph))")
             } else {
                 print("  \(name) -> NOT FOUND")
@@ -122,7 +122,7 @@ struct WidehatGlyphTest {
 
         for (latex, description) in testCases {
             let mathList = MathListBuilder.build(fromString: latex)
-            let display = Typesetter.createLineForMathList(mathList, font: font, style: .display)
+            let display = Typesetter.makeLineDisplay(for: mathList, font: font, style: .display)
 
             if let display,
                let accentDisp = display.subDisplays.first as? AccentDisplay,

@@ -1,6 +1,35 @@
 import CoreText
 import Foundation
 
+// MARK: - Plist Data Model
+
+/// Typed representation of a companion `.plist` MATH table file.
+/// Decoded once at font load time; eliminates all `[String: Any]` casts.
+struct MathTableData: Decodable {
+    let version: String
+    let constants: [String: Int]
+    let accents: [String: Int]
+    let italic: [String: Int]
+    let v_variants: [String: [String]]
+    let h_variants: [String: [String]]
+    let v_assembly: [String: AssemblyEntry]
+
+    struct AssemblyEntry: Decodable {
+        let italic: Int
+        let parts: [PartEntry]
+    }
+
+    struct PartEntry: Decodable {
+        let advance: Int
+        let endConnector: Int
+        let startConnector: Int
+        let extender: Bool
+        let glyph: String
+    }
+}
+
+// MARK: - GlyphPart
+
 /// One piece of an extensible glyph assembly (top cap, bottom cap, mid section, or extender).
 /// Used by the typesetter to construct tall delimiters and radical signs from parts defined
 /// in the font's OpenType MATH table.
@@ -20,6 +49,8 @@ struct GlyphPart {
     /// If this part is an extender. If set, the part can be skipped or repeated.
     let isExtender: Bool
 }
+
+// MARK: - FontMathTable
 
 /// Provides access to OpenType MATH table metrics for a specific font and size.
 ///
@@ -42,10 +73,8 @@ final class FontMathTable {
     let mathFont: MathFont
     let fontSize: CGFloat
     let unitsPerEm: UInt
-    private let _mathTable: [String: Any]
+    private let data: MathTableData
     private let _graphicsFont: CGFont
-
-    private let kConstants = "constants"
 
     /// Target position in the variant list for display-style glyph selection (0.6 = 60%).
     private static let displayStyleVariantRatio = 0.6
@@ -61,7 +90,7 @@ final class FontMathTable {
         self.mathFont = mathFont
         fontSize = size
         self.unitsPerEm = unitsPerEm
-        _mathTable = mathFont.rawMathTable()
+        data = mathFont.mathTableData()
         _graphicsFont = mathFont.graphicsFont()
     }
 
@@ -74,20 +103,12 @@ final class FontMathTable {
     }
 
     func constantFromTable(_ name: String) -> CGFloat {
-        guard let constants = _mathTable[kConstants] as? [String: Any],
-              let value = constants[name] as? Int
-        else {
-            return .zero
-        }
+        guard let value = data.constants[name] else { return .zero }
         return fontUnitsToPt(value)
     }
 
     func percentFromTable(_ percentName: String) -> CGFloat {
-        guard let constants = _mathTable[kConstants] as? [String: Any],
-              let value = constants[percentName] as? Int
-        else {
-            return .zero
-        }
+        guard let value = data.constants[percentName] else { return .zero }
         return CGFloat(value) / 100
     }
 
@@ -214,27 +235,22 @@ final class FontMathTable {
 
     // MARK: - Variants
 
-    private let kVertVariants = "v_variants"
-    private let kHorizVariants = "h_variants"
-
     /// Returns an Array of all the vertical variants of the glyph if any. If
     /// there are no variants for the glyph, the array contains the given glyph.
     func verticalVariants(for glyph: CGGlyph) -> [CGGlyph] {
-        guard let variants = _mathTable[kVertVariants] as? [String: Any] else { return [] }
-        return self.variants(for: glyph, in: variants)
+        variants(for: glyph, in: data.v_variants)
     }
 
     /// Returns an Array of all the horizontal variants of the glyph if any. If
     /// there are no variants for the glyph, the array contains the given glyph.
     func horizontalVariants(for glyph: CGGlyph) -> [CGGlyph] {
-        guard let variants = _mathTable[kHorizVariants] as? [String: Any] else { return [] }
-        return self.variants(for: glyph, in: variants)
+        variants(for: glyph, in: data.h_variants)
     }
 
-    func variants(for glyph: CGGlyph, in variants: [String: Any]) -> [CGGlyph] {
+    func variants(for glyph: CGGlyph, in variants: [String: [String]]) -> [CGGlyph] {
         let name = glyphName(for: glyph)
 
-        guard let variantGlyphs = variants[name] as? [String], !variantGlyphs.isEmpty else {
+        guard let variantGlyphs = variants[name], !variantGlyphs.isEmpty else {
             let glyph = self.glyph(named: name)
             return [glyph]
         }
@@ -256,9 +272,7 @@ final class FontMathTable {
     func largerGlyph(_ glyph: CGGlyph, displayStyle: Bool = false) -> CGGlyph {
         let name = glyphName(for: glyph)
 
-        guard let variants = _mathTable[kVertVariants] as? [String: Any],
-              let variantGlyphs = variants[name] as? [String], !variantGlyphs.isEmpty
-        else {
+        guard let variantGlyphs = data.v_variants[name], !variantGlyphs.isEmpty else {
             return glyph
         }
 
@@ -288,33 +302,22 @@ final class FontMathTable {
 
     // MARK: - Italic Correction
 
-    private let kItalic = "italic"
-
     /// Returns the italic correction for the given glyph if any. If there
     /// isn't any this returns 0.
     func italicCorrection(for glyph: CGGlyph) -> CGFloat {
         let name = glyphName(for: glyph)
-
-        guard let italics = _mathTable[kItalic] as? [String: Any],
-              let value = italics[name] as? Int
-        else {
-            return .zero
-        }
+        guard let value = data.italic[name] else { return .zero }
         return fontUnitsToPt(value)
     }
 
     // MARK: - Accents
-
-    private let kAccents = "accents"
 
     /// Returns the adjustment to the top accent for the given glyph if any.
     /// If there isn't any this returns the center of the advance width.
     func topAccentAdjustment(for glyph: CGGlyph) -> CGFloat {
         let name = glyphName(for: glyph)
 
-        guard let accents = _mathTable[kAccents] as? [String: Any],
-              let value = accents[name] as? Int
-        else {
+        guard let value = data.accents[name] else {
             var glyph = glyph
             var advances = CGSize.zero
             let ctFont = mathFont.coreTextFont(size: fontSize)
@@ -329,39 +332,22 @@ final class FontMathTable {
     /// Minimum overlap of connecting glyphs during glyph construction
     var minConnectorOverlap: CGFloat { constantFromTable("MinConnectorOverlap") }
 
-    private let kVertAssembly = "v_assembly"
-    private let kAssemblyParts = "parts"
-
     /// Returns an array of the glyph parts to be used for constructing vertical variants
     /// of this glyph. If there is no glyph assembly defined, returns an empty array.
     func verticalGlyphAssembly(for glyph: CGGlyph) -> [GlyphPart] {
         let name = glyphName(for: glyph)
 
-        guard let assemblyTable = _mathTable[kVertAssembly] as? [String: Any],
-              let assemblyInfo = assemblyTable[name] as? [String: Any],
-              let partDicts = assemblyInfo[kAssemblyParts] as? [[String: Any]]
-        else {
-            return []
-        }
+        guard let entry = data.v_assembly[name] else { return [] }
 
         var parts = [GlyphPart]()
-        for partInfo in partDicts {
-            guard let advance = partInfo["advance"] as? Int,
-                  let endConnector = partInfo["endConnector"] as? Int,
-                  let startConnector = partInfo["startConnector"] as? Int,
-                  let extender = partInfo["extender"] as? Int,
-                  let partGlyphName = partInfo["glyph"] as? String
-            else { continue }
-            let fullAdvance = fontUnitsToPt(advance)
-            let endConnectorLength = fontUnitsToPt(endConnector)
-            let startConnectorLength = fontUnitsToPt(startConnector)
-            let isExtender = extender != 0
-            let partGlyph = self.glyph(named: partGlyphName)
+        for partEntry in entry.parts {
+            let partGlyph = self.glyph(named: partEntry.glyph)
             let part = GlyphPart(
-                glyph: partGlyph, fullAdvance: fullAdvance,
-                startConnectorLength: startConnectorLength,
-                endConnectorLength: endConnectorLength,
-                isExtender: isExtender,
+                glyph: partGlyph,
+                fullAdvance: fontUnitsToPt(partEntry.advance),
+                startConnectorLength: fontUnitsToPt(partEntry.startConnector),
+                endConnectorLength: fontUnitsToPt(partEntry.endConnector),
+                isExtender: partEntry.extender,
             )
             parts.append(part)
         }

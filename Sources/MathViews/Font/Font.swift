@@ -59,8 +59,8 @@ public enum MathFont: String, CaseIterable, Identifiable, Sendable {
         BundleManager.manager.obtainCoreTextFont(font: self, size: size)
     }
 
-    func rawMathTable() -> [String: Any] {
-        BundleManager.manager.obtainRawMathTable(font: self)
+    func mathTableData() -> MathTableData {
+        BundleManager.manager.obtainMathTableData(font: self)
     }
 
     public func fontInstance(size: CGFloat) -> FontInstance {
@@ -87,7 +87,7 @@ extension CTFont {
 
     private var graphicsFonts = [MathFont: CGFont]()
     private var coreTextFonts = [FontSizePair: CTFont]()
-    private var rawMathTables = [MathFont: [String: Any]]()
+    private var mathTableDataCache = [MathFont: MathTableData]()
 
     private static func loadGraphicsFont(mathFont: MathFont) throws(FontError) -> CGFont {
         guard
@@ -115,7 +115,7 @@ extension CTFont {
         return graphicsFont
     }
 
-    private static func loadMathTable(mathFont: MathFont) throws(FontError) -> [String: Any] {
+    private static func loadMathTable(mathFont: MathFont) throws(FontError) -> MathTableData {
         guard
             let frameworkBundleURL = Bundle.module.url(
                 forResource: "mathFonts",
@@ -128,17 +128,13 @@ extension CTFont {
             throw FontError.fontPathNotFound
         }
         guard let plistData = try? Data(contentsOf: mathTablePlist),
-              let plist =
-              (try? PropertyListSerialization.propertyList(
-                  from: plistData, format: nil,
-              )) as? [String: Any],
-              let version = plist["version"] as? String,
-              version == expectedPlistVersion
+              let tableData = try? PropertyListDecoder().decode(MathTableData.self, from: plistData),
+              tableData.version == expectedPlistVersion
         else {
             throw FontError.invalidMathTable
         }
 
-        return plist
+        return tableData
     }
 
     private func onDemandRegistration(mathFont: MathFont) {
@@ -150,7 +146,7 @@ extension CTFont {
 
             if graphicsFonts[mathFont] == nil {
                 graphicsFonts[mathFont] = graphicsFont
-                rawMathTables[mathFont] = mathTable
+                mathTableDataCache[mathFont] = mathTable
             }
         } catch {
             fatalError(
@@ -182,9 +178,9 @@ extension CTFont {
         return result
     }
 
-    fileprivate func obtainRawMathTable(font: MathFont) -> [String: Any] {
+    fileprivate func obtainMathTableData(font: MathFont) -> MathTableData {
         onDemandRegistration(mathFont: font)
-        guard let data = rawMathTables[font] else {
+        guard let data = mathTableDataCache[font] else {
             fatalError("unable to locate mathTable: \(font.rawValue).plist")
         }
         return data

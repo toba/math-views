@@ -47,6 +47,9 @@ final class FontMathTable {
 
     private let kConstants = "constants"
 
+    /// Target position in the variant list for display-style glyph selection (0.6 = 60%).
+    private static let displayStyleVariantRatio = 0.6
+
     /// MU unit in points
     var muUnit: CGFloat { fontSize / 18 }
 
@@ -118,8 +121,15 @@ final class FontMathTable {
 
     // MARK: - Non-standard
 
-    var fractionDelimiterSize: CGFloat { 1.01 * fontSize }
-    var fractionDelimiterDisplayStyleSize: CGFloat { 2.39 * fontSize }
+    /// Non-standard multiplier for fraction delimiter height (text style).
+    private static let fractionDelimiterMultiplier: CGFloat = 1.01
+    /// Non-standard multiplier for fraction delimiter height (display style).
+    private static let fractionDelimiterDisplayMultiplier: CGFloat = 2.39
+
+    var fractionDelimiterSize: CGFloat { Self.fractionDelimiterMultiplier * fontSize }
+    var fractionDelimiterDisplayStyleSize: CGFloat {
+        Self.fractionDelimiterDisplayMultiplier * fontSize
+    }
 
     // MARK: - Stacks
 
@@ -261,7 +271,8 @@ final class FontMathTable {
             } else if count <= 4 {
                 targetIndex = count - 2
             } else {
-                targetIndex = min(count - 2, Int(Double(count) * 0.6))
+                // Pick a variant ~60% through the list for display style
+                targetIndex = min(count - 2, Int(Double(count) * Self.displayStyleVariantRatio))
             }
 
             let glyphVariantName = variantGlyphs[targetIndex]

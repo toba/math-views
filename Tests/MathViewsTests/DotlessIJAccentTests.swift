@@ -293,7 +293,7 @@ struct DotlessIJAccentTests {
         let expectedBase: String
         var testDescription: String { "\(unicode) -> \(expectedBase)" }
 
-        static let otherAccented: [AccentedCharCase] = [
+        nonisolated static let otherAccented: [AccentedCharCase] = [
             AccentedCharCase(unicode: "é", expectedBase: "e"),
             AccentedCharCase(unicode: "ñ", expectedBase: "n"),
             AccentedCharCase(unicode: "ü", expectedBase: "u"),
@@ -301,7 +301,7 @@ struct DotlessIJAccentTests {
             AccentedCharCase(unicode: "ô", expectedBase: "o"),
         ]
 
-        static let uppercaseAccented: [AccentedCharCase] = [
+        nonisolated static let uppercaseAccented: [AccentedCharCase] = [
             AccentedCharCase(unicode: "Î", expectedBase: "I"), // circumflex
             AccentedCharCase(unicode: "Ï", expectedBase: "I"), // dieresis
             AccentedCharCase(unicode: "Í", expectedBase: "I"), // acute

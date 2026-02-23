@@ -16,7 +16,7 @@ protocol Shiftable {
 // MARK: - Display
 
 /// The base class for rendering a math equation.
-public class Display: @unchecked Sendable {
+public class Display {
     init() {}
 
     /// Draws itself in the given graphics context.
@@ -60,14 +60,14 @@ public class Display: @unchecked Sendable {
 }
 
 /// Special class to be inherited from that implements the Shiftable protocol
-class ShiftableDisplay: Display, Shiftable, @unchecked Sendable {
+class ShiftableDisplay: Display, Shiftable {
     var shiftDown: CGFloat = 0
 }
 
 // MARK: - CTLineDisplay
 
 /// A rendering of a single CTLine as an Display
-public final class CTLineDisplay: Display, @unchecked Sendable {
+public final class CTLineDisplay: Display {
     /// The CTLine being displayed
     public var line: CTLine!
     /// The attributed string used to generate the CTLineRef. Note setting this does not reset the dimensions of
@@ -142,7 +142,7 @@ public final class CTLineDisplay: Display, @unchecked Sendable {
 
 /// A MathListDisplay is a rendered form of MathList in one line.
 /// It can render itself using the draw method.
-public final class MathListDisplay: Display, @unchecked Sendable {
+public final class MathListDisplay: Display {
     ///     The type of position for a line, i.e. subscript/superscript or regular.
     public enum LinePosition: Int {
         /// Regular
@@ -230,7 +230,7 @@ public final class MathListDisplay: Display, @unchecked Sendable {
 // MARK: - FractionDisplay
 
 /// Rendering of an Fraction as an Display
-public final class FractionDisplay: Display, @unchecked Sendable {
+public final class FractionDisplay: Display {
     /// A display representing the numerator of the fraction. Its position is relative
     /// to the parent and is not treated as a sub-display.
     public fileprivate(set) var numerator: MathListDisplay?
@@ -342,7 +342,7 @@ public final class FractionDisplay: Display, @unchecked Sendable {
 // MARK: - RadicalDisplay
 
 /// Rendering of an Radical as an Display
-final class RadicalDisplay: Display, @unchecked Sendable {
+final class RadicalDisplay: Display {
     /// A display representing the radicand of the radical. Its position is relative
     /// to the parent is not treated as a sub-display.
     fileprivate(set) var radicand: MathListDisplay?
@@ -471,7 +471,7 @@ final class RadicalDisplay: Display, @unchecked Sendable {
 // MARK: - GlyphDisplay
 
 /// Rendering a glyph as a display
-final class GlyphDisplay: ShiftableDisplay, @unchecked Sendable {
+final class GlyphDisplay: ShiftableDisplay {
     var glyph: CGGlyph!
     var font: FontInstance?
     /// Horizontal scale factor for stretching glyphs (1.0 = no scaling)
@@ -521,7 +521,7 @@ final class GlyphDisplay: ShiftableDisplay, @unchecked Sendable {
 
 // MARK: - GlyphConstructionDisplay
 
-final class GlyphConstructionDisplay: ShiftableDisplay, @unchecked Sendable {
+final class GlyphConstructionDisplay: ShiftableDisplay {
     var glyphs = [CGGlyph]()
     var positions = [CGPoint]()
     var font: FontInstance?
@@ -567,7 +567,7 @@ final class GlyphConstructionDisplay: ShiftableDisplay, @unchecked Sendable {
 // MARK: - LargeOpLimitsDisplay
 
 /// Rendering a large operator with limits as an Display
-final class LargeOpLimitsDisplay: Display, @unchecked Sendable {
+final class LargeOpLimitsDisplay: Display {
     /// A display representing the upper limit of the large operator. Its position is relative
     /// to the parent is not treated as a sub-display.
     var upperLimit: MathListDisplay?
@@ -698,7 +698,7 @@ final class LargeOpLimitsDisplay: Display, @unchecked Sendable {
 // MARK: - LineDisplay
 
 /// Rendering of an list with an overline or underline
-final class LineDisplay: Display, @unchecked Sendable {
+final class LineDisplay: Display {
     /// A display representing the inner list that is underlined. Its position is relative
     /// to the parent is not treated as a sub-display.
     var inner: MathListDisplay?
@@ -756,7 +756,7 @@ final class LineDisplay: Display, @unchecked Sendable {
 // MARK: - AccentDisplay
 
 /// Rendering an accent as a display
-final class AccentDisplay: Display, @unchecked Sendable {
+final class AccentDisplay: Display {
     /// A display representing the inner list that is accented. Its position is relative
     /// to the parent is not treated as a sub-display.
     var accentee: MathListDisplay?

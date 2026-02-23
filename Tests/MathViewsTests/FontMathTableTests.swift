@@ -19,31 +19,4 @@ struct FontMathTableTests {
             ].compactMap(\.self)
         }
     }
-
-    @Test func concurrentThreadsafe() throws {
-        let queue = DispatchQueue(label: "com.swiftmath.mathbundle", attributes: .concurrent)
-        let group = DispatchGroup()
-        let totalCases = 1000
-        let fontInstances = (0 ..< 10).map { _ in
-            MathFont.allCases.randomElement()!.fontInstance(size: CGFloat.random(in: 20 ... 40))
-        }
-        for _ in 0 ..< totalCases {
-            let fontInst = try #require(fontInstances.randomElement())
-            group.enter()
-            queue.async {
-                defer { group.leave() }
-                let mTable = fontInst.mathTable
-                _ = [
-                    mTable?.fractionNumeratorDisplayStyleShiftUp,
-                    mTable?.fractionNumeratorShiftUp,
-                    mTable?.fractionDenominatorDisplayStyleShiftDown,
-                    mTable?.fractionDenominatorShiftDown,
-                    mTable?.fractionNumeratorDisplayStyleGapMin,
-                    mTable?.fractionNumeratorGapMin,
-                ].compactMap(\.self)
-                #expect(mTable != nil)
-            }
-        }
-        group.wait()
-    }
 }

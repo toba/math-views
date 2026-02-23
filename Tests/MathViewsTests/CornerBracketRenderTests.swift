@@ -13,7 +13,7 @@ struct CornerBracketRenderTests {
     let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
-    static let cornerBracketCases: [RenderCase] = [
+    nonisolated static let cornerBracketCases: [RenderCase] = [
         RenderCase(name: "upper_corners", latex: "\\left\\ulcorner x \\right\\urcorner"),
         RenderCase(name: "lower_corners", latex: "\\left\\llcorner x \\right\\lrcorner"),
         RenderCase(
@@ -22,7 +22,7 @@ struct CornerBracketRenderTests {
         ),
     ]
 
-    static let doubleBracketCases: [RenderCase] = [
+    nonisolated static let doubleBracketCases: [RenderCase] = [
         RenderCase(name: "double_brackets", latex: "\\left\\llbracket x \\right\\rrbracket"),
         RenderCase(name: "semantic_function", latex: "\\left\\llbracket f(x) \\right\\rrbracket"),
     ]

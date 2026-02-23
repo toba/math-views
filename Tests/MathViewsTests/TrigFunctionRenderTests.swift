@@ -13,13 +13,13 @@ struct TrigFunctionRenderTests {
     let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
-    static let inverseTrigCases: [RenderCase] = [
+    nonisolated static let inverseTrigCases: [RenderCase] = [
         RenderCase(name: "arccot", latex: "\\arccot x"),
         RenderCase(name: "arcsec", latex: "\\arcsec x"),
         RenderCase(name: "arccsc", latex: "\\arccsc x"),
     ]
 
-    static let hyperbolicCases: [RenderCase] = [
+    nonisolated static let hyperbolicCases: [RenderCase] = [
         RenderCase(name: "sech", latex: "\\sech x"),
         RenderCase(name: "csch", latex: "\\csch x"),
         RenderCase(name: "arcsinh", latex: "\\arcsinh x"),

@@ -63,34 +63,6 @@ struct MathFontTests {
         MathFont.allCases.map(\.fontFamilyName)
     }
 
-    @Test func concurrentThreadsafe() throws {
-        let queue = DispatchQueue(label: "com.swiftmath.mathbundle", attributes: .concurrent)
-        let group = DispatchGroup()
-        let totalCases = 5000
-        for caseNumber in 0 ..< totalCases {
-            let mathFont = try #require(MathFont.allCases.randomElement())
-            group.enter()
-            queue.async {
-                defer { group.leave() }
-                switch caseNumber % 3 {
-                    case 0:
-                        let font = mathFont.cgFont()
-                        #expect(font != nil, "font != nil")
-                    case 1:
-                        let size = CGFloat.random(in: 20 ... 40)
-                        let font = mathFont.ctFont(size: size)
-                        #expect(font != nil, "font != nil")
-                    case 2:
-                        let mathtable = mathFont.rawMathTable()
-                        #expect(mathtable != nil, "mathTable != nil")
-                    default:
-                        break
-                }
-            }
-        }
-        group.wait()
-    }
-
     @Test func fallbackFont() throws {
         #if os(iOS) || os(visionOS)
         let systemFont = UIFont.systemFont(ofSize: 20)

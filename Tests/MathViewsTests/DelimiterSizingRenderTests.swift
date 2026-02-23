@@ -10,7 +10,7 @@ import UIKit
 // MARK: - Delimiter Sizing Render Tests
 
 struct DelimiterSizingRenderTests {
-    static let bigDelimiterCases: [RenderCase] = [
+    nonisolated static let bigDelimiterCases: [RenderCase] = [
         RenderCase(
             name: "01_sizes_comparison",
             latex: #"\Bigg( \bigg( \Big( \big( x \big) \Big) \bigg) \Bigg)"#,

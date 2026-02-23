@@ -13,7 +13,7 @@ struct DiracRenderTests {
     let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
-    static let diracExpressionCases: [RenderCase] = [
+    nonisolated static let diracExpressionCases: [RenderCase] = [
         RenderCase(name: "bra_0", latex: "\\bra{0}"),
         RenderCase(name: "ket_1", latex: "\\ket{1}"),
         RenderCase(name: "braket_01", latex: "\\braket{0}{1}"),

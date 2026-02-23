@@ -114,7 +114,7 @@ struct WidehatTests {
         let description: String
         var testDescription: String { description }
 
-        static let all: [WidehatCase] = [
+        nonisolated static let all: [WidehatCase] = [
             WidehatCase(latex: "\\widehat{AB}", description: "two characters"),
             WidehatCase(latex: "\\widehat{ABC}", description: "three characters"),
             WidehatCase(latex: "\\widehat{ABCD}", description: "four characters"),

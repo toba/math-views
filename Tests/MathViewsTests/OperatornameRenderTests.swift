@@ -13,7 +13,7 @@ struct OperatornameRenderTests {
     let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
-    static let operatornameCases: [RenderCase] = [
+    nonisolated static let operatornameCases: [RenderCase] = [
         RenderCase(name: "lcm", latex: "\\operatorname{lcm}(a,b)"),
         RenderCase(name: "sgn", latex: "\\operatorname{sgn}(x)"),
         RenderCase(name: "ord", latex: "\\operatorname{ord}(g)"),
@@ -21,13 +21,13 @@ struct OperatornameRenderTests {
         RenderCase(name: "rank", latex: "\\operatorname{rank}(M)"),
     ]
 
-    static let operatornameStarCases: [RenderCase] = [
+    nonisolated static let operatornameStarCases: [RenderCase] = [
         RenderCase(name: "argmax", latex: "\\operatorname*{argmax}_{x \\in X} f(x)"),
         RenderCase(name: "argmin", latex: "\\operatorname*{argmin}_{x \\in X} f(x)"),
         RenderCase(name: "esssup", latex: "\\operatorname*{esssup}_{x \\in \\mathbb{R}} |f(x)|"),
     ]
 
-    static let comparisonCases: [RenderCase] = [
+    nonisolated static let comparisonCases: [RenderCase] = [
         RenderCase(name: "compare_sin", latex: "\\sin x + \\operatorname{mysin} x"),
         RenderCase(
             name: "compare_lim",

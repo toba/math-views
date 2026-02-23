@@ -13,7 +13,7 @@ struct BoldsymbolRenderTests {
     let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
-    static let greekCases: [RenderCase] = [
+    nonisolated static let greekCases: [RenderCase] = [
         RenderCase(name: "alpha", latex: "\\boldsymbol{\\alpha}"),
         RenderCase(name: "beta", latex: "\\boldsymbol{\\beta}"),
         RenderCase(name: "gamma", latex: "\\boldsymbol{\\gamma}"),
@@ -21,7 +21,7 @@ struct BoldsymbolRenderTests {
         RenderCase(name: "mu_sigma", latex: "\\boldsymbol{\\mu} + \\boldsymbol{\\sigma}"),
     ]
 
-    static let comparisonCases: [RenderCase] = [
+    nonisolated static let comparisonCases: [RenderCase] = [
         RenderCase(name: "x_comparison", latex: "\\mathbf{x} \\text{ vs } \\boldsymbol{x}"),
         RenderCase(
             name: "alpha_comparison",

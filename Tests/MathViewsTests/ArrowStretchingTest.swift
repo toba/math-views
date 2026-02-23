@@ -87,7 +87,7 @@ struct ArrowStretchingTest {
         let command: String
         var testDescription: String { "\\\(command){\(content)}" }
 
-        static let all: [ArrowCase] = [
+        nonisolated static let all: [ArrowCase] = [
             ArrowCase(content: "A", command: "overrightarrow"),
             ArrowCase(content: "DA", command: "overrightarrow"),
             ArrowCase(content: "ABC", command: "overrightarrow"),

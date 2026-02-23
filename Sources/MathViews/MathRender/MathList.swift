@@ -147,7 +147,7 @@ public enum FontStyle: Int, Sendable {
 /// the subscript or superscript that is to be rendered.
 ///
 /// Certain types of atoms inherit from `MathAtom` and may have additional fields.
-public class MathAtom: CustomStringConvertible, Equatable, @unchecked Sendable {
+public class MathAtom: CustomStringConvertible, Equatable {
     public static func == (lhs: MathAtom, rhs: MathAtom) -> Bool { lhs === rhs }
     /// The type of the atom.
     public var type = MathAtomType.ordinary
@@ -303,7 +303,7 @@ func isBinaryOperator(_ prevNode: MathAtom?) -> Bool {
 
 // MARK: - Fraction
 
-public final class Fraction: MathAtom, @unchecked Sendable {
+public final class Fraction: MathAtom {
     public var hasRule: Bool = true
     public var leftDelimiter = ""
     public var rightDelimiter = ""
@@ -364,7 +364,7 @@ public final class Fraction: MathAtom, @unchecked Sendable {
 // MARK: - Radical
 
 /// An atom of type radical (square root).
-public final class Radical: MathAtom, @unchecked Sendable {
+public final class Radical: MathAtom {
     /// Denotes the term under the square root sign
     public var radicand: MathList?
 
@@ -414,7 +414,7 @@ public final class Radical: MathAtom, @unchecked Sendable {
 // MARK: - LargeOperator
 
 /// A `MathAtom` of type `MathAtomType.largeOperator`.
-public final class LargeOperator: MathAtom, @unchecked Sendable {
+public final class LargeOperator: MathAtom {
     /// Indicates whether the limits (if present) should be displayed
     /// above and below the operator in display mode. If limits is false
     /// then the limits (if present) are displayed like a regular subscript/superscript.
@@ -437,7 +437,7 @@ public final class LargeOperator: MathAtom, @unchecked Sendable {
 /// An inner atom. This denotes an atom which contains a math list inside it. An inner atom
 /// has optional boundaries. Note: Only one boundary may be present, it is not required to have
 /// both.
-public final class Inner: MathAtom, @unchecked Sendable {
+public final class Inner: MathAtom {
     /// The inner math list
     public var innerList: MathList?
     /// The left boundary atom. This must be a node of type MathAtomType.boundary
@@ -506,7 +506,7 @@ public final class Inner: MathAtom, @unchecked Sendable {
 // MARK: - OverLine
 
 /// An atom with a line over the contained math list.
-public final class OverLine: MathAtom, @unchecked Sendable {
+public final class OverLine: MathAtom {
     public var innerList: MathList?
 
     override public var finalized: MathAtom {
@@ -530,7 +530,7 @@ public final class OverLine: MathAtom, @unchecked Sendable {
 // MARK: - UnderLine
 
 /// An atom with a line under the contained math list.
-public final class UnderLine: MathAtom, @unchecked Sendable {
+public final class UnderLine: MathAtom {
     public var innerList: MathList?
 
     override public var finalized: MathAtom {
@@ -553,7 +553,7 @@ public final class UnderLine: MathAtom, @unchecked Sendable {
 
 // MARK: - Accent
 
-public final class Accent: MathAtom, @unchecked Sendable {
+public final class Accent: MathAtom {
     public var innerList: MathList?
     /// Indicates if this accent should use stretchy arrow behavior (for \overrightarrow, etc.)
     /// vs short accent behavior (for \vec). Only applies to arrow accents.
@@ -591,7 +591,7 @@ public final class Accent: MathAtom, @unchecked Sendable {
 /// Note: None of the usual fields of the `MathAtom` apply even though this
 /// class inherits from `MathAtom`. i.e. it is meaningless to have a value
 /// in the nucleus, subscript or superscript fields.
-public final class MathSpace: MathAtom, @unchecked Sendable {
+public final class MathSpace: MathAtom {
     /// The amount of space represented by this object in mu units.
     public var space: CGFloat = 0
 
@@ -637,7 +637,7 @@ public enum LineStyle: Int, Comparable, Sendable {
 /// Note: None of the usual fields of the `MathAtom` apply even though this
 /// class inherits from `MathAtom`. i.e. it is meaningless to have a value
 /// in the nucleus, subscript or superscript fields.
-public final class MathStyle: MathAtom, @unchecked Sendable {
+public final class MathStyle: MathAtom {
     public var style: LineStyle = .display
 
     init(_ style: MathStyle?) {
@@ -659,7 +659,7 @@ public final class MathStyle: MathAtom, @unchecked Sendable {
 /// Note: None of the usual fields of the `MathAtom` apply even though this
 /// class inherits from `MathAtom`. i.e. it is meaningless to have a value
 /// in the nucleus, subscript or superscript fields.
-public final class MathColorAtom: MathAtom, @unchecked Sendable {
+public final class MathColorAtom: MathAtom {
     public var colorString: String = ""
     public var innerList: MathList?
 
@@ -692,7 +692,7 @@ public final class MathColorAtom: MathAtom, @unchecked Sendable {
 /// Note: None of the usual fields of the `MathAtom` apply even though this
 /// class inherits from `MathAtom`. i.e. it is meaningless to have a value
 /// in the nucleus, subscript or superscript fields.
-public final class MathTextColor: MathAtom, @unchecked Sendable {
+public final class MathTextColor: MathAtom {
     public var colorString: String = ""
     public var innerList: MathList?
 
@@ -725,7 +725,7 @@ public final class MathTextColor: MathAtom, @unchecked Sendable {
 /// Note: None of the usual fields of the `MathAtom` apply even though this
 /// class inherits from `MathAtom`. i.e. it is meaningless to have a value
 /// in the nucleus, subscript or superscript fields.
-public final class MathColorBox: MathAtom, @unchecked Sendable {
+public final class MathColorBox: MathAtom {
     public var colorString = ""
     public var innerList: MathList?
 
@@ -770,7 +770,7 @@ public enum ColumnAlignment {
 /// `MathList` objects. The `MathList`s could be empty to denote a missing
 /// value in the cell. Additionally an array of alignments indicates how each
 /// column will be aligned.
-public final class MathTable: MathAtom, @unchecked Sendable {
+public final class MathTable: MathAtom {
     /// The alignment for each column (left, right, center). The default alignment
     /// for a column (if not set) is center.
     public var alignments = [ColumnAlignment]()
@@ -884,7 +884,7 @@ extension MathList: CustomStringConvertible {
 ///    or can be a list of tokens to be used by a parser after finalizedMathList is called.
 ///
 ///    Note: This class is for **advanced** usage only.
-public final class MathList: Equatable, @unchecked Sendable {
+public final class MathList: Equatable {
     public static func == (lhs: MathList, rhs: MathList) -> Bool { lhs === rhs }
 
     init?(_ list: MathList?) {

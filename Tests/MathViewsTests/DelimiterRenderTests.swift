@@ -13,7 +13,7 @@ struct DelimiterRenderTests {
     let font = MathFont.latinModern
     let fontSize: CGFloat = 24.0
 
-    static let delimiterSizeCases: [RenderCase] = [
+    nonisolated static let delimiterSizeCases: [RenderCase] = [
         RenderCase(name: "size_comparison_parens", latex: #"( \big( \Big( \bigg( \Bigg("#),
         RenderCase(name: "size_comparison_parens_close", latex: #") \big) \Big) \bigg) \Bigg)"#),
         RenderCase(name: "size_comparison_brackets", latex: #"[ \big[ \Big[ \bigg[ \Bigg["#),

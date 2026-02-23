@@ -56,7 +56,7 @@ struct TestRecord: Sendable, CustomTestStringConvertible {
     let result: String
     var testDescription: String { build }
 
-    init(
+    nonisolated init(
         build: String,
         atomType: [MathAtomType],
         types: [MathAtomType],
@@ -70,7 +70,7 @@ struct TestRecord: Sendable, CustomTestStringConvertible {
         self.result = result
     }
 
-    static let builderCases: [TestRecord] = [
+    nonisolated static let builderCases: [TestRecord] = [
         TestRecord(build: "x", atomType: [.variable], types: [], result: "x"),
         TestRecord(build: "1", atomType: [.number], types: [], result: "1"),
         TestRecord(build: "*", atomType: [.binaryOperator], types: [], result: "*"),
@@ -123,7 +123,7 @@ struct TestRecord: Sendable, CustomTestStringConvertible {
         ),
     ]
 
-    static let superScriptCases: [TestRecord] = [
+    nonisolated static let superScriptCases: [TestRecord] = [
         TestRecord(build: "x^2", atomType: [.variable], types: [.number], result: "x^{2}"),
         TestRecord(
             build: "x^23",
@@ -157,7 +157,7 @@ struct TestRecord: Sendable, CustomTestStringConvertible {
         TestRecord(build: "5{x}^2", atomType: [.number, .variable], types: [], result: "5x^{2}"),
     ]
 
-    static let subScriptCases: [TestRecord] = [
+    nonisolated static let subScriptCases: [TestRecord] = [
         TestRecord(build: "x_2", atomType: [.variable], types: [.number], result: "x_{2}"),
         TestRecord(
             build: "x_23",
@@ -191,7 +191,7 @@ struct TestRecord: Sendable, CustomTestStringConvertible {
         TestRecord(build: "5{x}_2", atomType: [.number, .variable], types: [], result: "5x_{2}"),
     ]
 
-    static let superSubScriptCases: [TestRecord] = [
+    nonisolated static let superSubScriptCases: [TestRecord] = [
         TestRecord(
             build: "x_2^*", atomType: [.variable], types: [.number], extra: [.binaryOperator],
             result: "x^{*}_{2}",
@@ -227,7 +227,7 @@ struct TestRecord2: Sendable, CustomTestStringConvertible {
     let result: String
     var testDescription: String { build }
 
-    static let leftRightCases: [TestRecord2] = [
+    nonisolated static let leftRightCases: [TestRecord2] = [
         TestRecord2(
             build: "\\left( 2 \\right)", type1: [.inner], number: 0, type2: [.number], left: "(",
             right: ")", result: "\\left( 2\\right) ",
@@ -296,7 +296,7 @@ struct ParseErrorRecord: Sendable, CustomTestStringConvertible {
     let expectedError: ParseErrorCase
     var testDescription: String { input }
 
-    static let parseErrorCases: [ParseErrorRecord] = [
+    nonisolated static let parseErrorCases: [ParseErrorRecord] = [
         ParseErrorRecord(input: "}a", expectedError: .mismatchBraces),
         ParseErrorRecord(input: "\\notacommand", expectedError: .invalidCommand),
         ParseErrorRecord(input: "\\sqrt[5+3", expectedError: .characterNotFound),

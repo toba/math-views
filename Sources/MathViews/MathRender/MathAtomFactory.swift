@@ -1,5 +1,4 @@
 public import Foundation
-import Synchronization
 
 /// Reverses a [String: String] dictionary, preferring the shortest (then lexicographically first) key
 /// when multiple keys map to the same value.
@@ -99,21 +98,17 @@ public enum MathAtomFactory {
     public static let accentValueToName: [String: String] = buildReverseMapping(accents)
 
     static var supportedLatexSymbolNames: [String] {
-        symbolState.withLock { state in
-            state.symbols.keys.map { String($0) }
-        }
+        symbolState.symbols.keys.map { String($0) }
     }
 
-    private struct SymbolState: @unchecked Sendable {
+    private struct SymbolState {
         var symbols: [String: MathAtom]
         var textToLatex: [String: String]?
     }
 
-    private static let symbolState = Mutex(
-        SymbolState(
-            symbols: initialSymbols,
-            textToLatex: nil,
-        ),
+    private static var symbolState = SymbolState(
+        symbols: initialSymbols,
+        textToLatex: nil,
     )
 
     private static let initialSymbols: [String: MathAtom] = [
@@ -566,27 +561,25 @@ public enum MathAtomFactory {
     ]
 
     public static var textToLatexSymbolName: [String: String] {
-        symbolState.withLock { state in
-            if let cached = state.textToLatex {
-                return cached
-            }
-            var output = [String: String]()
-            for (key, atom) in state.symbols {
-                if atom.nucleus.isEmpty { continue }
-                if let existingText = output[atom.nucleus] {
-                    if key.count > existingText.count {
+        if let cached = symbolState.textToLatex {
+            return cached
+        }
+        var output = [String: String]()
+        for (key, atom) in symbolState.symbols {
+            if atom.nucleus.isEmpty { continue }
+            if let existingText = output[atom.nucleus] {
+                if key.count > existingText.count {
+                    continue
+                } else if key.count == existingText.count {
+                    if key.compare(existingText) == .orderedDescending {
                         continue
-                    } else if key.count == existingText.count {
-                        if key.compare(existingText) == .orderedDescending {
-                            continue
-                        }
                     }
                 }
-                output[atom.nucleus] = key
             }
-            state.textToLatex = output
-            return output
+            output[atom.nucleus] = key
         }
+        symbolState.textToLatex = output
+        return output
     }
 
     //  public static let sharedInstance = MathAtomFactory()
@@ -787,9 +780,7 @@ public enum MathAtomFactory {
         if let canonicalName = aliases[name] {
             name = canonicalName
         }
-        return symbolState.withLock { state in
-            state.symbols[name]?.copy()
-        }
+        return symbolState.symbols[name]?.copy()
     }
 
     /// Finds the name of the LaTeX symbol name for the given atom. This function is a reverse
@@ -809,27 +800,25 @@ public enum MathAtomFactory {
     /// e.g. to define a symbol for "lcm" one can call:
     /// `MathAtomFactory.add(latexSymbol:"lcm", value:MathAtomFactory.`operator`(named: "lcm", hasLimits: false))`
     public static func add(latexSymbol name: String, value: MathAtom) {
-        symbolState.withLock { state in
-            // Ensure textToLatex is initialized before mutating
-            if state.textToLatex == nil {
-                var output = [String: String]()
-                for (key, atom) in state.symbols {
-                    if atom.nucleus.isEmpty { continue }
-                    if let existingText = output[atom.nucleus] {
-                        if key.count > existingText.count { continue }
-                        if key.count == existingText.count,
-                           key.compare(existingText) == .orderedDescending
-                        {
-                            continue
-                        }
+        // Ensure textToLatex is initialized before mutating
+        if symbolState.textToLatex == nil {
+            var output = [String: String]()
+            for (key, atom) in symbolState.symbols {
+                if atom.nucleus.isEmpty { continue }
+                if let existingText = output[atom.nucleus] {
+                    if key.count > existingText.count { continue }
+                    if key.count == existingText.count,
+                       key.compare(existingText) == .orderedDescending
+                    {
+                        continue
                     }
-                    output[atom.nucleus] = key
                 }
-                state.textToLatex = output
+                output[atom.nucleus] = key
             }
-            state.symbols[name] = value
-            state.textToLatex?[value.nucleus] = name
+            symbolState.textToLatex = output
         }
+        symbolState.symbols[name] = value
+        symbolState.textToLatex?[value.nucleus] = name
     }
 
     /// Returns a large opertor for the given name. If limits is true, limits are set up on

@@ -13,13 +13,13 @@ struct BinaryOperatorRenderTests {
     let font = MathFont.latinModern
     let fontSize: CGFloat = 20.0
 
-    static let semidirectProductCases: [RenderCase] = [
+    nonisolated static let semidirectProductCases: [RenderCase] = [
         RenderCase(name: "ltimes", latex: "G \\ltimes H"),
         RenderCase(name: "rtimes", latex: "G \\rtimes H"),
         RenderCase(name: "bowtie", latex: "A \\bowtie B"),
     ]
 
-    static let circledAndBoxedCases: [RenderCase] = [
+    nonisolated static let circledAndBoxedCases: [RenderCase] = [
         RenderCase(name: "oplus", latex: "a \\oplus b"),
         RenderCase(name: "ominus", latex: "a \\ominus b"),
         RenderCase(name: "otimes", latex: "a \\otimes b"),
@@ -31,7 +31,7 @@ struct BinaryOperatorRenderTests {
         RenderCase(name: "boxdot", latex: "a \\boxdot b"),
     ]
 
-    static let logicalCases: [RenderCase] = [
+    nonisolated static let logicalCases: [RenderCase] = [
         RenderCase(name: "barwedge", latex: "p \\barwedge q"),
         RenderCase(name: "veebar", latex: "p \\veebar q"),
         RenderCase(name: "curlywedge", latex: "p \\curlywedge q"),

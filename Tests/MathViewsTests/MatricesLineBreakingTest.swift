@@ -4,7 +4,7 @@ import Foundation
 import CoreGraphics
 
 /// Test case to verify the fix for incorrect line breaking with mixed text and math
-@MainActor struct MatricesLineBreakingTest {
+struct MatricesLineBreakingTest {
     @Test func matricesLineBreakingFixed() throws {
         var helper = TypesetterHelper()
         helper.latex = "\\(\\text{Add corresponding entries of matrices }A\\text{ and }B\\text{.}\\)"

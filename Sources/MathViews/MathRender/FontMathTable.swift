@@ -31,7 +31,7 @@ struct GlyphPart {
 /// how to parse the returned NSData object using the open type rules.
 ///
 /// Remark: This class is not meant to be used outside of this library.
-final class FontMathTable: @unchecked Sendable {
+final class FontMathTable {
     let mathFont: MathFont
     let fontSize: CGFloat
     let unitsPerEm: UInt

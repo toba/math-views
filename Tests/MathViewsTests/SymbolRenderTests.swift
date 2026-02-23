@@ -10,7 +10,7 @@ import UIKit
 // MARK: - Symbol Render Tests
 
 struct SymbolRenderTests {
-    static let priority1SymbolCases: [RenderCase] = [
+    nonisolated static let priority1SymbolCases: [RenderCase] = [
         RenderCase(name: "01_greek_varkappa", latex: #"\varkappa"#),
         RenderCase(
             name: "02_arrows", latex: #"\longmapsto \quad \hookrightarrow \quad \hookleftarrow"#,
@@ -34,7 +34,7 @@ struct SymbolRenderTests {
         ),
     ]
 
-    static let negatedRelationCases: [RenderCase] = [
+    nonisolated static let negatedRelationCases: [RenderCase] = [
         RenderCase(
             name: "11_ineq_negations",
             latex: #"a \nless b \quad c \ngtr d \quad x \nleq y \quad z \ngeq w"#,

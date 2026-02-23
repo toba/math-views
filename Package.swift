@@ -4,14 +4,10 @@
 import PackageDescription
 
 let upcomingFeatures: [SwiftSetting] = [
+  .defaultIsolation(MainActor.self),
   .enableUpcomingFeature("ExistentialAny"),
   .enableUpcomingFeature("MemberImportVisibility"),
   .enableUpcomingFeature("InternalImportsByDefault"),
-  .enableUpcomingFeature("GlobalConcurrency"),
-  .enableUpcomingFeature("RegionBasedIsolation"),
-  .enableUpcomingFeature("InferSendableFromCaptures"),
-  .enableUpcomingFeature("DisableOutwardActorIsolation"),
-  .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
   .swiftLanguageMode(.v6),
 ]
 

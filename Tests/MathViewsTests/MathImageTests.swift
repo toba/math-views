@@ -44,28 +44,6 @@ struct MathImageTests {
         }
     }
 
-    @Test func concurrentMathImageScript() {
-        let queue = DispatchQueue(label: "com.swiftmath.mathbundle", attributes: .concurrent)
-        let group = DispatchGroup()
-        var latex: String { Latex.samples.randomElement()! }
-        var mathfont: MathFont { MathFont.allCases.randomElement()! }
-        var size: CGFloat { CGFloat.random(in: 20 ... 40) }
-        let totalCases = 20
-        for _ in 0 ..< totalCases {
-            group.enter()
-            let l = latex
-            let m = mathfont
-            let s = size
-            queue.async {
-                defer { group.leave() }
-                let result = MathImageResult.useMathImage(latex: l, font: m, fontSize: s)
-                #expect(result.error == nil)
-                #expect(result.image != nil)
-                #expect(result.layoutInfo != nil)
-            }
-        }
-        group.wait()
-    }
 }
 
 struct MathImageResult {
